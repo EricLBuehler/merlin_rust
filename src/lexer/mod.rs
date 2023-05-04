@@ -6,6 +6,7 @@ pub enum TokenType {
     NEWLINE,
     UNKNOWN,
     PLUS,
+    EOF,
 }
 
 impl std::fmt::Display for TokenType {
@@ -15,6 +16,7 @@ impl std::fmt::Display for TokenType {
            TokenType::NEWLINE => write!(f, "NEWLINE"),
            TokenType::UNKNOWN => write!(f, "UNKNOWN"),
            TokenType::PLUS => write!(f, "PLUS"),
+           TokenType::EOF => write!(f, "EOF"),
        }
     }
 }
@@ -86,7 +88,7 @@ pub fn new<'a>(data: &'a [u8], info: &crate::fileinfo::FileInfo<'a>, kwds: Vec<S
         len: data.len(),
         line: 0,
         col: 0,
-        info: info.clone(),
+        info: info.to_owned(),
         kwds,
     }
 }
@@ -111,7 +113,7 @@ fn advance(lexer: &mut Lexer) {
 
 #[allow(dead_code)]
 pub fn print_tokens(lexer: Lexer) {
-    println!("\n\nGenerated tokens:\n========================");
+    println!("Generated tokens:\n========================");
     println!("------------------------");
     let mut idx: usize = 1;
     for tok in lexer.into_iter(){
@@ -121,7 +123,7 @@ pub fn print_tokens(lexer: Lexer) {
     println!("========================");
 }
 
-fn add_char_token(lexer: &mut Lexer, val: char, tp: TokenType) -> Token {
+pub fn add_char_token(lexer: &mut Lexer, val: char, tp: TokenType) -> Token {
     let res = Token {
         data: String::from(val),
         tp,

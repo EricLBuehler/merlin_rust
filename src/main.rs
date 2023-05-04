@@ -3,6 +3,10 @@ use fileinfo::FileInfo;
 
 mod lexer;
 
+mod parser;
+
+mod errors;
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -27,11 +31,14 @@ fn main() {
 
     let file_info = FileInfo {
         data: file_data_bytes.clone(),
-        name: filename.clone(),
+        name: filename.to_owned(),
     };
 
     let keywords = vec![];
     let lexer = lexer::new(file_data_bytes, &file_info, keywords);
 
-    lexer::print_tokens(lexer.clone());
+    lexer::print_tokens(lexer.to_owned());
+
+    let ast = parser::new(lexer, &file_info).generate_ast();
+    println!("{:?}", ast);
 }

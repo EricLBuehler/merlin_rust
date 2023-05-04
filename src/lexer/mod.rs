@@ -3,12 +3,24 @@
 #[derive(Clone, PartialEq, Debug)]
 pub enum TokenType {
     DECIMAL,
-    EOF,
     NEWLINE,
     UNKNOWN,
     PLUS,
 }
 
+impl std::fmt::Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+       match *self {
+           TokenType::DECIMAL => write!(f, "DECIMAL"),
+           TokenType::NEWLINE => write!(f, "NEWLINE"),
+           TokenType::UNKNOWN => write!(f, "UNKNOWN"),
+           TokenType::PLUS => write!(f, "PLUS"),
+       }
+    }
+}
+
+
+#[derive(Clone)]
 pub struct Lexer<'life> {
     pub idx: usize,
     pub data: &'life [u8],
@@ -17,6 +29,38 @@ pub struct Lexer<'life> {
     pub line: usize,
     pub col: usize,
     pub info: crate::fileinfo::FileInfo<'life>,
+    pub kwds: Vec<String>,
+}
+
+impl<'a> Iterator for Lexer<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let cur: char = self.current.into();
+
+        if cur.is_digit(10) {
+            return Some(make_decimal(self));
+        }
+        else if cur == '\n' {
+            return Some(add_char_token(self, cur, TokenType::NEWLINE));
+        }
+        else if cur.is_whitespace() {
+            advance(self);
+            while (self.current as char).is_whitespace(){
+                advance(self);
+            }
+            return self.next();
+        }
+        else if cur == '+' {
+            return Some(add_char_token(self, cur, TokenType::PLUS));
+        }
+        else if cur == '\0' {
+            return None;
+        }
+        else {
+            return Some(add_char_token(self, cur, TokenType::UNKNOWN));
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -28,26 +72,13 @@ pub struct Token {
     pub endcol: usize, //Exclusive
 }
 
-
-impl std::fmt::Display for TokenType {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-       match *self {
-           TokenType::DECIMAL => write!(f, "DECIMAL"),
-           TokenType::EOF => write!(f, "EOF"),
-           TokenType::NEWLINE => write!(f, "NEWLINE"),
-           TokenType::UNKNOWN => write!(f, "UNKNOWN"),
-           TokenType::PLUS => write!(f, "PLUS"),
-       }
-    }
-}
-
 impl std::fmt::Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}: '{}'", self.tp, self.data)
     }
 }
 
-pub fn new<'a>(data: &'a [u8], info: &crate::fileinfo::FileInfo<'a>) -> Lexer<'a> {
+pub fn new<'a>(data: &'a [u8], info: &crate::fileinfo::FileInfo<'a>, kwds: Vec<String>) -> Lexer<'a> {
     return Lexer {
         idx: 0,
         data: data.clone(),
@@ -56,6 +87,7 @@ pub fn new<'a>(data: &'a [u8], info: &crate::fileinfo::FileInfo<'a>) -> Lexer<'a
         line: 0,
         col: 0,
         info: info.clone(),
+        kwds,
     }
 }
 
@@ -78,69 +110,31 @@ fn advance(lexer: &mut Lexer) {
 }
 
 #[allow(dead_code)]
-pub fn print_tokens(len: usize, tokens: &Vec<Token>) {
+pub fn print_tokens(lexer: Lexer) {
     println!("\n\nGenerated tokens:\n========================");
-    println!("Token list ({} tokens)", len);
     println!("------------------------");
     let mut idx: usize = 1;
-    for tok in tokens{
+    for tok in lexer.into_iter(){
         println!("{} | {} {}", idx, tok, tok.line);
         idx+=1;
     }
     println!("========================");
 }
 
-fn add_char_token(lexer: &mut Lexer, tokens: &mut Vec<Token>, val: char, tp: TokenType) {
-    tokens.push(Token {
+fn add_char_token(lexer: &mut Lexer, val: char, tp: TokenType) -> Token {
+    let res = Token {
         data: String::from(val),
         tp,
         line: lexer.line,
         startcol: lexer.col,
         endcol: lexer.col+1,
-    });
+    };
     advance(lexer);
+    return res;
 }
 
-pub fn generate_tokens(lexer: &mut Lexer, kwds: &Vec<String>) -> (usize, Vec<Token>) {  
-    let mut tokens = Vec::new();
 
-    while lexer.current!=b'\0' {
-        let cur: char = lexer.current.into();
 
-        if cur.is_digit(10) {
-            tokens.push(make_decimal(lexer));
-        }
-        else if cur == '\n' {
-            add_char_token(lexer, &mut tokens, cur, TokenType::NEWLINE);
-        }
-        else if cur.is_whitespace() {
-            advance(lexer);
-        }
-        else if cur == '+' {
-            add_char_token(lexer, &mut tokens, cur, TokenType::PLUS);
-        }
-        else {
-            tokens.push(Token {
-                data: String::from(cur),
-                tp: TokenType::UNKNOWN,
-                line: lexer.line,
-                startcol: lexer.col,
-                endcol: lexer.col+1,
-            });
-            advance(lexer);
-        }
-    }
-
-    tokens.push(Token {
-        data: String::from("\\0"),
-        tp: TokenType::EOF,
-        line: lexer.line,
-        startcol: lexer.col,
-        endcol: lexer.col+1,
-    });
-
-    return (tokens.len(), tokens);
-}
 
 fn make_decimal(lexer: &mut Lexer) -> Token {
     let mut data = String::from("");

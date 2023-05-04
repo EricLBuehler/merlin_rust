@@ -6,13 +6,13 @@ mod lexer;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    assert!(args.len()==2);
+    debug_assert!(args.len()==2);
 
-    let filename: &String = &args[1];
-    let file_data: String;
+    let filename = &args[1];
+    let file_data;
     
     
-    let res: Result<String, std::io::Error> = std::fs::read_to_string(filename);
+    let res = std::fs::read_to_string(filename);
     match res {
         Ok(_) => {
             file_data = res.unwrap();
@@ -23,16 +23,15 @@ fn main() {
         }
     }
 
-    let file_data_bytes: &[u8] = file_data.as_bytes();
+    let file_data_bytes = file_data.as_bytes();
 
-    let file_info: FileInfo = FileInfo {
+    let file_info = FileInfo {
         data: file_data_bytes.clone(),
         name: filename.clone(),
     };
 
-    let mut keywords: Vec<String> = vec![];
-    let mut lexer: lexer::Lexer = lexer::new(file_data_bytes, &file_info);
-    let (_, tokens) = lexer::generate_tokens(&mut lexer, &mut keywords);
+    let keywords = vec![];
+    let lexer = lexer::new(file_data_bytes, &file_info, keywords);
 
-    lexer::print_tokens(tokens.len(), &tokens);
+    lexer::print_tokens(lexer.clone());
 }

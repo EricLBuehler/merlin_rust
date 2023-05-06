@@ -3,10 +3,10 @@ use crate::parser::Position;
 
 #[derive(Debug)]
 pub struct Node {
-    start: Position,
-    end: Position,
-    tp: NodeType,
-    data: Box<dyn NodeData>,
+    pub start: Position,
+    pub end: Position,
+    pub tp: NodeType,
+    pub data: Box<dyn NodeData>,
 }
 
 impl Node {
@@ -23,9 +23,9 @@ pub enum NodeType {
 
 #[derive(Debug)]
 pub struct NodeValue<'a> {
-    raw: HashMap<String, String>,
-    nodes: HashMap<String, &'a Node>,
-    op: Option<BinaryOpType>,
+    pub raw: HashMap<String, String>,
+    pub nodes: HashMap<String, &'a Node>,
+    pub op: Option<BinaryOpType>,
 }
 
 pub trait NodeData {

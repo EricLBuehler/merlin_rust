@@ -163,7 +163,10 @@ impl<'a> Parser<'a> {
     // ============ Expr ==============
 
     fn generate_binary(&mut self, left: Node, precedence: Precedence) -> Node {
-        let tp = match self.current.tp { TokenType::PLUS => nodes::BinaryOpType::ADD, _ => {panic!()}};
+        let tp = match self.current.tp {
+            TokenType::PLUS => nodes::BinaryOpType::ADD,
+            _ => {panic!()}};
+            
         self.advance();
         return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                 Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 

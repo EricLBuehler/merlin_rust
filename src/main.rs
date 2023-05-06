@@ -1,11 +1,16 @@
 mod fileinfo;
-use fileinfo::FileInfo;
+use std::collections::HashMap;
+#[macro_use]
+extern crate lazy_static;
 
+use fileinfo::FileInfo;
 mod lexer;
 
 mod parser;
 
 mod errors;
+
+mod objects;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -40,5 +45,15 @@ fn main() {
     lexer::print_tokens(lexer.to_owned());
 
     let ast = parser::new(lexer, &file_info).generate_ast();
-    println!("{:?}", ast);
+    println!();
+    //println!("{:?}", ast);
+    (*ast.last().unwrap().data).get_data();
+
+    objects::init_types();
+
+    let mut types = HashMap::new();
+    
+    for key in objects::TYPES.read().unwrap().keys() {
+        types.insert(key, objects::get_type(key));
+    }
 }

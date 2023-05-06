@@ -1,7 +1,13 @@
 use std::{sync::{Arc, RwLock}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
-
 use self::{typeobject::TypeType, intobject::IntType, boolobject::BoolType, stringobject::StringType, listobject::ListType};
 
+pub mod utils;
+
+mod typeobject;
+mod intobject;
+mod boolobject;
+mod stringobject;
+mod listobject;
 
 type Object = Arc<dyn ObjectTrait + Send + Sync>;
 
@@ -17,7 +23,7 @@ pub trait ObjectTrait {
         return hasher.finish();
     }
     fn get_bases(self: Arc<Self>) -> Object; //list, not inherited
-    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> Option<Object>; //cls, args, kwargs
+    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> Option<Object> where Self: ObjectTrait +  Sized; //cls, args, kwargs
     fn repr(self: Arc<Self>) -> Option<Object>; //self
     fn eq(self: Arc<Self>, _other: Object) -> Option<Object>; //self, other
 }
@@ -40,9 +46,3 @@ pub fn init_types() {
     StringType::init();
     ListType::init();
 }
-
-mod typeobject;
-mod intobject;
-mod boolobject;
-mod stringobject;
-mod listobject;

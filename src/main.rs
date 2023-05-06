@@ -1,8 +1,10 @@
 mod fileinfo;
 use std::collections::HashMap;
+use std::sync::Arc;
+
 #[macro_use]
 extern crate lazy_static;
-
+ 
 use fileinfo::FileInfo;
 mod lexer;
 
@@ -54,6 +56,9 @@ fn main() {
     let mut types = HashMap::new();
     
     for key in objects::TYPES.read().unwrap().keys() {
-        types.insert(key, objects::get_type(key));
+        let typ = objects::get_type(key);
+        println!("{}", objects::utils::object_repr(&typ));
+        println!("{}", Arc::strong_count(&typ));
+        types.insert(key.clone(), typ);
     }
 }

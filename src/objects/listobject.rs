@@ -47,7 +47,7 @@ pub struct ListObject {
 }
 
 impl ListObject {
-    pub fn from(value: Vec<Object>) -> Arc<Self> {
+    pub fn from(value: Vec<Object>) -> Object {
         return Arc::new(ListObject { tp: get_type("str"), value });
     }
 }

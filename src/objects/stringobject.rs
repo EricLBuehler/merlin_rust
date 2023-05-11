@@ -47,7 +47,7 @@ pub struct StringObject {
 }
 
 impl StringObject {
-    pub fn from(value: String) -> Arc<Self> {
+    pub fn from(value: String) -> Object {
         return Arc::new(StringObject { tp: get_type("str"), value});
     }
 }

@@ -3,11 +3,11 @@ use self::{typeobject::TypeType, intobject::IntType, boolobject::BoolType, strin
 
 pub mod utils;
 
-mod typeobject;
-mod intobject;
-mod boolobject;
-mod stringobject;
-mod listobject;
+pub mod typeobject;
+pub mod intobject;
+pub mod boolobject;
+pub mod stringobject;
+pub mod listobject;
 
 type Object = Arc<dyn ObjectTrait + Send + Sync>;
 

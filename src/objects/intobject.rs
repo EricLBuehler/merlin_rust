@@ -48,7 +48,7 @@ pub struct IntObject {
 }
 
 impl IntObject {
-    pub fn from(value: i128) -> Arc<Self> {
+    pub fn from(value: i128) -> Object {
         return Arc::new(IntObject { tp: get_type("int"), value});
     }
 }

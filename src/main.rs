@@ -52,5 +52,6 @@ fn main() {
     (*ast.last().unwrap().data).get_data();
 
     let types = objects::init_types();
-    println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()))
+    println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()));
+    println!("{}", objects::utils::object_repr(&objects::intobject::IntObject::from(1234567890)));
 }

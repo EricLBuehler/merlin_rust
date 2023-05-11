@@ -48,7 +48,7 @@ pub struct BoolObject {
 }
 
 impl BoolObject {
-    pub fn from(value: bool) -> Arc<Self> {
+    pub fn from(value: bool) -> Object {
         return Arc::new(BoolObject { tp: get_type("bool"), value});
     }
 }

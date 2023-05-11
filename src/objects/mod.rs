@@ -11,15 +11,15 @@ mod listobject;
 
 type Object = Arc<dyn ObjectTrait + Send + Sync>;
 
-// -> MethodValue<Object> (None means no implementation)
+// -> MethodValue<Object, Object> (None means no implementation)
 
-pub enum MethodValue<T>{
+pub enum MethodValue<T, E>{
     Some(T),
     NotImplemented,
-    Error,
+    Error(E),
 }
 
-impl<T: Clone> MethodValue<T> {
+impl<T: Clone, E: Clone> MethodValue<T, E> {
     pub fn unwrap(&self) -> T{
         match self {
             MethodValue::Some(v) => {
@@ -28,8 +28,22 @@ impl<T: Clone> MethodValue<T> {
             MethodValue::NotImplemented => {
                 panic!("Attempted to unwrap MethodValue with no value (got NotImplemented variant). ")
             }
-            MethodValue::Error => {
+            MethodValue::Error(_) => {
                 panic!("Attempted to unwrap MethodValue with no value (got Error variant). ")
+            }
+        }
+    }
+    
+    pub fn unwrap_err(&self) -> E {
+        match self {
+            MethodValue::Some(_) => {
+                panic!("Attempted to unwrap MethodValue that is not an error (got Some variant). ")
+            }
+            MethodValue::NotImplemented => {
+                panic!("Attempted to unwrap MethodValue that is not an error (got NotImplemented variant). ")
+            }
+            MethodValue::Error(v) => {
+                return v.clone()
             }
         }
     }
@@ -42,10 +56,14 @@ impl<T: Clone> MethodValue<T> {
     }
 
     pub fn is_error(&self) -> bool {
-        if let MethodValue::Error = self {
-            return true;
+        match self {
+            MethodValue::Error(_) => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
         }
-        return false;
     }
 
     pub fn is_some(&self) -> bool {
@@ -62,7 +80,7 @@ impl<T: Clone> MethodValue<T> {
 
 pub trait ObjectTrait {
     fn get_name(self: Arc<Self>) -> String; //self
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String>; //self
+    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object>; //self
     fn get_type(self: Arc<Self>) -> Object; //self
     fn get_typeid(self: Arc<Self>) -> u64{
         let mut hasher = DefaultHasher::new();
@@ -70,9 +88,9 @@ pub trait ObjectTrait {
         return hasher.finish();
     }
     fn get_bases(self: Arc<Self>) -> Object; //list, not inherited
-    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> MethodValue<Object>; //cls, args, kwargs
-    fn repr(self: Arc<Self>) -> MethodValue<Object>; //self
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object>; //self, other
+    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> MethodValue<Object, Object>; //cls, args, kwargs
+    fn repr(self: Arc<Self>) -> MethodValue<Object, Object>; //self
+    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object>; //self, other
 }
 
 lazy_static! {

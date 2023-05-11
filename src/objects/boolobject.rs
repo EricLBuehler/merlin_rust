@@ -13,7 +13,7 @@ impl ObjectTrait for BoolType {
     fn get_name(self: Arc<Self>) -> String {
         return String::from("bool");
     }
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String> {
+    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object> {
         return MethodValue::NotImplemented;
     }
     fn get_type(self: Arc<Self>) -> Object {
@@ -22,13 +22,13 @@ impl ObjectTrait for BoolType {
     fn get_bases(self: Arc<Self>) -> Object {
         return ListObject::from(vec![get_type("type")]);
     }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object> {
+    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
         return MethodValue::NotImplemented;
     }
-    fn repr(self: Arc<Self>) -> MethodValue<Object> {
+    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
         return MethodValue::Some(StringObject::from("<class 'bool'>".to_string()));
     }
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object> {
+    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> {
         return MethodValue::NotImplemented;
     }
 }
@@ -58,7 +58,7 @@ impl ObjectTrait for BoolObject {
         let strong = self.tp.clone();
         return strong.get_name();
     }
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String> {
+    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object> {
         return MethodValue::NotImplemented;
     }
     fn get_type(self: Arc<Self>) -> Object {
@@ -68,13 +68,13 @@ impl ObjectTrait for BoolObject {
         let strong = self.tp.clone();
         return strong.get_bases();
     }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object> {
+    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
         return MethodValue::NotImplemented;
     }
-    fn repr(self: Arc<Self>) -> MethodValue<Object> {
+    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
         return MethodValue::Some(StringObject::from(self.value.to_string()));
     }
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object> {
+    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> {
         return MethodValue::NotImplemented;
     }
 }

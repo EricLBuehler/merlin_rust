@@ -74,7 +74,7 @@ impl ObjectTrait for ListObject {
         let mut res = String::from("[");
         for item in &self.value {
             let repr = utils::object_repr_safe(item);
-            if repr.is_error() {
+            if !repr.is_some() {
                 return MethodValue::NotImplemented;
             }
             res += &repr.unwrap();

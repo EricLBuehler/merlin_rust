@@ -1,6 +1,4 @@
 mod fileinfo;
-use std::collections::HashMap;
-use std::sync::Arc;
 
 #[macro_use]
 extern crate lazy_static;

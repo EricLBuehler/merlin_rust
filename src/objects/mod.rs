@@ -104,10 +104,18 @@ fn add_type(key: &str, obj: Object) {
     TYPES.write().unwrap().insert(key.to_string(), obj);
 }
 
-pub fn init_types() {
+pub fn init_types() -> HashMap<String, Object> {
     TypeType::init();
     IntType::init();
     BoolType::init();
     StringType::init();
     ListType::init();
+
+    let mut types = HashMap::new();
+    for key in TYPES.read().unwrap().keys() {
+        let typ = get_type(key);
+        types.insert(key.clone(), typ);
+    }
+
+    return types;
 }

@@ -51,16 +51,6 @@ fn main() {
     //println!("{:?}", ast);
     (*ast.last().unwrap().data).get_data();
 
-    objects::init_types();
-
-    let mut types = HashMap::new();
-    
-    for key in objects::TYPES.read().unwrap().keys() {
-        let typ = objects::get_type(key);
-        println!("{}", objects::utils::object_repr(&typ));
-        println!("{}", Arc::strong_count(&typ));
-        types.insert(key.clone(), typ);
-    }
-
+    let types = objects::init_types();
     println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()))
 }

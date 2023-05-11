@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::objects::stringobject::StringObject;
 
-use super::{Object, ObjectTrait, get_type, add_type};
+use super::{Object, ObjectTrait, get_type, add_type, MethodValue, utils};
 
 #[derive(Clone)]
 pub struct ListType {
@@ -12,23 +12,23 @@ impl ObjectTrait for ListType {
     fn get_name(self: Arc<Self>) -> String {
         return String::from("list");
     }
-    fn get_basic_repr(self: Arc<Self>) -> Option<String> {
-        return None;
+    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String> {
+        return MethodValue::NotImplemented;
     }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();
     }
     fn get_bases(self: Arc<Self>) -> Object {
-        return ListObject::from(vec![get_type("type"), get_type("object")]);
+        return ListObject::from(vec![get_type("type")]);
     }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> Option<Object> {
-        return None;
+    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object> {
+        return MethodValue::NotImplemented;
     }
-    fn repr(self: Arc<Self>) -> Option<Object> {
-        return Some(StringObject::from("<class 'str'>".to_string()));
+    fn repr(self: Arc<Self>) -> MethodValue<Object> {
+        return MethodValue::Some(StringObject::from("<class 'str'>".to_string()));
     }
-    fn eq(self: Arc<Self>, _other: Object) -> Option<Object> {
-        return None;
+    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object> {
+        return MethodValue::NotImplemented;
     }
 }
 
@@ -52,13 +52,13 @@ impl ListObject {
     }
 }
 
-impl ObjectTrait for Arc<ListObject> {
+impl ObjectTrait for ListObject {
     fn get_name(self: Arc<Self>) -> String {
         let strong = self.tp.clone();
         return strong.get_name();
     }
-    fn get_basic_repr(self: Arc<Self>) -> Option<String> {
-        return None;
+    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String> {
+        return MethodValue::NotImplemented;
     }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();
@@ -67,37 +67,27 @@ impl ObjectTrait for Arc<ListObject> {
         let strong = self.tp.clone();
         return strong.get_bases();
     }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> Option<Object> {
-        unimplemented!();
+    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object> {
+        return MethodValue::NotImplemented;
     }
-    fn repr(self: Arc<Self>) -> Option<Object> {
-        return Some(self.clone())
+    fn repr(self: Arc<Self>) -> MethodValue<Object> {
+        let mut res = String::from("[");
+        for item in &self.value {
+            let repr = utils::object_repr_safe(item);
+            if repr.is_err() {
+                return MethodValue::NotImplemented;
+            }
+            res += &repr.unwrap();
+            res += ", ";
+        }
+        if res.len() > 1 {
+            res.pop();
+            res.pop();
+        }
+        res += "]";
+        return MethodValue::Some(StringObject::from(res));
     }
-    fn eq(self: Arc<Self>, _other: Object) -> Option<Object> {
-        return None;
-    }
-}
-
-impl ObjectTrait for ListObject {
-    fn get_name(self: Arc<Self>) -> String {
-        unimplemented!();
-    }
-    fn get_basic_repr(self: Arc<Self>) -> Option<String> {
-        unimplemented!();
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        unimplemented!();
-    }
-    fn get_bases(self: Arc<Self>) -> Object {
-        unimplemented!();
-    }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> Option<Object> {
-        unimplemented!();
-    }
-    fn repr(self: Arc<Self>) -> Option<Object> {
-        unimplemented!();
-    }
-    fn eq(self: Arc<Self>, _other: Object) -> Option<Object> {
-        unimplemented!();
+    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object> {
+        return MethodValue::NotImplemented;
     }
 }

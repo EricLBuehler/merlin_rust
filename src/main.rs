@@ -61,4 +61,6 @@ fn main() {
         println!("{}", Arc::strong_count(&typ));
         types.insert(key.clone(), typ);
     }
+
+    println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()))
 }

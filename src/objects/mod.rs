@@ -80,17 +80,25 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 
 pub trait ObjectTrait {
     fn get_name(self: Arc<Self>) -> String; //self
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object>; //self
+    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object> { //self
+        return MethodValue::NotImplemented;
+    }
     fn get_type(self: Arc<Self>) -> Object; //self
-    fn get_typeid(self: Arc<Self>) -> u64{
+    fn get_typeid(self: Arc<Self>) -> u64 { //self
         let mut hasher = DefaultHasher::new();
         self.get_name().hash(&mut hasher);
         return hasher.finish();
     }
     fn get_bases(self: Arc<Self>) -> Object; //list, not inherited
-    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> MethodValue<Object, Object>; //cls, args, kwargs
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object>; //self
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object>; //self, other
+    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> { //cls, args, kwargs
+        return MethodValue::NotImplemented;
+    }
+    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> { //self
+        return MethodValue::NotImplemented;
+    }
+    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+        return MethodValue::NotImplemented;
+    }
 }
 
 lazy_static! {

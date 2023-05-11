@@ -12,23 +12,14 @@ impl ObjectTrait for ListType {
     fn get_name(self: Arc<Self>) -> String {
         return String::from("list");
     }
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object> {
-        return MethodValue::NotImplemented;
-    }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();
     }
     fn get_bases(self: Arc<Self>) -> Object {
         return ListObject::from(vec![get_type("type")]);
     }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
-        return MethodValue::NotImplemented;
-    }
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
         return MethodValue::Some(StringObject::from("<class 'str'>".to_string()));
-    }
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> {
-        return MethodValue::NotImplemented;
     }
 }
 
@@ -57,18 +48,12 @@ impl ObjectTrait for ListObject {
         let strong = self.tp.clone();
         return strong.get_name();
     }
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object> {
-        return MethodValue::NotImplemented;
-    }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();
     }
     fn get_bases(self: Arc<Self>) -> Object {
         let strong = self.tp.clone();
         return strong.get_bases();
-    }
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
-        return MethodValue::NotImplemented;
     }
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
         let mut res = String::from("[");
@@ -86,8 +71,5 @@ impl ObjectTrait for ListObject {
         }
         res += "]";
         return MethodValue::Some(StringObject::from(res));
-    }
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> {
-        return MethodValue::NotImplemented;
     }
 }

@@ -48,8 +48,8 @@ impl ObjectTrait for StringObject {
         let strong = self.tp.clone();
         return strong.get_name();
     }
-    fn get_raw(self: Arc<Self>) -> MethodValue<ObjectInternals, Object> {
-        return MethodValue::Some(ObjectInternals::Str(self.value.clone()));
+    fn get_raw(self: Arc<Self>) -> ObjectInternals {
+        return ObjectInternals::Str(self.value.clone());
     }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();

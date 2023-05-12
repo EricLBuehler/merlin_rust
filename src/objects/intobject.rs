@@ -49,8 +49,8 @@ impl ObjectTrait for IntObject {
         let strong = self.tp.clone();
         return strong.get_name();
     }
-    fn get_raw(self: Arc<Self>) -> MethodValue<ObjectInternals, Object> {
-        return MethodValue::Some(ObjectInternals::Int(self.value));
+    fn get_raw(self: Arc<Self>) -> ObjectInternals {
+        return ObjectInternals::Int(self.value);
     }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();

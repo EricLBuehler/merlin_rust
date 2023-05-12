@@ -184,8 +184,8 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 
 pub trait ObjectTrait {
     fn get_name(self: Arc<Self>) -> String; //self
-    fn get_raw(self: Arc<Self>) -> MethodValue<ObjectInternals, Object> { //self
-        return MethodValue::NotImplemented;
+    fn get_raw(self: Arc<Self>) -> ObjectInternals { //self
+        return ObjectInternals::No;
     }
     fn get_type(self: Arc<Self>) -> Object; //self
     fn get_typeid(self: Arc<Self>) -> u64 { //self

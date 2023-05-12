@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::objects::stringobject::StringObject;
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue, utils};
+use super::{Object, ObjectTrait, get_type, add_type, MethodValue, utils, ObjectInternals};
 
 #[derive(Clone)]
 pub struct ListType {
@@ -47,6 +47,9 @@ impl ObjectTrait for ListObject {
     fn get_name(self: Arc<Self>) -> String {
         let strong = self.tp.clone();
         return strong.get_name();
+    }
+    fn get_raw(self: Arc<Self>) -> MethodValue<ObjectInternals, Object> {
+        return MethodValue::Some(ObjectInternals::Arr(self.value.clone()));
     }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();

@@ -2,7 +2,7 @@ use std::{sync::Arc};
 use crate::objects::stringobject::StringObject;
 use crate::objects::listobject::ListObject;
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue};
+use super::{Object, ObjectTrait, get_type, add_type, MethodValue, ObjectInternals};
 
 #[derive(Clone)]
 pub struct BoolType {
@@ -48,6 +48,9 @@ impl ObjectTrait for BoolObject {
     fn get_name(self: Arc<Self>) -> String {
         let strong = self.tp.clone();
         return strong.get_name();
+    }
+    fn get_raw(self: Arc<Self>) -> MethodValue<ObjectInternals, Object> {
+        return MethodValue::Some(ObjectInternals::Bool(self.value));
     }
     fn get_type(self: Arc<Self>) -> Object {
         return self.tp.clone();

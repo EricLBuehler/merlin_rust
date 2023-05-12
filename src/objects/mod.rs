@@ -11,7 +11,111 @@ pub mod listobject;
 
 type Object = Arc<dyn ObjectTrait + Send + Sync>;
 
-// -> MethodValue<Object, Object> (None means no implementation)
+#[derive(Clone)]
+pub enum ObjectInternals {
+    No,
+    Bool(bool),
+    Int(i128),
+    Str(String),
+    Arr(Vec<Object>),
+}
+
+impl ObjectInternals {
+    pub fn is_no(&self) -> bool {
+        match self {
+            ObjectInternals::No => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
+        }
+    }
+
+    pub fn is_bool(&self) -> bool {
+        match self {
+            ObjectInternals::Bool(_) => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
+        }
+    }
+    pub fn get_bool(&self) -> Option<&bool> {
+        match self {
+            ObjectInternals::Bool(v) => {
+                return Some(v);
+            }
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    pub fn is_int(&self) -> bool {
+        match self {
+            ObjectInternals::Int(_) => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
+        }
+    }
+    pub fn get_int(&self) -> Option<&i128> {
+        match self {
+            ObjectInternals::Int(v) => {
+                return Some(v);
+            }
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    pub fn is_str(&self) -> bool {
+        match self {
+            ObjectInternals::Str(_) => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
+        }
+    }
+    pub fn get_str(&self) -> Option<&String> {
+        match self {
+            ObjectInternals::Str(v) => {
+                return Some(v);
+            }
+            _ => {
+                return None;
+            }
+        }
+    }
+
+    pub fn is_arr(&self) -> bool {
+        match self {
+            ObjectInternals::Arr(_) => {
+                return true;
+            }
+            _ => {
+                return false;
+            }
+        }
+    }
+    pub fn get_arr(&self) -> Option<&Vec<Object>> {
+        match self {
+            ObjectInternals::Arr(v) => {
+                return Some(v);
+            }
+            _ => {
+                return None;
+            }
+        }
+    }
+}
 
 pub enum MethodValue<T, E>{
     Some(T),
@@ -80,7 +184,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 
 pub trait ObjectTrait {
     fn get_name(self: Arc<Self>) -> String; //self
-    fn get_basic_repr(self: Arc<Self>) -> MethodValue<String, Object> { //self
+    fn get_raw(self: Arc<Self>) -> MethodValue<ObjectInternals, Object> { //self
         return MethodValue::NotImplemented;
     }
     fn get_type(self: Arc<Self>) -> Object; //self

@@ -1,4 +1,4 @@
-use std::{sync::{Arc, RwLock}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
+use std::{sync::{Arc, RwLock}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}, fmt::Display};
 use self::{typeobject::TypeType, intobject::IntType, boolobject::BoolType, stringobject::StringType, listobject::ListType};
 
 pub mod utils;
@@ -9,7 +9,7 @@ pub mod boolobject;
 pub mod stringobject;
 pub mod listobject;
 
-type Object = Arc<dyn ObjectTrait + Send + Sync>;
+pub type Object = Arc<dyn ObjectTrait + Send + Sync>;
 
 #[derive(Clone)]
 pub enum ObjectInternals {

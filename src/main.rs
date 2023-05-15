@@ -12,6 +12,8 @@ mod errors;
 
 mod objects;
 
+mod compiler;
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
@@ -44,12 +46,23 @@ fn main() {
 
     lexer::print_tokens(lexer.to_owned());
 
+    println!("\n===== Running parser =====");
     let ast = parser::new(lexer, &file_info).generate_ast();
-    println!();
-    //println!("{:?}", ast);
-    (*ast.last().unwrap().data).get_data();
+    println!("===== Done with parsing =====");
 
+    println!("\n===== Running type tests =====");
     let types = objects::init_types();
     println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()));
     println!("{}", objects::utils::object_repr(&objects::intobject::IntObject::from(1234567890)));
+    println!("===== Done with type tests =====");
+
+    println!("\n===== Running compiler =====");
+    let mut compiler = compiler::Compiler::new();
+    let bytecode = compiler.generate_bytecode(ast);
+
+    println!("{:?}", bytecode.instructions);
+    for c in bytecode.consts {
+        println!("{}", objects::utils::object_repr(&c));
+    }
+    println!("===== Done with compiler =====");
 }

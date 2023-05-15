@@ -1,4 +1,4 @@
-mod nodes;
+pub mod nodes;
 
 use crate::fileinfo::FileInfo;
 use crate::lexer::{Lexer, Token, TokenType};
@@ -17,7 +17,7 @@ pub struct Parser<'a> {
     info: &'a FileInfo<'a>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Position {
     pub startcol: usize,
     pub endcol: usize,

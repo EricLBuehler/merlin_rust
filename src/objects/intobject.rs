@@ -42,6 +42,11 @@ impl IntObject {
     pub fn from(value: i128) -> Object {
         return Arc::new(IntObject { tp: get_type("int"), value});
     }
+    pub fn from_str(value: String) -> MethodValue<Object, Object> {
+        let convert = value.parse::<i128>();
+        debug_assert!(!convert.is_err());
+        return MethodValue::Some(Arc::new(IntObject { tp: get_type("int"), value: convert.unwrap()}));
+    }
 }
 
 impl ObjectTrait for IntObject {

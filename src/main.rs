@@ -54,6 +54,7 @@ fn main() {
     let types = objects::init_types();
     println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()));
     println!("{}", objects::utils::object_repr(&objects::intobject::IntObject::from(1234567890)));
+    println!("{}", objects::utils::object_repr(&(objects::intobject::IntObject::from(3)).pow(objects::intobject::IntObject::from(25)).unwrap()));
     println!("===== Done with type tests =====");
 
     println!("\n===== Running compiler =====");

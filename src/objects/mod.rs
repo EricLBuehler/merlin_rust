@@ -194,13 +194,40 @@ pub trait ObjectTrait {
         return hasher.finish();
     }
     fn get_bases(self: Arc<Self>) -> Object; //list, not inherited
+
+    //instantiation
     fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> { //cls, args, kwargs
         return MethodValue::NotImplemented;
     }
+
+    //unary
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> { //self
         return MethodValue::NotImplemented;
     }
+    fn abs(self: Arc<Self>) -> MethodValue<Object, Object> { //self
+        return MethodValue::NotImplemented;
+    }
+    fn neg(self: Arc<Self>) -> MethodValue<Object, Object> { //self
+        return MethodValue::NotImplemented;
+    }
+
+    //binary
     fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+        return MethodValue::NotImplemented;
+    }
+    fn add(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+        return MethodValue::NotImplemented;
+    }
+    fn sub(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+        return MethodValue::NotImplemented;
+    }
+    fn mul(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+        return MethodValue::NotImplemented;
+    }
+    fn div(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+        return MethodValue::NotImplemented;
+    }
+    fn pow(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
         return MethodValue::NotImplemented;
     }
 }

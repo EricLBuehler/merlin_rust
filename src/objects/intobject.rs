@@ -67,4 +67,78 @@ impl ObjectTrait for IntObject {
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
         return MethodValue::Some(StringObject::from(self.value.to_string()));
     }
+    fn abs(self: Arc<Self>) -> MethodValue<Object, Object> {
+        let res = self.value.checked_abs();
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
+    fn neg(self: Arc<Self>) -> MethodValue<Object, Object> {
+        let res = self.value.checked_neg();
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
+    fn add(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
+        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+
+        let otherv = other.get_raw().get_int().unwrap().clone();
+
+        let res = self.value.checked_add(otherv);
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
+    fn sub(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
+        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+
+        let otherv = other.get_raw().get_int().unwrap().clone();
+
+        let res = self.value.checked_sub(otherv);
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
+    fn mul(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
+        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+
+        let otherv = other.get_raw().get_int().unwrap().clone();
+
+        let res = self.value.checked_mul(otherv);
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
+    fn div(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
+        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+
+        let otherv = other.get_raw().get_int().unwrap().clone();
+        debug_assert!(otherv != 0);
+
+        let res = self.value.checked_div(otherv);
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
+    fn pow(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
+        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+
+        let otherv = other.get_raw().get_int().unwrap().clone();
+
+        if otherv >=0 {
+            debug_assert!(otherv < std::u32::MAX as i128);
+
+            let res = self.value.checked_pow(otherv as u32);
+            debug_assert!(res.is_some());
+    
+            return MethodValue::Some(Self::from(res.unwrap()))
+        }
+
+        debug_assert!(otherv.abs() < std::u32::MAX as i128);
+
+        let res = self.value.checked_pow(otherv.abs() as u32);
+        debug_assert!(res.is_some());
+
+        return MethodValue::Some(Self::from(res.unwrap()))
+    }
 }

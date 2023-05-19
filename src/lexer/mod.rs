@@ -52,6 +52,13 @@ impl<'a> Iterator for Lexer<'a> {
         else if cur == '\n' {
             return Some(add_char_token(self, cur, TokenType::NEWLINE));
         }
+        else if cur == '#' {
+            advance(self);
+            while (self.current as char) != '\n' && (self.current as char) != '\0'{
+                advance(self);
+            }
+            return self.next();
+        }
         else if cur.is_whitespace() {
             advance(self);
             while (self.current as char).is_whitespace(){

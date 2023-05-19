@@ -75,8 +75,11 @@ impl<'a> Parser<'a> {
 
     fn get_precedence(&self) -> Precedence {
         match self.current.tp {
-            TokenType::PLUS => {
+            TokenType::PLUS | TokenType::HYPHEN => {
                 return Precedence::Sum;
+            },
+            TokenType::ASTERISK | TokenType::SLASH => {
+                return Precedence::Product;
             },
             _ => {
                 return Precedence::Lowest;
@@ -137,7 +140,10 @@ impl<'a> Parser<'a> {
         self.advance();
         while !self.current_is_type(TokenType::EOF) && (precedence as u32) < (self.get_precedence() as u32){
             match self.current.tp {
-                TokenType::PLUS => {
+                TokenType::PLUS |
+                TokenType::HYPHEN |
+                TokenType::ASTERISK |
+                TokenType::SLASH => {
                     left = self.generate_binary(left, self.get_precedence());
                 }
                 _ => {
@@ -165,6 +171,9 @@ impl<'a> Parser<'a> {
     fn generate_binary(&mut self, left: Node, precedence: Precedence) -> Node {
         let tp = match self.current.tp {
             TokenType::PLUS => nodes::BinaryOpType::ADD,
+            TokenType::HYPHEN => nodes::BinaryOpType::SUB,
+            TokenType::ASTERISK => nodes::BinaryOpType::MUL,
+            TokenType::SLASH => nodes::BinaryOpType::DIV,
             _ => {panic!()}};
             
         self.advance();

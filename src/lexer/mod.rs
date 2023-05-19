@@ -7,6 +7,9 @@ pub enum TokenType {
     UNKNOWN,
     PLUS,
     EOF,
+    ASTERISK,
+    SLASH,
+    HYPHEN,
 }
 
 impl std::fmt::Display for TokenType {
@@ -17,6 +20,9 @@ impl std::fmt::Display for TokenType {
            TokenType::UNKNOWN => write!(f, "UNKNOWN"),
            TokenType::PLUS => write!(f, "PLUS"),
            TokenType::EOF => write!(f, "EOF"),
+           TokenType::ASTERISK => write!(f, "ASTERISK"),
+           TokenType::SLASH => write!(f, "SLASH"),
+           TokenType::HYPHEN => write!(f, "HYPHEN"),
        }
     }
 }
@@ -55,6 +61,15 @@ impl<'a> Iterator for Lexer<'a> {
         }
         else if cur == '+' {
             return Some(add_char_token(self, cur, TokenType::PLUS));
+        }
+        else if cur == '*' {
+            return Some(add_char_token(self, cur, TokenType::ASTERISK));
+        }
+        else if cur == '/' {
+            return Some(add_char_token(self, cur, TokenType::SLASH));
+        }
+        else if cur == '-' {
+            return Some(add_char_token(self, cur, TokenType::HYPHEN));
         }
         else if cur == '\0' {
             return None;

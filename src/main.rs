@@ -44,26 +44,34 @@ fn main() {
     let keywords = vec![];
     let lexer = lexer::new(file_data_bytes, &file_info, keywords);
 
-    lexer::print_tokens(lexer.to_owned());
+    if cfg!(debug_assertions) {
+        lexer::print_tokens(lexer.to_owned());
+    }
 
-    println!("\n===== Running parser =====");
+
+    if cfg!(debug_assertions) { println!("\n===== Running parser ====="); }
     let ast = parser::new(lexer, &file_info).generate_ast();
-    println!("===== Done with parsing =====");
+    if cfg!(debug_assertions) { println!("===== Done with parsing ====="); }
 
-    println!("\n===== Running type tests =====");
     let types = objects::init_types();
-    println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()));
-    println!("{}", objects::utils::object_repr(&objects::intobject::IntObject::from(1234567890)));
-    println!("{}", objects::utils::object_repr(&(objects::intobject::IntObject::from(3)).pow(objects::intobject::IntObject::from(25)).unwrap()));
-    println!("===== Done with type tests =====");
 
-    println!("\n===== Running compiler =====");
+    if cfg!(debug_assertions) {
+        println!("\n===== Running type tests =====");
+        println!("{}", objects::utils::object_repr(&types.get("str").unwrap().clone().get_bases()));
+        println!("{}", objects::utils::object_repr(&objects::intobject::IntObject::from(1234567890)));
+        println!("{}", objects::utils::object_repr(&(objects::intobject::IntObject::from(3)).pow(objects::intobject::IntObject::from(25)).unwrap()));
+        println!("===== Done with type tests =====");
+    }
+
+    if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
     let mut compiler = compiler::Compiler::new();
     let bytecode = compiler.generate_bytecode(ast);
 
-    println!("{:?}", bytecode.instructions);
-    for c in bytecode.consts {
-        println!("{}", objects::utils::object_repr(&c));
+    if cfg!(debug_assertions) {
+        println!("{:?}", bytecode.instructions);
+        for c in bytecode.consts {
+            println!("{}", objects::utils::object_repr(&c));
+        }
+        println!("===== Done with compiler =====");
     }
-    println!("===== Done with compiler =====");
 }

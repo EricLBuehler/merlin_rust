@@ -1,4 +1,4 @@
-use crate::{objects::{Object, intobject::IntObject}, parser::{self, nodes::NodeType, Position}};
+use crate::{objects::{Object, intobject::IntObject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}};
 
 pub struct Compiler {
     instructions: Vec<CompilerInstruction>,
@@ -10,6 +10,9 @@ pub struct Compiler {
 pub enum CompilerInstruction {
     LoadConst(usize, Position, Position), //index
     BinaryAdd(Position, Position), //TOS is right, TOS-1 is left
+    BinarySub(Position, Position), //TOS is right, TOS-1 is left
+    BinaryMul(Position, Position), //TOS is right, TOS-1 is left
+    BinaryDiv(Position, Position), //TOS is right, TOS-1 is left
 }
 
 pub struct Bytecode {
@@ -53,7 +56,20 @@ impl Compiler {
             NodeType::BINARY => {
                 self.compile_expr(expr.data.get_data().nodes.get("left").unwrap());
                 self.compile_expr(expr.data.get_data().nodes.get("right").unwrap());
-                self.instructions.push(CompilerInstruction::BinaryAdd(expr.start, expr.end));
+                match expr.data.get_data().op.unwrap() {
+                    BinaryOpType::ADD => {
+                        self.instructions.push(CompilerInstruction::BinaryAdd(expr.start, expr.end));
+                    }
+                    BinaryOpType::SUB => {
+                        self.instructions.push(CompilerInstruction::BinarySub(expr.start, expr.end));
+                    }
+                    BinaryOpType::MUL => {
+                        self.instructions.push(CompilerInstruction::BinaryMul(expr.start, expr.end));
+                    }
+                    BinaryOpType::DIV => {
+                        self.instructions.push(CompilerInstruction::BinaryDiv(expr.start, expr.end));
+                    }
+                }
             }
         }
     }

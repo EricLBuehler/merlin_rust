@@ -31,12 +31,11 @@ impl std::fmt::Display for TokenType {
 #[derive(Clone)]
 pub struct Lexer<'life> {
     pub idx: usize,
-    pub data: &'life [u8],
     pub current: u8,
     pub len: usize,
     pub line: usize,
     pub col: usize,
-    pub info: crate::fileinfo::FileInfo<'life>,
+    pub info: &'life crate::fileinfo::FileInfo<'life>,
     pub kwds: Vec<String>,
 }
 
@@ -102,15 +101,14 @@ impl std::fmt::Display for Token {
     }
 }
 
-pub fn new<'a>(data: &'a [u8], info: &crate::fileinfo::FileInfo<'a>, kwds: Vec<String>) -> Lexer<'a> {
+pub fn new<'a>(data: &'a [u8], info: &'a crate::fileinfo::FileInfo, kwds: Vec<String>) -> Lexer<'a> {
     return Lexer {
         idx: 0,
-        data: data.clone(),
         current: data[0],
         len: data.len(),
         line: 0,
         col: 0,
-        info: info.to_owned(),
+        info,
         kwds,
     }
 }
@@ -130,7 +128,7 @@ fn advance(lexer: &mut Lexer) {
         lexer.col=0;
     }
     
-    lexer.current = lexer.data[lexer.idx];
+    lexer.current = lexer.info.data[lexer.idx];
 }
 
 #[allow(dead_code)]

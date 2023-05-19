@@ -1,3 +1,5 @@
+//Pretty error generation
+
 use colored::Colorize;
 
 #[derive(Clone)]

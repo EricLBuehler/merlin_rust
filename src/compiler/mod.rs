@@ -1,3 +1,5 @@
+//Generate bytecode from AST
+
 use crate::{objects::{Object, intobject::IntObject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}};
 
 pub struct Compiler {
@@ -56,17 +58,26 @@ impl Compiler {
         match expr.tp {
             NodeType::DECIMAL => {
                 let int = IntObject::from_str(expr.data.get_data().raw.get("value").unwrap().to_string());
+                
                 debug_assert!(int.is_some());
+                
                 self.consts.push(int.unwrap());
                 match register {
-                    CompilerRegister::R1 => { self.instructions.push(CompilerInstruction::LoadConstR1(self.consts.len()-1, expr.start, expr.end)); }
-                    CompilerRegister::R2 => { self.instructions.push(CompilerInstruction::LoadConstR2(self.consts.len()-1, expr.start, expr.end)); }
-                    CompilerRegister::NA => { unreachable!(); }
+                    CompilerRegister::R1 => {
+                        self.instructions.push(CompilerInstruction::LoadConstR1(self.consts.len()-1, expr.start, expr.end));
+                    }
+                    CompilerRegister::R2 => {
+                        self.instructions.push(CompilerInstruction::LoadConstR2(self.consts.len()-1, expr.start, expr.end));
+                    }
+                    CompilerRegister::NA => {
+                        unreachable!();
+                    }
                 }
             }
             NodeType::BINARY => {
                 self.compile_expr(expr.data.get_data().nodes.get("left").unwrap(), CompilerRegister::R1);
                 self.compile_expr(expr.data.get_data().nodes.get("right").unwrap(), CompilerRegister::R2);
+
                 match expr.data.get_data().op.unwrap() {
                     BinaryOpType::ADD => {
                         self.instructions.push(CompilerInstruction::BinaryAdd(expr.start, expr.end));

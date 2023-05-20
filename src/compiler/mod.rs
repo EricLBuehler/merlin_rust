@@ -12,12 +12,13 @@ pub struct Compiler {
 pub enum CompilerInstruction {
     LoadConstR1(usize, Position, Position), //load const from consts[index] into R1
     LoadConstR2(usize, Position, Position), //load const from consts[index] into R2
-    BinaryAdd(Position, Position), //Sum R1 (right), and R2 (left)
-    BinarySub(Position, Position), //SubtR1ct R2 (left), and R1 (right)
-    BinaryMul(Position, Position), //Multiply R1 (right), and R2 (left)
-    BinaryDiv(Position, Position), //Divide R1 (right) by R2 (left)
+    BinaryAdd(CompilerRegister, Position, Position), //Sum R1 (right), and R2 (left). Result in specified register
+    BinarySub(CompilerRegister, Position, Position), //SubtR1ct R2 (left), and R1 (right). Result in specified register
+    BinaryMul(CompilerRegister, Position, Position), //Multiply R1 (right), and R2 (left). Result in specified register
+    BinaryDiv(CompilerRegister, Position, Position), //Divide R1 (right) by R2 (left). Result in specified register
 }
 
+#[derive(Clone, Copy, Debug)]
 pub enum CompilerRegister {
     R1,
     R2,
@@ -46,10 +47,10 @@ impl Compiler {
     fn compile_statement(&mut self, expr: Node) {
         match expr.tp {
             NodeType::DECIMAL => {
-                self.compile_expr(&expr, CompilerRegister::R1);
+                self.compile_expr(&expr, CompilerRegister::NA);
             }
             NodeType::BINARY => {
-                self.compile_expr(&expr, CompilerRegister::NA);
+                self.compile_expr(&expr, CompilerRegister::R1);
             }
         }
     }
@@ -70,7 +71,7 @@ impl Compiler {
                         self.instructions.push(CompilerInstruction::LoadConstR2(self.consts.len()-1, expr.start, expr.end));
                     }
                     CompilerRegister::NA => {
-                        unreachable!();
+                        
                     }
                 }
             }
@@ -78,18 +79,23 @@ impl Compiler {
                 self.compile_expr(expr.data.get_data().nodes.get("left").unwrap(), CompilerRegister::R1);
                 self.compile_expr(expr.data.get_data().nodes.get("right").unwrap(), CompilerRegister::R2);
 
-                match expr.data.get_data().op.unwrap() {
-                    BinaryOpType::ADD => {
-                        self.instructions.push(CompilerInstruction::BinaryAdd(expr.start, expr.end));
-                    }
-                    BinaryOpType::SUB => {
-                        self.instructions.push(CompilerInstruction::BinarySub(expr.start, expr.end));
-                    }
-                    BinaryOpType::MUL => {
-                        self.instructions.push(CompilerInstruction::BinaryMul(expr.start, expr.end));
-                    }
-                    BinaryOpType::DIV => {
-                        self.instructions.push(CompilerInstruction::BinaryDiv(expr.start, expr.end));
+                match register {
+                    CompilerRegister::NA => {}
+                    _ => {
+                        match expr.data.get_data().op.unwrap() {
+                            BinaryOpType::ADD => {
+                                self.instructions.push(CompilerInstruction::BinaryAdd(register, expr.start, expr.end));
+                            }
+                            BinaryOpType::SUB => {
+                                self.instructions.push(CompilerInstruction::BinarySub(register, expr.start, expr.end));
+                            }
+                            BinaryOpType::MUL => {
+                                self.instructions.push(CompilerInstruction::BinaryMul(register, expr.start, expr.end));
+                            }
+                            BinaryOpType::DIV => {
+                                self.instructions.push(CompilerInstruction::BinaryDiv(register, expr.start, expr.end));
+                            }
+                        }
                     }
                 }
             }

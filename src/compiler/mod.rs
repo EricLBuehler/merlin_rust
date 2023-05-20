@@ -13,7 +13,7 @@ pub enum CompilerInstruction {
     LoadConstR1(usize, Position, Position), //load const from consts[index] into R1
     LoadConstR2(usize, Position, Position), //load const from consts[index] into R2
     BinaryAdd(CompilerRegister, Position, Position), //Sum R1 (right), and R2 (left). Result in specified register
-    BinarySub(CompilerRegister, Position, Position), //SubtR1ct R2 (left), and R1 (right). Result in specified register
+    BinarySub(CompilerRegister, Position, Position), //Subtract R2 (left) from R1 (right). Result in specified register
     BinaryMul(CompilerRegister, Position, Position), //Multiply R1 (right), and R2 (left). Result in specified register
     BinaryDiv(CompilerRegister, Position, Position), //Divide R1 (right) by R2 (left). Result in specified register
 }

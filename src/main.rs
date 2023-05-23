@@ -78,8 +78,8 @@ fn main() {
     }
 
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
-    let mut interpreter = interpreter::Interpreter::new();
+    let mut vm = interpreter::VM::new(types);
 
-    interpreter.run_interpreter(bytecode);
+    vm.execute(bytecode);
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
 }

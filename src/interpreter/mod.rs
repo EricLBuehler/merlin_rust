@@ -1,8 +1,15 @@
+use std::collections::HashMap;
+
 // Interpret bytecode
 use crate::{objects::{Object, noneobject, utils::object_repr}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
 
-pub struct Interpreter {
+pub struct VM {
+    types: HashMap<String, Object>,
+}
+
+pub struct Interpreter<'a> {
     frames: Vec<Frame>,
+    vm: &'a VM,
 }
 
 #[derive(Clone)]
@@ -11,9 +18,21 @@ struct Frame {
     register2: Object,
 }
 
-impl Interpreter {
-    pub fn new() -> Interpreter {
-        Interpreter { frames: Vec::new() }
+impl VM {
+    pub fn new(types: HashMap<String, Object>) -> VM {
+        VM { types }
+    }
+
+    pub fn execute(&mut self, bytecode: Bytecode) -> Object {
+        let mut interpreter = Interpreter::new(self);
+        
+        return interpreter.run_interpreter(bytecode);
+    }
+}
+
+impl<'a> Interpreter<'a> {
+    pub fn new(vm: &'a VM) -> Interpreter<'a> {
+        Interpreter { frames: Vec::new(), vm, }
     }
 
     fn add_frame(&mut self) {

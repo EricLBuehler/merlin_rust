@@ -160,48 +160,145 @@ pub trait ObjectTrait {
     }
     fn get_bases(self: Arc<Self>) -> Vec<Object>; //list, not inherited
 
+
+    //true if type does not have internals and only uses its dict
+    fn is_dict_inherit(self: Arc<Self>) -> bool {
+        false
+    }
+
     //instantiation
     fn new(self: Arc<Self>, args: Object, kwargs: Object) -> MethodValue<Object, Object> { //cls, args, kwargs
-        /*/
-        for base in self.get_bases() {
-            let res = base.new(self, args, kwargs);
-            if !res.is_not_implemented() {
-                return res;
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.new(args.clone(), kwargs.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
             }
-            debug_assert!(!res.is_error());
         }
-        */
+        
         MethodValue::NotImplemented
     }
 
     //unary
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> { //self
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.repr();
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
     fn abs(self: Arc<Self>) -> MethodValue<Object, Object> { //self
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.abs();
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
     fn neg(self: Arc<Self>) -> MethodValue<Object, Object> { //self
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.neg();
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
 
     //binary
-    fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+    fn eq(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.eq(other.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
-    fn add(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+    fn add(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.add(other.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
-    fn sub(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+    fn sub(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.sub(other.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
-    fn mul(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+    fn mul(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.mul(other.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
-    fn div(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+    fn div(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.div(other.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
-    fn pow(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
+    fn pow(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
+        if self.clone().is_dict_inherit() {
+            for base in self.get_bases() {
+                let res = base.pow(other.clone());
+                if res.is_some() {
+                    return res;
+                }
+                debug_assert!(res.is_not_implemented());
+            }
+        }
+
         MethodValue::NotImplemented
     }
 }

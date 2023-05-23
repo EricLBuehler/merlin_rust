@@ -28,7 +28,7 @@ pub struct Position {
 
 impl Position {
     fn create_from_parts(startcol: usize, endcol: usize, line: usize) -> Position {
-        return Position { startcol, endcol, line};
+        Position { startcol, endcol, line}
     }
 }
 
@@ -50,7 +50,7 @@ impl<'a> Parser<'a> {
         if self.tokens.get(self.idx-1).is_none() {
             self.current = Token {
                 data: String::from("\0"),
-                tp: TokenType::EOF,
+                tp: TokenType::Eof,
                 line: 0,
                 startcol: 0,
                 endcol: 0,
@@ -58,33 +58,34 @@ impl<'a> Parser<'a> {
             return self.current.to_owned();
         }
         self.current = self.tokens.get(self.idx-1).unwrap().to_owned();
-        return self.current.to_owned();
+        
+        self.current.to_owned()
     }
 
     fn skip_newlines(&mut self) {
-        while self.current_is_type(TokenType::NEWLINE) {
+        while self.current_is_type(TokenType::Newline) {
             self.advance();
         }
     }
 
     fn current_is_type(&self, tp: TokenType) -> bool {
-        return self.current.tp  == tp;
+        self.current.tp  == tp
     }
 
     fn raise_error(&mut self, error: &str, errtp: ErrorType) -> !{
-        raise_error(error, errtp, &Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), &self.info);
+        raise_error(error, errtp, &Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), self.info);
     }
 
     fn get_precedence(&self) -> Precedence {
         match self.current.tp {
-            TokenType::PLUS | TokenType::HYPHEN => {
-                return Precedence::Sum;
+            TokenType::Plus | TokenType::Hyphen => {
+                Precedence::Sum
             },
-            TokenType::ASTERISK | TokenType::SLASH => {
-                return Precedence::Product;
+            TokenType::Asterisk | TokenType::Slash => {
+                Precedence::Product
             },
             _ => {
-                return Precedence::Lowest;
+                Precedence::Lowest
             },
         }
     }
@@ -95,40 +96,31 @@ impl<'a> Parser<'a> {
     pub fn generate_ast(&mut self) -> Vec<Node> {
         let mut nodes = Vec::new();
         
-        while !self.current_is_type(TokenType::EOF) {
+        while !self.current_is_type(TokenType::Eof) {
             nodes.push(self.parse_statement());
             self.skip_newlines();
         }
 
-        return nodes;
+        nodes
     }
 
     fn parse_statement(&mut self) -> Node {
-        let left: Node = match self.current.tp {
+        match self.current.tp {
             _ => {
                 self.expr(Precedence::Lowest)
-            }
-        };
-
-        return left;
-    }
-
-    fn is_atomic(&mut self) -> bool {
-        match self.current.tp {
-            TokenType::DECIMAL => {
-                return true;
-            }
-            _ => {
-                return false;
             }
         }
     }
 
+    fn is_atomic(&mut self) -> bool {
+        matches!(self.current.tp, TokenType::Decimal)
+    }
+
     fn atom(&mut self) -> Option<Node> {
-        return match self.current.tp {
-            TokenType::DECIMAL => Some(self.generate_decimal()),
+        match self.current.tp {
+            TokenType::Decimal => Some(self.generate_decimal()),
             _ => None,
-        };
+        }
     }
 
     fn expr(&mut self, precedence: Precedence) -> Node {
@@ -140,12 +132,12 @@ impl<'a> Parser<'a> {
         }
         
         self.advance();
-        while !self.current_is_type(TokenType::EOF) && (precedence as u32) < (self.get_precedence() as u32){
+        while !self.current_is_type(TokenType::Eof) && (precedence as u32) < (self.get_precedence() as u32){
             match self.current.tp {
-                TokenType::PLUS |
-                TokenType::HYPHEN |
-                TokenType::ASTERISK |
-                TokenType::SLASH => {
+                TokenType::Plus |
+                TokenType::Hyphen |
+                TokenType::Asterisk |
+                TokenType::Slash => {
                     left = self.generate_binary(left, self.get_precedence());
                 }
                 _ => {
@@ -156,32 +148,34 @@ impl<'a> Parser<'a> {
         if self.is_atomic() {
             self.raise_error("Invalid or unexpected token.", ErrorType::UnexpectedToken);
         }
-        return left;
+        
+        left
     }
 
     // ============ Atomic ==============
 
     fn generate_decimal(&mut self) -> Node {
-        return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                 Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::DECIMAL, 
-                                Box::new(nodes::DecimalNode {value: self.current.data.to_owned()}));
+                                nodes::NodeType::Decimal, 
+                                Box::new(nodes::DecimalNode {value: self.current.data.to_owned()}))
     }
 
     // ============ Expr ==============
 
     fn generate_binary(&mut self, left: Node, precedence: Precedence) -> Node {
         let tp = match self.current.tp {
-            TokenType::PLUS => nodes::BinaryOpType::ADD,
-            TokenType::HYPHEN => nodes::BinaryOpType::SUB,
-            TokenType::ASTERISK => nodes::BinaryOpType::MUL,
-            TokenType::SLASH => nodes::BinaryOpType::DIV,
+            TokenType::Plus => nodes::BinaryOpType::Add,
+            TokenType::Hyphen => nodes::BinaryOpType::Sub,
+            TokenType::Asterisk => nodes::BinaryOpType::Mul,
+            TokenType::Slash => nodes::BinaryOpType::Div,
             _ => {panic!()}};
             
         self.advance();
-        return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+        
+        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                 Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::BINARY, 
-                                Box::new(nodes::BinaryNode {left: left, right: self.expr(precedence), op: tp}));
+                                nodes::NodeType::Binary, 
+                                Box::new(nodes::BinaryNode {left, right: self.expr(precedence), op: tp}))
     }
 }

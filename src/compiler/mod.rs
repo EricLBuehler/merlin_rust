@@ -34,22 +34,22 @@ type Node = parser::nodes::Node;
 
 impl Compiler {
     pub fn new() -> Compiler {
-        return Compiler{instructions: Vec::new(), consts: Vec::new()};
+        Compiler{instructions: Vec::new(), consts: Vec::new()}
     }
 
     pub fn generate_bytecode(&mut self, ast: Vec<Node>) -> Bytecode {
         for head_node in ast {
             self.compile_statement(head_node);
         }
-        return Bytecode {instructions: self.instructions.clone(), consts: self.consts.clone()};
+        Bytecode {instructions: self.instructions.clone(), consts: self.consts.clone()}
     }
 
     fn compile_statement(&mut self, expr: Node) {
         match expr.tp {
-            NodeType::DECIMAL => {
+            NodeType::Decimal => {
                 self.compile_expr(&expr, CompilerRegister::NA);
             }
-            NodeType::BINARY => {
+            NodeType::Binary => {
                 self.compile_expr(&expr, CompilerRegister::R1);
             }
         }
@@ -57,7 +57,7 @@ impl Compiler {
 
     fn compile_expr(&mut self, expr: &Node, register: CompilerRegister) {
         match expr.tp {
-            NodeType::DECIMAL => {
+            NodeType::Decimal => {
                 let int = IntObject::from_str(expr.data.get_data().raw.get("value").unwrap().to_string());
                 
                 debug_assert!(int.is_some());
@@ -75,7 +75,7 @@ impl Compiler {
                     }
                 }
             }
-            NodeType::BINARY => {
+            NodeType::Binary => {
                 self.compile_expr(expr.data.get_data().nodes.get("left").unwrap(), CompilerRegister::R1);
                 self.compile_expr(expr.data.get_data().nodes.get("right").unwrap(), CompilerRegister::R2);
 
@@ -83,16 +83,16 @@ impl Compiler {
                     CompilerRegister::NA => {}
                     _ => {
                         match expr.data.get_data().op.unwrap() {
-                            BinaryOpType::ADD => {
+                            BinaryOpType::Add => {
                                 self.instructions.push(CompilerInstruction::BinaryAdd(register, expr.start, expr.end));
                             }
-                            BinaryOpType::SUB => {
+                            BinaryOpType::Sub => {
                                 self.instructions.push(CompilerInstruction::BinarySub(register, expr.start, expr.end));
                             }
-                            BinaryOpType::MUL => {
+                            BinaryOpType::Mul => {
                                 self.instructions.push(CompilerInstruction::BinaryMul(register, expr.start, expr.end));
                             }
-                            BinaryOpType::DIV => {
+                            BinaryOpType::Div => {
                                 self.instructions.push(CompilerInstruction::BinaryDiv(register, expr.start, expr.end));
                             }
                         }

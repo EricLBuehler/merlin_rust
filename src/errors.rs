@@ -29,7 +29,7 @@ pub fn raise_error(error: &str, errtp: ErrorType, pos: &crate::parser::Position,
     let snippet: String = format!("{}", String::from_utf8(lines.get(pos.line).unwrap().to_vec()).unwrap().blue());
     let mut arrows: String = String::new();
     for idx in 0..snippet.len() {
-        if (idx as usize)>=pos.startcol && (idx as usize)<pos.endcol {
+        if idx>=pos.startcol && idx<pos.endcol {
             arrows += "^";
         }
         else {

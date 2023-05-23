@@ -2,27 +2,27 @@
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum TokenType {
-    DECIMAL,
-    NEWLINE,
-    UNKNOWN,
-    PLUS,
-    EOF,
-    ASTERISK,
-    SLASH,
-    HYPHEN,
+    Decimal,
+    Newline,
+    Unknown,
+    Plus,
+    Eof,
+    Asterisk,
+    Slash,
+    Hyphen,
 }
 
 impl std::fmt::Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
        match *self {
-           TokenType::DECIMAL => write!(f, "DECIMAL"),
-           TokenType::NEWLINE => write!(f, "NEWLINE"),
-           TokenType::UNKNOWN => write!(f, "UNKNOWN"),
-           TokenType::PLUS => write!(f, "PLUS"),
-           TokenType::EOF => write!(f, "EOF"),
-           TokenType::ASTERISK => write!(f, "ASTERISK"),
-           TokenType::SLASH => write!(f, "SLASH"),
-           TokenType::HYPHEN => write!(f, "HYPHEN"),
+           TokenType::Decimal => write!(f, "Decimal"),
+           TokenType::Newline => write!(f, "Newline"),
+           TokenType::Unknown => write!(f, "UNKNOWN"),
+           TokenType::Plus => write!(f, "Plus"),
+           TokenType::Eof => write!(f, "Eof"),
+           TokenType::Asterisk => write!(f, "Asterisk"),
+           TokenType::Slash => write!(f, "Slash"),
+           TokenType::Hyphen => write!(f, "Hyphen"),
        }
     }
 }
@@ -45,43 +45,43 @@ impl<'a> Iterator for Lexer<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let cur: char = self.current.into();
 
-        if cur.is_digit(10) {
-            return Some(make_decimal(self));
+        if cur.is_ascii_digit() {
+            Some(make_decimal(self))
         }
         else if cur == '\n' {
-            return Some(add_char_token(self, cur, TokenType::NEWLINE));
+            Some(add_char_token(self, cur, TokenType::Newline))
         }
         else if cur == '#' {
             advance(self);
             while (self.current as char) != '\n' && (self.current as char) != '\0'{
                 advance(self);
             }
-            return self.next();
+            self.next()
         }
         else if cur.is_whitespace() {
             advance(self);
             while (self.current as char).is_whitespace(){
                 advance(self);
             }
-            return self.next();
+            self.next()
         }
         else if cur == '+' {
-            return Some(add_char_token(self, cur, TokenType::PLUS));
+            Some(add_char_token(self, cur, TokenType::Plus))
         }
         else if cur == '*' {
-            return Some(add_char_token(self, cur, TokenType::ASTERISK));
+            Some(add_char_token(self, cur, TokenType::Asterisk))
         }
         else if cur == '/' {
-            return Some(add_char_token(self, cur, TokenType::SLASH));
+            Some(add_char_token(self, cur, TokenType::Slash))
         }
         else if cur == '-' {
-            return Some(add_char_token(self, cur, TokenType::HYPHEN));
+            Some(add_char_token(self, cur, TokenType::Hyphen))
         }
         else if cur == '\0' {
-            return None;
+            None
         }
         else {
-            return Some(add_char_token(self, cur, TokenType::UNKNOWN));
+            Some(add_char_token(self, cur, TokenType::Unknown))
         }
     }
 }
@@ -102,7 +102,7 @@ impl std::fmt::Display for Token {
 }
 
 pub fn new<'a>(data: &'a [u8], info: &'a crate::fileinfo::FileInfo, kwds: Vec<String>) -> Lexer<'a> {
-    return Lexer {
+    Lexer {
         idx: 0,
         current: data[0],
         len: data.len(),
@@ -152,7 +152,8 @@ pub fn add_char_token(lexer: &mut Lexer, val: char, tp: TokenType) -> Token {
         endcol: lexer.col+1,
     };
     advance(lexer);
-    return res;
+    
+    res
 }
 
 
@@ -178,12 +179,11 @@ fn make_decimal(lexer: &mut Lexer) -> Token {
         i+=1;
     }
     
-    let tok = Token {
-        data: data,
-        tp: TokenType::DECIMAL,
+    Token {
+        data,
+        tp: TokenType::Decimal,
         line,
         startcol: start,
         endcol: end+1,
-    };
-    return tok;
+    }
 }

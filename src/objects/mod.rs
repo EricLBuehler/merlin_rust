@@ -1,5 +1,5 @@
-use std::{sync::{Arc, RwLock}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}, fmt::Display};
-use self::{typeobject::TypeType, intobject::IntType, boolobject::BoolType, stringobject::StringType, listobject::ListType};
+use std::{sync::{Arc, RwLock}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
+use self::{typeobject::TypeType, intobject::IntType, boolobject::BoolType, stringobject::StringType, listobject::ListType, noneobject::NoneType};
 
 pub mod utils;
 
@@ -8,6 +8,7 @@ pub mod intobject;
 pub mod boolobject;
 pub mod stringobject;
 pub mod listobject;
+pub mod noneobject;
 
 pub type Object = Arc<dyn ObjectTrait + Send + Sync>;
 
@@ -18,100 +19,80 @@ pub enum ObjectInternals {
     Int(i128),
     Str(String),
     Arr(Vec<Object>),
+    None,
 }
 
 impl ObjectInternals {
     pub fn is_no(&self) -> bool {
-        match self {
-            ObjectInternals::No => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, ObjectInternals::No)
     }
 
     pub fn is_bool(&self) -> bool {
-        match self {
-            ObjectInternals::Bool(_) => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, ObjectInternals::Bool(_))
     }
     pub fn get_bool(&self) -> Option<&bool> {
         match self {
             ObjectInternals::Bool(v) => {
-                return Some(v);
+                Some(v)
             }
             _ => {
-                return None;
+                None
             }
         }
     }
 
     pub fn is_int(&self) -> bool {
-        match self {
-            ObjectInternals::Int(_) => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, ObjectInternals::Int(_))
     }
     pub fn get_int(&self) -> Option<&i128> {
         match self {
             ObjectInternals::Int(v) => {
-                return Some(v);
+                Some(v)
             }
             _ => {
-                return None;
+                None
             }
         }
     }
 
     pub fn is_str(&self) -> bool {
-        match self {
-            ObjectInternals::Str(_) => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, ObjectInternals::Str(_))
     }
     pub fn get_str(&self) -> Option<&String> {
         match self {
             ObjectInternals::Str(v) => {
-                return Some(v);
+                Some(v)
             }
             _ => {
-                return None;
+                None
             }
         }
     }
 
     pub fn is_arr(&self) -> bool {
-        match self {
-            ObjectInternals::Arr(_) => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, ObjectInternals::Arr(_))
     }
     pub fn get_arr(&self) -> Option<&Vec<Object>> {
         match self {
             ObjectInternals::Arr(v) => {
-                return Some(v);
+                Some(v)
             }
             _ => {
-                return None;
+                None
+            }
+        }
+    }
+
+    pub fn is_none(&self) -> bool {
+        matches!(self, ObjectInternals::None)
+    }
+    pub fn get_none(&self) -> Option<()> {
+        match self {
+            ObjectInternals::None => {
+                Some(())
+            }
+            _ => {
+                None
             }
         }
     }
@@ -127,7 +108,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     pub fn unwrap(&self) -> T{
         match self {
             MethodValue::Some(v) => {
-                return v.clone();
+                v.clone()
             }
             MethodValue::NotImplemented => {
                 panic!("Attempted to unwrap MethodValue with no value (got NotImplemented variant). ")
@@ -147,88 +128,81 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
                 panic!("Attempted to unwrap MethodValue that is not an error (got NotImplemented variant). ")
             }
             MethodValue::Error(v) => {
-                return v.clone()
+                v.clone()
             }
         }
     }
 
     pub fn is_not_implemented(&self) -> bool {
-        if let MethodValue::NotImplemented = self {
-            return true;
-        }
-        return false;
+        matches!(self, MethodValue::NotImplemented)
     }
 
     pub fn is_error(&self) -> bool {
-        match self {
-            MethodValue::Error(_) => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, MethodValue::Error(_))
     }
 
     pub fn is_some(&self) -> bool {
-        match self {
-            MethodValue::Some(_) => {
-                return true;
-            }
-            _ => {
-                return false;
-            }
-        }
+        matches!(self, MethodValue::Some(_))
     }
 }
+
 
 pub trait ObjectTrait {
     fn get_name(self: Arc<Self>) -> String; //self
     fn get_raw(self: Arc<Self>) -> ObjectInternals { //self
-        return ObjectInternals::No;
+        ObjectInternals::No
     }
     fn get_type(self: Arc<Self>) -> Object; //self
     fn get_typeid(self: Arc<Self>) -> u64 { //self
         let mut hasher = DefaultHasher::new();
         self.get_name().hash(&mut hasher);
-        return hasher.finish();
+        hasher.finish()
     }
-    fn get_bases(self: Arc<Self>) -> Object; //list, not inherited
+    fn get_bases(self: Arc<Self>) -> Vec<Object>; //list, not inherited
 
     //instantiation
-    fn new(self: Arc<Self>, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> { //cls, args, kwargs
-        return MethodValue::NotImplemented;
+    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> MethodValue<Object, Object> { //cls, args, kwargs
+        /*/
+        for base in self.get_bases() {
+            let res = base.new(self, args, kwargs);
+            if !res.is_not_implemented() {
+                return res;
+            }
+            debug_assert!(!res.is_error());
+        }
+        */
+        MethodValue::NotImplemented
     }
 
     //unary
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> { //self
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn abs(self: Arc<Self>) -> MethodValue<Object, Object> { //self
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn neg(self: Arc<Self>) -> MethodValue<Object, Object> { //self
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
 
     //binary
     fn eq(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn add(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn sub(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn mul(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn div(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
     fn pow(self: Arc<Self>, _other: Object) -> MethodValue<Object, Object> { //self, other
-        return MethodValue::NotImplemented;
+        MethodValue::NotImplemented
     }
 }
 
@@ -249,6 +223,7 @@ pub fn init_types() -> HashMap<String, Object> {
     BoolType::init();
     StringType::init();
     ListType::init();
+    NoneType::init();
 
     let mut types = HashMap::new();
     for key in TYPES.read().unwrap().keys() {
@@ -256,5 +231,5 @@ pub fn init_types() -> HashMap<String, Object> {
         types.insert(key.clone(), typ);
     }
 
-    return types;
+    types
 }

@@ -11,14 +11,14 @@ pub struct Node {
 
 impl Node {
     pub fn new(start: Position, end: Position, tp: NodeType, data: Box<dyn NodeData>) -> Node{
-        return Node {start, end, tp, data};
+        Node {start, end, tp, data}
     } 
 }
 
 #[derive(Debug)]
 pub enum NodeType {
-    DECIMAL,
-    BINARY,
+    Decimal,
+    Binary,
 }
 
 #[derive(Debug)]
@@ -40,7 +40,7 @@ impl Debug for dyn NodeData {
 
 impl<'a> NodeValue<'a> {
     fn new() -> NodeValue<'a> {
-        return NodeValue {raw: HashMap::new(), nodes: HashMap::new(), op: None};
+        NodeValue {raw: HashMap::new(), nodes: HashMap::new(), op: None}
     }
 }
 
@@ -55,7 +55,8 @@ impl NodeData for DecimalNode {
     fn get_data(&self) -> NodeValue {
         let mut value = NodeValue::new();
         value.raw.insert(String::from("value"), self.value.to_owned());
-        return value;
+        
+        value
     }
 }
 
@@ -63,10 +64,10 @@ impl NodeData for DecimalNode {
 
 #[derive(Debug, Copy, Clone)]
 pub enum BinaryOpType {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
+    Add,
+    Sub,
+    Mul,
+    Div,
 }
 
 pub struct BinaryNode {
@@ -81,6 +82,7 @@ impl NodeData for BinaryNode {
         value.nodes.insert(String::from("left"), &self.left);
         value.nodes.insert(String::from("right"), &self.right);
         value.op = Some(self.op);
-        return value;
+        
+        value
     }
 }

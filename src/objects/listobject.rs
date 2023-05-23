@@ -10,16 +10,16 @@ pub struct ListType {
 
 impl ObjectTrait for ListType {
     fn get_name(self: Arc<Self>) -> String {
-        return String::from("list");
+        String::from("list")
     }
     fn get_type(self: Arc<Self>) -> Object {
-        return self.tp.clone();
+        self.tp.clone()
     }
-    fn get_bases(self: Arc<Self>) -> Object {
-        return ListObject::from(vec![get_type("type")]);
+    fn get_bases(self: Arc<Self>) -> Vec<Object> {
+        vec![get_type("type")]
     }
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        return MethodValue::Some(StringObject::from("<class 'str'>".to_string()));
+        MethodValue::Some(StringObject::from("<class 'str'>".to_string()))
     }
 }
 
@@ -39,24 +39,22 @@ pub struct ListObject {
 
 impl ListObject {
     pub fn from(value: Vec<Object>) -> Object {
-        return Arc::new(ListObject { tp: get_type("str"), value });
+        Arc::new(ListObject { tp: get_type("str"), value })
     }
 }
 
 impl ObjectTrait for ListObject {
     fn get_name(self: Arc<Self>) -> String {
-        let strong = self.tp.clone();
-        return strong.get_name();
+        self.tp.clone().get_name()
     }
     fn get_raw(self: Arc<Self>) -> ObjectInternals {
-        return ObjectInternals::Arr(self.value.clone());
+        ObjectInternals::Arr(self.value.clone())
     }
     fn get_type(self: Arc<Self>) -> Object {
-        return self.tp.clone();
+        self.tp.clone()
     }
-    fn get_bases(self: Arc<Self>) -> Object {
-        let strong = self.tp.clone();
-        return strong.get_bases();
+    fn get_bases(self: Arc<Self>) -> Vec<Object> {
+        self.tp.clone().get_bases()
     }
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
         let mut res = String::from("[");
@@ -73,6 +71,6 @@ impl ObjectTrait for ListObject {
             res.pop();
         }
         res += "]";
-        return MethodValue::Some(StringObject::from(res));
+        MethodValue::Some(StringObject::from(res))
     }
 }

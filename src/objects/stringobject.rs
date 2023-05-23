@@ -1,5 +1,4 @@
 use std::{sync::Arc};
-use crate::objects::listobject::ListObject;
 
 use super::{Object, ObjectTrait, get_type, add_type, MethodValue, ObjectInternals};
 
@@ -10,16 +9,16 @@ pub struct StringType {
 
 impl ObjectTrait for StringType {
     fn get_name(self: Arc<Self>) -> String {
-        return String::from("str");
+        String::from("str")
     }
     fn get_type(self: Arc<Self>) -> Object {
-        return self.tp.clone();
+        self.tp.clone()
     }
-    fn get_bases(self: Arc<Self>) -> Object {
-        return ListObject::from(vec![get_type("type")]);
+    fn get_bases(self: Arc<Self>) -> Vec<Object> {
+        vec![get_type("type")]
     }
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        return MethodValue::Some(StringObject::from("<class 'str'>".to_string()));
+        MethodValue::Some(StringObject::from("<class 'str'>".to_string()))
     }
 }
 
@@ -45,20 +44,18 @@ impl StringObject {
 
 impl ObjectTrait for StringObject {
     fn get_name(self: Arc<Self>) -> String {
-        let strong = self.tp.clone();
-        return strong.get_name();
+        self.tp.clone().get_name()
     }
     fn get_raw(self: Arc<Self>) -> ObjectInternals {
-        return ObjectInternals::Str(self.value.clone());
+        ObjectInternals::Str(self.value.clone())
     }
     fn get_type(self: Arc<Self>) -> Object {
-        return self.tp.clone();
+        self.tp.clone()
     }
-    fn get_bases(self: Arc<Self>) -> Object {
-        let strong = self.tp.clone();
-        return strong.get_bases();
+    fn get_bases(self: Arc<Self>) -> Vec<Object> {
+        self.tp.clone().get_bases()
     }
     fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        return MethodValue::Some(self.clone())
+        MethodValue::Some(self)
     }
 }

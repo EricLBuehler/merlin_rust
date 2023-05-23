@@ -1,132 +1,120 @@
 use std::{sync::Arc};
-use crate::objects::stringobject::StringObject;
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue, ObjectInternals};
+use crate::objects::is_instance;
 
-#[derive(Clone)]
-pub struct IntType {
-    tp: Object,
+use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject};
+
+pub fn int_from(raw: i128) -> Object {
+    let mut tp = create_object_from_type(get_type("int"));
+    let mut refr = Arc::make_mut(&mut tp);
+    refr.internals = ObjectInternals::Int(raw);
+    tp
 }
-
-impl ObjectTrait for IntType {
-    fn get_name(self: Arc<Self>) -> String {
-        String::from("int")
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        vec![get_type("type")]
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(StringObject::from("<class 'int'>".to_string()))
-    }
-}
-
-impl IntType {
-    pub fn init(){
-        let tp = Arc::new(IntType{tp: get_type("type")});
-        add_type("int", tp);
-    }
+pub fn int_from_str(raw: String) -> MethodValue<Object, Object> {
+    let convert = raw.parse::<i128>();
+    debug_assert!(convert.is_ok());
+    let mut tp = create_object_from_type(get_type("int"));
+    let mut refr = Arc::make_mut(&mut tp);
+    refr.internals = ObjectInternals::Int(convert.unwrap());
+    MethodValue::Some(tp)
 }
 
 
-#[derive(Clone)]
-pub struct IntObject {
-    tp: Object,
-    value: i128,
+fn int_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+    unimplemented!();
 }
 
-impl IntObject {
-    pub fn from(value: i128) -> Object {
-        return Arc::new(IntObject { tp: get_type("int"), value});
-    }
-    pub fn from_str(value: String) -> MethodValue<Object, Object> {
-        let convert = value.parse::<i128>();
-        debug_assert!(convert.is_ok());
-        return MethodValue::Some(Arc::new(IntObject { tp: get_type("int"), value: convert.unwrap()}));
-    }
+fn int_repr(selfv: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(stringobject::string_from(selfv.internals.get_int().unwrap().to_string()))
+}
+fn int_abs(selfv: Object) -> MethodValue<Object, Object> {
+    let res = selfv.internals.get_int().unwrap().checked_abs();
+    debug_assert!(res.is_some());
+
+    MethodValue::Some(int_from(res.unwrap()))
+}
+fn int_eq(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
+    MethodValue::Some(boolobject::bool_from(selfv.internals.get_int().unwrap() == other.internals.get_int().unwrap()))
 }
 
-impl ObjectTrait for IntObject {
-    fn get_name(self: Arc<Self>) -> String {
-        self.tp.clone().get_name()
-    }
-    fn get_raw(self: Arc<Self>) -> ObjectInternals {
-        ObjectInternals::Int(self.value)
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        self.tp.clone().get_bases()
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(StringObject::from(self.value.to_string()))
-    }
-    fn abs(self: Arc<Self>) -> MethodValue<Object, Object> {
-        let res = self.value.checked_abs();
-        debug_assert!(res.is_some());
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
-    fn neg(self: Arc<Self>) -> MethodValue<Object, Object> {
-        let res = self.value.checked_neg();
-        debug_assert!(res.is_some());
+fn int_neg(selfv: Object) -> MethodValue<Object, Object> {
+    let res = selfv.internals.get_int().unwrap().checked_neg();
+    debug_assert!(res.is_some());
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
-    fn add(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
-        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+    MethodValue::Some(int_from(res.unwrap()))
+}
+fn int_add(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
+    let otherv = *other.internals.get_int().unwrap();
 
-        let otherv = *other.get_raw().get_int().unwrap();
+    let res = selfv.internals.get_int().unwrap().checked_add(otherv);
+    debug_assert!(res.is_some());
 
-        let res = self.value.checked_add(otherv);
-        debug_assert!(res.is_some());
+    MethodValue::Some(int_from(res.unwrap()))
+}
+fn int_sub(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
-    fn sub(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
-        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+    let otherv = *other.internals.get_int().unwrap();
 
-        let otherv = *other.get_raw().get_int().unwrap();
+    let res = selfv.internals.get_int().unwrap().checked_sub(otherv);
+    debug_assert!(res.is_some());
 
-        let res = self.value.checked_sub(otherv);
-        debug_assert!(res.is_some());
+    MethodValue::Some(int_from(res.unwrap()))
+}
+fn int_mul(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
+    let otherv = *other.internals.get_int().unwrap();
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
-    fn mul(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
-        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+    let res = selfv.internals.get_int().unwrap().checked_mul(otherv);
+    debug_assert!(res.is_some());
 
-        let otherv = *other.get_raw().get_int().unwrap();
+    MethodValue::Some(int_from(res.unwrap()))
+}
+fn int_div(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
+    let otherv = *other.internals.get_int().unwrap();
+    debug_assert!(otherv != 0);
 
-        let res = self.value.checked_mul(otherv);
-        debug_assert!(res.is_some());
+    let res = selfv.internals.get_int().unwrap().checked_div(otherv);
+    debug_assert!(res.is_some());
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
-    fn div(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
-        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+    MethodValue::Some(int_from(res.unwrap()))
+}
+fn int_pow(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
+    let otherv = *other.internals.get_int().unwrap();
 
-        let otherv = *other.get_raw().get_int().unwrap();
-        debug_assert!(otherv != 0);
+    debug_assert!(otherv < std::u32::MAX as i128);
 
-        let res = self.value.checked_div(otherv);
-        debug_assert!(res.is_some());
+    let res = selfv.internals.get_int().unwrap().checked_pow(otherv as u32);
+    debug_assert!(res.is_some());
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
-    fn pow(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
-        debug_assert!(self.clone().get_typeid() == other.clone().get_typeid());
+    MethodValue::Some(int_from(res.unwrap()))
+}
 
-        let otherv = *other.get_raw().get_int().unwrap();
-    
-        debug_assert!(otherv < std::u32::MAX as i128);
+pub fn init(){
+    let tp: Arc<RawObject> = Arc::new( RawObject{
+        tp: super::ObjectType::Other(get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("int"),
+        bases: vec![super::ObjectBase::Other(get_type("object"))],
 
-        let res = self.value.checked_pow(otherv as u32);
-        debug_assert!(res.is_some());
+        new: Some(int_new),
 
-        MethodValue::Some(Self::from(res.unwrap()))
-    }
+        repr: Some(int_repr),
+        abs: Some(int_abs),
+        neg: Some(int_neg),
+
+        eq: Some(int_eq),
+        add: Some(int_add),
+        sub: Some(int_sub),
+        mul: Some(int_mul),
+        div: Some(int_div),
+        pow: Some(int_pow),
+    });
+
+    add_type(&tp.clone().typename, tp);
 }

@@ -1,61 +1,42 @@
 use std::{sync::Arc};
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue, ObjectInternals};
+use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type};
 
-#[derive(Clone)]
-pub struct StringType {
-    tp: Object,
+
+pub fn string_from(raw: String) -> Object {
+    let mut tp = create_object_from_type(get_type("str"));
+    let mut refr = Arc::make_mut(&mut tp);
+    refr.internals = ObjectInternals::Str(raw);
+    tp
 }
 
-impl ObjectTrait for StringType {
-    fn get_name(self: Arc<Self>) -> String {
-        String::from("str")
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        vec![get_type("type")]
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(StringObject::from("<class 'str'>".to_string()))
-    }
+fn string_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+    unimplemented!();
+}
+fn string_repr(selfv: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(selfv)
 }
 
-impl StringType {
-    pub fn init(){
-        let tp = Arc::new(StringType{tp: get_type("type")});
-        add_type("str", tp);
-    }
-}
+pub fn init(){
+    let tp: Arc<RawObject> = Arc::new( RawObject{
+        tp: super::ObjectType::Other(get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("str"),
+        bases: vec![super::ObjectBase::Other(get_type("object"))],
 
+        new: Some(string_new),
 
-#[derive(Clone)]
-pub struct StringObject {
-    tp: Object,
-    value: String,
-}
+        repr: Some(string_repr),
+        abs: None,
+        neg: None,
 
-impl StringObject {
-    pub fn from(value: String) -> Object {
-        return Arc::new(StringObject { tp: get_type("str"), value});
-    }
-}
+        eq: None,
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+    });
 
-impl ObjectTrait for StringObject {
-    fn get_name(self: Arc<Self>) -> String {
-        self.tp.clone().get_name()
-    }
-    fn get_raw(self: Arc<Self>) -> ObjectInternals {
-        ObjectInternals::Str(self.value.clone())
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        self.tp.clone().get_bases()
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(self)
-    }
+    add_type(&tp.clone().typename, tp);
 }

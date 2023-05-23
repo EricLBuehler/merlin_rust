@@ -1,61 +1,39 @@
 use std::{sync::Arc};
-use crate::objects::stringobject::StringObject;
+use crate::objects::stringobject;
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue, ObjectInternals};
+use super::{RawObject, Object, get_type, add_type, MethodValue, create_object_from_type};
 
-#[derive(Clone)]
-pub struct NoneType {
-    tp: Object,
+pub fn none_from() -> Object {
+    create_object_from_type(get_type("NoneType"))
 }
 
-impl ObjectTrait for NoneType {
-    fn get_name(self: Arc<Self>) -> String {
-        String::from("NoneType")
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        vec![get_type("type")]
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(StringObject::from("<class 'NoneType'>".to_string()))
-    }
+fn none_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+    unimplemented!();
+}
+fn none_repr(_selfv: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(stringobject::string_from(String::from("None")))
 }
 
-impl NoneType {
-    pub fn init(){
-        let tp = Arc::new(NoneType{tp: get_type("type")});
-        add_type("NoneType", tp);
-    }
-}
+pub fn init(){
+    let tp: Arc<RawObject> = Arc::new( RawObject{
+        tp: super::ObjectType::Other(get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("NoneType"),
+        bases: vec![super::ObjectBase::Other(get_type("object"))],
 
+        new: Some(none_new),
 
-#[derive(Clone)]
-pub struct NoneObject {
-    tp: Object,
-}
+        repr: Some(none_repr),
+        abs: None,
+        neg: None,
 
-impl NoneObject {
-    pub fn from() -> Object {
-        Arc::new(NoneObject { tp: get_type("NoneType") })
-    }
-}
+        eq: None,
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+    });
 
-impl ObjectTrait for NoneObject {
-    fn get_name(self: Arc<Self>) -> String {
-        self.tp.clone().get_name()
-    }
-    fn get_raw(self: Arc<Self>) -> ObjectInternals {
-        ObjectInternals::None
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        self.tp.clone().get_bases()
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        return MethodValue::Some(StringObject::from("None".to_string()));
-    }
+    add_type(&tp.clone().typename, tp);
 }

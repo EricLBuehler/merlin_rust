@@ -57,11 +57,11 @@ fn main() {
 
     if cfg!(debug_assertions) {
         println!("\n===== Running type tests =====");
-        for base in types.get("str").unwrap().clone().get_bases() {
-            println!("{}", objects::utils::object_repr(&base));
+        for base in &types.get("str").unwrap().clone().bases {
+            println!("{}", objects::utils::object_repr(&base.get_value()));
         }
-        println!("{}", objects::utils::object_repr(&objects::intobject::IntObject::from(1234567890)));
-        println!("{}", objects::utils::object_repr(&(objects::intobject::IntObject::from(3)).pow(objects::intobject::IntObject::from(25)).unwrap()));
+        println!("{}", objects::utils::object_repr(&objects::intobject::int_from(1234567890)));
+        println!("{}", objects::utils::object_repr(&(objects::intobject::int_from(3).pow.unwrap())(objects::intobject::int_from(3), objects::intobject::int_from(25)).unwrap()));
         println!("===== Done with type tests =====");
     }
 

@@ -1,6 +1,6 @@
 //Generate bytecode from AST
 
-use crate::{objects::{Object, intobject::IntObject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}};
+use crate::{objects::{Object, intobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}};
 
 pub struct Compiler {
     instructions: Vec<CompilerInstruction>,
@@ -58,7 +58,7 @@ impl Compiler {
     fn compile_expr(&mut self, expr: &Node, register: CompilerRegister) {
         match expr.tp {
             NodeType::Decimal => {
-                let int = IntObject::from_str(expr.data.get_data().raw.get("value").unwrap().to_string());
+                let int = intobject::int_from_str(expr.data.get_data().raw.get("value").unwrap().to_string());
                 
                 debug_assert!(int.is_some());
                 

@@ -1,34 +1,38 @@
 use std::{sync::Arc};
-use crate::objects::stringobject::StringObject;
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue, boolobject::BoolObject};
+use super::{Object, add_type, MethodValue, boolobject, stringobject, RawObject, get_type, get_typeid, create_object_from_type};
 
 
-#[derive(Clone)]
-pub struct TypeType {
+fn type_new(selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(create_object_from_type(selfv))
+}
+fn type_repr(selfv: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(stringobject::string_from(format!("<class '{}'>", selfv.typename)))
+}
+fn type_eq(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(boolobject::bool_from(get_typeid(selfv) == get_typeid(other)))
 }
 
-impl ObjectTrait for TypeType {
-    fn get_name(self: Arc<Self>) -> String {
-        String::from("type")
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        vec![get_type("types")]
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(StringObject::from("<class 'type'>".to_string()))
-    }
-    fn eq(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> {
-        MethodValue::Some(BoolObject::from(self.get_typeid() == other.get_typeid()))
-    }
-}
+pub fn init(){
+    let tp: Arc<RawObject> = Arc::new( RawObject{
+        tp: super::ObjectType::Type,
+        internals: super::ObjectInternals::No,
+        typename: String::from("type"),
+        bases: vec![super::ObjectBase::Other(get_type("object"))],
 
-impl TypeType {
-    pub fn init(){
-        let tp = Arc::new(TypeType{});
-        add_type("type", tp);
-    }
+        new: Some(type_new),
+
+        repr: Some(type_repr),
+        abs: None,
+        neg: None,
+
+        eq: Some(type_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+    });
+
+    add_type(&tp.clone().typename, tp);
 }

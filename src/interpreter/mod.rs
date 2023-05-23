@@ -17,7 +17,7 @@ impl Interpreter {
     }
 
     fn add_frame(&mut self) {
-        self.frames.push(Frame { register1: noneobject::NoneObject::from(), register2: noneobject::NoneObject::from() })
+        self.frames.push(Frame { register1: noneobject::none_from(), register2: noneobject::none_from() })
     }
 
     fn assign_to_register(&mut self, value: Object, register: CompilerRegister) {
@@ -61,7 +61,8 @@ impl Interpreter {
                 }
                 CompilerInstruction::BinaryAdd(out, _start, _end) => {
                     let last = self.frames.last().unwrap();
-                    let res = last.register1.clone().add(last.register2.clone());
+                    debug_assert!(last.register1.clone().add.is_some());
+                    let res = (last.register1.clone().add.unwrap())(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
@@ -69,7 +70,8 @@ impl Interpreter {
                 }
                 CompilerInstruction::BinarySub(out, _start, _end) => {
                     let last = self.frames.last().unwrap();
-                    let res = last.register1.clone().sub(last.register2.clone());
+                    debug_assert!(last.register1.clone().sub.is_some());
+                    let res = (last.register1.clone().sub.unwrap())(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
@@ -77,7 +79,8 @@ impl Interpreter {
                 }
                 CompilerInstruction::BinaryMul(out, _start, _end) => {
                     let last = self.frames.last().unwrap();
-                    let res = last.register1.clone().mul(last.register2.clone());
+                    debug_assert!(last.register1.clone().mul.is_some());
+                    let res = (last.register1.clone().mul.unwrap())(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
@@ -85,7 +88,8 @@ impl Interpreter {
                 }
                 CompilerInstruction::BinaryDiv(out, _start, _end) => {
                     let last = self.frames.last().unwrap();
-                    let res = last.register1.clone().div(last.register2.clone());
+                    debug_assert!(last.register1.clone().div.is_some());
+                    let res = (last.register1.clone().div.unwrap())(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
@@ -94,6 +98,6 @@ impl Interpreter {
             }
         }
 
-        return noneobject::NoneObject::from();
+        return noneobject::none_from();
     }
 }

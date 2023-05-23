@@ -1,8 +1,9 @@
 use std::{sync::{Arc, RwLock}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
-use self::{typeobject::TypeType, intobject::IntType, boolobject::BoolType, stringobject::StringType, listobject::ListType, noneobject::NoneType};
+
 
 pub mod utils;
 
+pub mod objectobject;
 pub mod typeobject;
 pub mod intobject;
 pub mod boolobject;
@@ -10,10 +11,77 @@ pub mod stringobject;
 pub mod listobject;
 pub mod noneobject;
 
-pub type Object = Arc<dyn ObjectTrait + Send + Sync>;
+#[derive(Clone)]
+pub enum ObjectType {
+    Type,
+    Other(Object)
+}
+
+impl ObjectType {
+    pub fn is_type(&self) -> bool {
+        matches!(self, ObjectType::Type)
+    }
+    pub fn get_value(&self) -> Object {
+        match self {
+            ObjectType::Other(v) => {
+                return v.clone();
+            }
+            _ => {
+                let tp = get_type("type");
+                return tp;
+            }
+        }
+    }
+}
 
 #[derive(Clone)]
+pub enum ObjectBase {
+    Object,
+    Other(Object)
+}
+
+impl ObjectBase {
+    pub fn is_object(&self) -> bool {
+        matches!(self, ObjectBase::Object)
+    }
+    pub fn get_value(&self) -> Object {
+        match self {
+            ObjectBase::Other(v) => {
+                return v.clone();
+            }
+            _ => {
+                let tp = get_type("object");
+                return tp;
+            }
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct RawObject {
+    pub tp: ObjectType,
+    pub internals: ObjectInternals,
+    pub typename: String,
+    pub bases: Vec<ObjectBase>,
+
+    pub new: Option<fn(Object, Object, Object) -> MethodValue<Object, Object>>, //self, args, kwargs
+    
+    pub repr: Option<fn(Object,) -> MethodValue<Object, Object>>, //self
+    pub abs: Option<fn(Object) -> MethodValue<Object, Object>>, //self, other
+    pub neg: Option<fn(Object) -> MethodValue<Object, Object>>, //self, other
+
+    pub eq: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub add: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub sub: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub mul: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub div: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub pow: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+}
+pub type Object = Arc<RawObject>;
+
+#[derive(Clone, Default)]
 pub enum ObjectInternals {
+    #[default]
     No,
     Bool(bool),
     Int(i128),
@@ -146,181 +214,44 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     }
 }
 
-
-pub trait ObjectTrait {
-    fn get_name(self: Arc<Self>) -> String; //self
-    fn get_raw(self: Arc<Self>) -> ObjectInternals { //self
-        ObjectInternals::No
-    }
-    fn get_type(self: Arc<Self>) -> Object; //self
-    fn get_typeid(self: Arc<Self>) -> u64 { //self
-        let mut hasher = DefaultHasher::new();
-        self.get_name().hash(&mut hasher);
-        hasher.finish()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object>; //list, not inherited
-
-
-    //true if type does not have internals and only uses its dict
-    fn is_dict_inherit(self: Arc<Self>) -> bool {
-        false
-    }
-
-    //instantiation
-    fn new(self: Arc<Self>, args: Object, kwargs: Object) -> MethodValue<Object, Object> { //cls, args, kwargs
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.new(args.clone(), kwargs.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-        
-        MethodValue::NotImplemented
-    }
-
-    //unary
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> { //self
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.repr();
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn abs(self: Arc<Self>) -> MethodValue<Object, Object> { //self
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.abs();
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn neg(self: Arc<Self>) -> MethodValue<Object, Object> { //self
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.neg();
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-
-    //binary
-    fn eq(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.eq(other.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn add(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.add(other.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn sub(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.sub(other.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn mul(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.mul(other.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn div(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.div(other.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-    fn pow(self: Arc<Self>, other: Object) -> MethodValue<Object, Object> { //self, other
-        if self.clone().is_dict_inherit() {
-            for base in self.get_bases() {
-                let res = base.pow(other.clone());
-                if res.is_some() {
-                    return res;
-                }
-                debug_assert!(res.is_not_implemented());
-            }
-        }
-
-        MethodValue::NotImplemented
-    }
-}
-
 lazy_static! {
     pub static ref TYPES: RwLock<HashMap<String, Object>> = RwLock::new(HashMap::new());
 }
 
 pub fn get_type(key: &str) -> Object {
-    return TYPES.read().unwrap().get(key).unwrap().clone();
+    TYPES.read().unwrap().get(key).unwrap().clone()
 }
 fn add_type(key: &str, obj: Object) {
     TYPES.write().unwrap().insert(key.to_string(), obj);
 }
 
+fn create_object_from_type(tp: Object) -> Object {
+    let mut tp = tp.clone();
+    let alt = tp.clone();
+    
+    let mut refr = Arc::make_mut(&mut tp);
+    refr.tp = ObjectType::Other(alt);
+    tp
+}
+
+fn get_typeid(selfv: Object) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    selfv.typename.hash(&mut hasher);
+    hasher.finish()
+}
+
+fn is_instance(selfv: &Object, other: &Object) -> bool {
+    return get_typeid(selfv.clone()) == get_typeid(other.clone());
+}
+
 pub fn init_types() -> HashMap<String, Object> {
-    TypeType::init();
-    IntType::init();
-    BoolType::init();
-    StringType::init();
-    ListType::init();
-    NoneType::init();
+    objectobject::init();
+    typeobject::init();
+    intobject::init();
+    boolobject::init();
+    stringobject::init();
+    listobject::init();
+    noneobject::init();
 
     let mut types = HashMap::new();
     for key in TYPES.read().unwrap().keys() {

@@ -1,62 +1,43 @@
 use std::{sync::Arc};
-use crate::objects::stringobject::StringObject;
+use crate::objects::stringobject;
 
-use super::{Object, ObjectTrait, get_type, add_type, MethodValue, ObjectInternals};
+use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type};
 
-#[derive(Clone)]
-pub struct BoolType {
-    tp: Object,
+
+pub fn bool_from(raw: bool) -> Object {
+    let mut tp = create_object_from_type(get_type("bool"));
+    let mut refr = Arc::make_mut(&mut tp);
+    refr.internals = ObjectInternals::Bool(raw);
+    tp
 }
 
-impl ObjectTrait for BoolType {
-    fn get_name(self: Arc<Self>) -> String {
-        String::from("bool")
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        vec![get_type("type")]
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        return MethodValue::Some(StringObject::from("<class 'bool'>".to_string()));
-    }
+fn bool_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+    unimplemented!();
+}
+fn bool_repr(selfv: Object) -> MethodValue<Object, Object> {
+    MethodValue::Some(stringobject::string_from(selfv.internals.get_bool().unwrap().to_string()))
 }
 
-impl BoolType {
-    pub fn init(){
-        let tp = Arc::new(BoolType{tp: get_type("type")});
-        add_type("bool", tp);
-    }
-}
+pub fn init(){
+    let tp: Arc<RawObject> = Arc::new( RawObject{
+        tp: super::ObjectType::Other(get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("bool"),
+        bases: vec![super::ObjectBase::Other(get_type("object"))],
 
+        new: Some(bool_new),
 
-#[derive(Clone)]
-pub struct BoolObject {
-    tp: Object,
-    value: bool,
-}
+        repr: Some(bool_repr),
+        abs: None,
+        neg: None,
 
-impl BoolObject {
-    pub fn from(value: bool) -> Object {
-        Arc::new(BoolObject { tp: get_type("bool"), value})
-    }
-}
+        eq: None,
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+    });
 
-impl ObjectTrait for BoolObject {
-    fn get_name(self: Arc<Self>) -> String {
-        self.tp.clone().get_name()
-    }
-    fn get_raw(self: Arc<Self>) -> ObjectInternals {
-        ObjectInternals::Bool(self.value)
-    }
-    fn get_type(self: Arc<Self>) -> Object {
-        self.tp.clone()
-    }
-    fn get_bases(self: Arc<Self>) -> Vec<Object> {
-        self.tp.clone().get_bases()
-    }
-    fn repr(self: Arc<Self>) -> MethodValue<Object, Object> {
-        MethodValue::Some(StringObject::from(self.value.to_string()))
-    }
+    add_type(&tp.clone().typename, tp);
 }

@@ -17,10 +17,8 @@ pub enum ObjectType {
     Other(Object)
 }
 
+#[allow(dead_code)]
 impl ObjectType {
-    pub fn is_type(&self) -> bool {
-        matches!(self, ObjectType::Type)
-    }
     pub fn get_value(&self) -> Object {
         match self {
             ObjectType::Other(v) => {
@@ -41,9 +39,6 @@ pub enum ObjectBase {
 }
 
 impl ObjectBase {
-    pub fn is_object(&self) -> bool {
-        matches!(self, ObjectBase::Object)
-    }
     pub fn get_value(&self) -> Object {
         match self {
             ObjectBase::Other(v) => {
@@ -80,6 +75,7 @@ pub struct RawObject {
 pub type Object = Arc<RawObject>;
 
 #[derive(Clone, Default)]
+#[allow(dead_code)]
 pub enum ObjectInternals {
     #[default]
     No,
@@ -90,6 +86,7 @@ pub enum ObjectInternals {
     None,
 }
 
+#[allow(dead_code)]
 impl ObjectInternals {
     pub fn is_no(&self) -> bool {
         matches!(self, ObjectInternals::No)
@@ -172,6 +169,7 @@ pub enum MethodValue<T, E>{
     Error(E),
 }
 
+#[allow(dead_code)]
 impl<T: Clone, E: Clone> MethodValue<T, E> {
     pub fn unwrap(&self) -> T{
         match self {

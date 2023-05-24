@@ -62,6 +62,23 @@ impl<'a> Parser<'a> {
         self.current.to_owned()
     }
 
+    fn reverse(&mut self) -> Token {
+        self.idx -= 1;
+        if self.tokens.get(self.idx-1).is_none() {
+            self.current = Token {
+                data: String::from("\0"),
+                tp: TokenType::Eof,
+                line: 0,
+                startcol: 0,
+                endcol: 0,
+            };
+            return self.current.to_owned();
+        }
+        self.current = self.tokens.get(self.idx-1).unwrap().to_owned();
+        
+        self.current.to_owned()
+    }
+
     fn skip_newlines(&mut self) {
         while self.current_is_type(TokenType::Newline) {
             self.advance();
@@ -70,6 +87,15 @@ impl<'a> Parser<'a> {
 
     fn current_is_type(&self, tp: TokenType) -> bool {
         self.current.tp  == tp
+    }
+
+    fn next_is_type(&mut self, tp: TokenType) -> bool {
+        self.advance();
+        if self.current.tp == tp {
+            self.reverse();
+            return true;
+        }
+        return false;
     }
 
     fn raise_error(&mut self, error: &str, errtp: ErrorType) -> !{
@@ -119,6 +145,7 @@ impl<'a> Parser<'a> {
     fn atom(&mut self) -> Option<Node> {
         match self.current.tp {
             TokenType::Decimal => Some(self.generate_decimal()),
+            TokenType::Identifier => Some(self.generate_identifier()),
             _ => None,
         }
     }
@@ -159,6 +186,21 @@ impl<'a> Parser<'a> {
                                 Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                 nodes::NodeType::Decimal, 
                                 Box::new(nodes::DecimalNode {value: self.current.data.to_owned()}))
+    }
+
+    fn generate_identifier(&mut self) -> Node {
+        let name: String = self.current.data.clone();
+        if self.next_is_type(TokenType::Equals) {
+            self.advance();
+            self.advance();
+            let expr = self.expr(Precedence::Lowest);
+            self.reverse();
+            return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                    Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                    nodes::NodeType::Identifier, 
+                                    Box::new(nodes::IdentifierNode {name, expr}));
+        }
+        unimplemented!();
     }
 
     // ============ Expr ==============

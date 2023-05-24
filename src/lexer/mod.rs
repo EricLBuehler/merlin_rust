@@ -10,6 +10,8 @@ pub enum TokenType {
     Asterisk,
     Slash,
     Hyphen,
+    Equals,
+    Identifier,
 }
 
 impl std::fmt::Display for TokenType {
@@ -23,6 +25,8 @@ impl std::fmt::Display for TokenType {
            TokenType::Asterisk => write!(f, "Asterisk"),
            TokenType::Slash => write!(f, "Slash"),
            TokenType::Hyphen => write!(f, "Hyphen"),
+           TokenType::Equals => write!(f, "Equals"),
+           TokenType::Identifier => write!(f, "Identifier"),
        }
     }
 }
@@ -47,6 +51,9 @@ impl<'a> Iterator for Lexer<'a> {
 
         if cur.is_ascii_digit() {
             Some(make_decimal(self))
+        }
+        else if cur.is_alphabetic() {
+            Some(make_identifier(self))
         }
         else if cur == '\n' {
             Some(add_char_token(self, cur, TokenType::Newline))
@@ -76,6 +83,9 @@ impl<'a> Iterator for Lexer<'a> {
         }
         else if cur == '-' {
             Some(add_char_token(self, cur, TokenType::Hyphen))
+        }
+        else if cur == '=' {
+            Some(add_char_token(self, cur, TokenType::Equals))
         }
         else if cur == '\0' {
             None
@@ -157,8 +167,6 @@ pub fn add_char_token(lexer: &mut Lexer, val: char, tp: TokenType) -> Token {
 }
 
 
-
-
 fn make_decimal(lexer: &mut Lexer) -> Token {
     let mut data = String::from("");
     let start = lexer.col;
@@ -166,8 +174,7 @@ fn make_decimal(lexer: &mut Lexer) -> Token {
     let mut end = lexer.col;
     let mut line = lexer.line;
 
-    let mut i = 0;
-    while (lexer.current as char).is_numeric() || lexer.current==b'_' || (i==0 && lexer.current==b'.') {
+    while (lexer.current as char).is_numeric() || lexer.current==b'_' {
         data.push(lexer.current as char);
         end=lexer.col;
         line=lexer.line;
@@ -176,12 +183,38 @@ fn make_decimal(lexer: &mut Lexer) -> Token {
             data.push(lexer.current as char);
             advance(lexer);
         }
-        i+=1;
     }
     
     Token {
         data,
         tp: TokenType::Decimal,
+        line,
+        startcol: start,
+        endcol: end+1,
+    }
+}
+
+fn make_identifier(lexer: &mut Lexer) -> Token {
+    let mut data = String::from("");
+    let start = lexer.col;
+
+    let mut end = lexer.col;
+    let mut line = lexer.line;
+
+    while (lexer.current as char).is_alphanumeric() || lexer.current==b'_' {
+        data.push(lexer.current as char);
+        end=lexer.col;
+        line=lexer.line;
+        advance(lexer);
+        if lexer.current == b'.' {
+            data.push(lexer.current as char);
+            advance(lexer);
+        }
+    }
+    
+    Token {
+        data,
+        tp: TokenType::Identifier,
         line,
         startcol: start,
         endcol: end+1,

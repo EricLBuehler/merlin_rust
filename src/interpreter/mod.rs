@@ -115,6 +115,11 @@ impl<'a> Interpreter<'a> {
 
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
+                CompilerInstruction::StoreName(idx, _start, _end) => {
+                    println!("{}", bytecode.names.get(idx).unwrap());
+                    self.output_register(CompilerRegister::R1);
+                    unimplemented!();
+                }
             }
         }
 

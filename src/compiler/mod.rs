@@ -5,6 +5,7 @@ use crate::{objects::{Object, intobject}, parser::{self, nodes::{NodeType, Binar
 pub struct Compiler {
     instructions: Vec<CompilerInstruction>,
     consts: Vec<Object>,
+    pub names: Vec<String>,
 }
 
 //first Position is start, second is end
@@ -16,6 +17,7 @@ pub enum CompilerInstruction {
     BinarySub(CompilerRegister, Position, Position), //Subtract R2 (left) from R1 (right). Result in specified register
     BinaryMul(CompilerRegister, Position, Position), //Multiply R1 (right), and R2 (left). Result in specified register
     BinaryDiv(CompilerRegister, Position, Position), //Divide R1 (right) by R2 (left). Result in specified register
+    StoreName(usize, Position, Position), //store R1 to names[index]
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -28,20 +30,21 @@ pub enum CompilerRegister {
 pub struct Bytecode {
     pub instructions: Vec<CompilerInstruction>,
     pub consts: Vec<Object>,
+    pub names: Vec<String>,
 }
 
 type Node = parser::nodes::Node;
 
 impl Compiler {
     pub fn new() -> Compiler {
-        Compiler{instructions: Vec::new(), consts: Vec::new()}
+        Compiler{instructions: Vec::new(), consts: Vec::new(), names: Vec::new()}
     }
 
     pub fn generate_bytecode(&mut self, ast: Vec<Node>) -> Bytecode {
         for head_node in ast {
             self.compile_statement(head_node);
         }
-        Bytecode {instructions: self.instructions.clone(), consts: self.consts.clone()}
+        Bytecode {instructions: self.instructions.clone(), consts: self.consts.clone(), names: self.names.clone()}
     }
 
     fn compile_statement(&mut self, expr: Node) {
@@ -50,6 +53,9 @@ impl Compiler {
                 self.compile_expr(&expr, CompilerRegister::NA);
             }
             NodeType::Binary => {
+                self.compile_expr(&expr, CompilerRegister::R1);
+            }
+            NodeType::Identifier => {
                 self.compile_expr(&expr, CompilerRegister::R1);
             }
         }
@@ -98,6 +104,11 @@ impl Compiler {
                         }
                     }
                 }
+            }
+            NodeType::Identifier => {
+                self.compile_expr(expr.data.get_data().nodes.get("expr").unwrap(), CompilerRegister::R1);
+                self.names.push(expr.data.get_data().raw.get("name").unwrap().clone());
+                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, expr.start, expr.end));
             }
         }
     }

@@ -19,6 +19,7 @@ impl Node {
 pub enum NodeType {
     Decimal,
     Binary,
+    Identifier,
 }
 
 #[derive(Debug)]
@@ -82,6 +83,23 @@ impl NodeData for BinaryNode {
         value.nodes.insert(String::from("left"), &self.left);
         value.nodes.insert(String::from("right"), &self.right);
         value.op = Some(self.op);
+        
+        value
+    }
+}
+
+// ========================
+
+pub struct IdentifierNode {
+    pub name: String,
+    pub expr: Node,
+}
+
+impl NodeData for IdentifierNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.nodes.insert(String::from("expr"), &self.expr);
+        value.raw.insert(String::from("name"), self.name.clone());
         
         value
     }

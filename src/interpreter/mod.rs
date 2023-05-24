@@ -1,16 +1,22 @@
 use std::collections::HashMap;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::object_repr}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
+use crate::{objects::{Object, noneobject, utils::object_repr, dictobject, stringobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
+
+pub struct Namespaces {
+    locals: Object,
+}
 
 pub struct VM<'a> {
     types: HashMap<String, Object>,
     interpreters: Vec<Interpreter<'a>>,
+    namespaces: Namespaces,
 }
 
 pub struct Interpreter<'a> {
     frames: Vec<Frame>,
     types: &'a HashMap<String, Object>,
+    namespaces: &'a Namespaces,
 }
 
 #[derive(Clone)]
@@ -21,19 +27,19 @@ struct Frame {
 
 impl<'a> VM<'a> {
     pub fn new(types: HashMap<String, Object>) -> VM<'a> {
-        VM { types, interpreters: Vec::new() }
+        VM { types, interpreters: Vec::new(), namespaces: Namespaces { locals: dictobject::dict_from(HashMap::new()) } }
     }
 
     pub fn execute(&'a mut self, bytecode: Bytecode) -> Object {
-        let interpreter = Interpreter::new(&self.types);
+        let interpreter = Interpreter::new(&self.types, &self.namespaces);
         self.interpreters.push(interpreter);
         return self.interpreters.last_mut().unwrap().run_interpreter(bytecode);
     }
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn new(types: &'a HashMap<String, Object>) -> Interpreter<'a> {
-        Interpreter { frames: Vec::new(), types }
+    pub fn new(types: &'a HashMap<String, Object>, namespaces: &'a Namespaces) -> Interpreter<'a> {
+        Interpreter { frames: Vec::new(), types, namespaces }
     }
 
     fn add_frame(&mut self) {
@@ -116,9 +122,7 @@ impl<'a> Interpreter<'a> {
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::StoreName(idx, _start, _end) => {
-                    println!("{}", bytecode.names.get(idx).unwrap());
-                    self.output_register(CompilerRegister::R1);
-                    unimplemented!();
+                    (self.namespaces.locals.set.unwrap())(self.namespaces.locals.clone(), stringobject::string_from(bytecode.names.get(idx).unwrap().clone()), self.frames.last().unwrap().register1.clone());
                 }
             }
         }

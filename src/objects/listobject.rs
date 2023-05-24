@@ -45,8 +45,12 @@ fn list_set(mut selfv: Object, other: Object, value: Object) -> MethodValue<Obje
     debug_assert!((other.internals.get_int().unwrap().clone().abs() as usize) < selfv.internals.get_arr().unwrap().len());
     let mut arr = selfv.internals.get_arr().unwrap().clone();
     arr[other.internals.get_int().unwrap().clone().abs() as usize] = value;
-    let modify = Arc::make_mut(&mut selfv);
-    modify.internals = ObjectInternals::Arr(arr.to_vec());
+    
+    unsafe {
+        let refr = Arc::into_raw(selfv.clone()) as *mut RawObject;
+        (*refr).internals = ObjectInternals::Arr(arr.to_vec());
+    }
+    
     MethodValue::Some(noneobject::none_from())
 }
 fn list_len(selfv: Object) -> MethodValue<Object, Object> {

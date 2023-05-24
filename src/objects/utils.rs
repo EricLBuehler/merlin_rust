@@ -18,7 +18,7 @@ pub fn object_repr_safe(object: &Object) -> MethodValue<String, String> {
         return MethodValue::Error(String::from("__repr__ is not implemented."));
     }
 
-    if reprv.unwrap().internals.is_str() {
+    if !reprv.unwrap().internals.is_str() {
         return MethodValue::Error(String::from("__repr__ returned non-string."));
     }
 

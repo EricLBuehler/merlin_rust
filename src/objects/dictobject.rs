@@ -1,13 +1,15 @@
-use std::{sync::Arc};
+use std::{sync::Arc, collections::HashMap};
 use crate::objects::{stringobject, noneobject, ObjectInternals, boolobject};
 
 use super::{RawObject, Object, get_type, add_type, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
 
-pub fn dict_from(raw: Vec<Object>) -> Object {
-    let mut tp = create_object_from_type(get_type("dict"));
-    let mut refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Arr(raw);
+pub fn dict_from(raw: HashMap<Object, Object>) -> Object {
+    let tp = create_object_from_type(get_type("dict"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject;
+        (*refr).internals = ObjectInternals::Map(raw);
+    }
     tp
 }
 
@@ -45,13 +47,16 @@ fn dict_get(selfv: Object, other: Object) -> MethodValue<Object, Object> {
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
-fn dict_set(mut selfv: Object, other: Object, value: Object) -> MethodValue<Object, Object> {
+fn dict_set(selfv: Object, other: Object, value: Object) -> MethodValue<Object, Object> {
     //DEBUG check for hash here!
-    debug_assert!((other.internals.get_int().unwrap().clone().abs() as usize) < selfv.internals.get_map().unwrap().len());
     let mut map = selfv.internals.get_map().unwrap().clone();
     map.insert(other, value);
-    let modify = Arc::make_mut(&mut selfv);
-    modify.internals = ObjectInternals::Map(map);
+
+    unsafe {
+        let refr = Arc::into_raw(selfv.clone()) as *mut RawObject;
+        (*refr).internals = ObjectInternals::Map(map);
+    }
+
     MethodValue::Some(noneobject::none_from())
 }
 fn dict_len(selfv: Object) -> MethodValue<Object, Object> {

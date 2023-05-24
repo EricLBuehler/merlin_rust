@@ -19,7 +19,7 @@ fn string_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Obj
     unimplemented!();
 }
 fn string_repr(selfv: Object) -> MethodValue<Object, Object> {
-    MethodValue::Some(selfv)
+    MethodValue::Some(string_from("\"".to_owned()+selfv.internals.get_str().unwrap()+"\""))
 }
 fn string_eq(selfv: Object, other: Object) -> MethodValue<Object, Object> {
     debug_assert!(is_instance(&selfv, &other));

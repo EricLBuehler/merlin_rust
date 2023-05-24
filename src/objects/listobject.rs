@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::objects::stringobject;
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, utils};
+use super::{RawObject, Object, get_type, add_type, MethodValue, utils, finalize_type};
 
 
 fn list_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
@@ -46,5 +46,7 @@ pub fn init(){
         pow: None,
     });
 
-    add_type(&tp.clone().typename, tp);
+    add_type(&tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
 }

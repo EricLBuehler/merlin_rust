@@ -1,6 +1,6 @@
 use std::{sync::Arc};
 
-use super::{Object, add_type, MethodValue, boolobject, stringobject, RawObject, create_object_from_type};
+use super::{Object, add_type, MethodValue, boolobject, stringobject, RawObject, create_object_from_type, finalize_type};
 
 
 fn object_new(selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
@@ -34,5 +34,7 @@ pub fn init(){
         pow: None,
     });
 
-    add_type(&tp.clone().typename, tp);
+    add_type(&tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
 }

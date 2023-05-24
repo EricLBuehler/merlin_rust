@@ -2,7 +2,7 @@ use std::{sync::Arc};
 
 use crate::objects::is_instance;
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject};
+use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
 
 pub fn int_from(raw: i128) -> Object {
     let mut tp = create_object_from_type(get_type("int"));
@@ -116,5 +116,7 @@ pub fn init(){
         pow: Some(int_pow),
     });
 
-    add_type(&tp.clone().typename, tp);
+    add_type(&tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
 }

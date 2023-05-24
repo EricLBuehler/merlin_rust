@@ -1,6 +1,6 @@
 use std::{sync::Arc};
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type};
+use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, finalize_type};
 
 
 pub fn string_from(raw: String) -> Object {
@@ -38,5 +38,7 @@ pub fn init(){
         pow: None,
     });
 
-    add_type(&tp.clone().typename, tp);
+    add_type(&tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
 }

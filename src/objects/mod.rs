@@ -218,6 +218,7 @@ lazy_static! {
     pub static ref TYPES: RwLock<HashMap<String, Object>> = RwLock::new(HashMap::new());
 }
 
+//helper functions
 pub fn get_type(key: &str) -> Object {
     TYPES.read().unwrap().get(key).unwrap().clone()
 }
@@ -242,6 +243,39 @@ fn get_typeid(selfv: Object) -> u64 {
 
 fn is_instance(selfv: &Object, other: &Object) -> bool {
     return get_typeid(selfv.clone()) == get_typeid(other.clone());
+}
+
+fn inherit_slots(tp: &mut RawObject, basetp: Object) {
+    tp.new = basetp.new;
+
+    tp.repr = basetp.repr;
+    tp.abs = basetp.abs;
+    tp.neg = basetp.neg;
+
+    tp.eq = basetp.eq;
+    tp.add = basetp.add;
+    tp.sub = basetp.sub;
+    tp.mul = basetp.mul;
+    tp.div = basetp.div;
+    tp.pow = basetp.pow;
+}
+
+fn finalize_type(tp: Object) {
+    let mut cpy = tp.clone();
+    let refr = Arc::make_mut(&mut cpy);
+
+    for base in refr.bases.clone() {
+        match base {
+            ObjectBase::Other(basetp) => {
+                inherit_slots(refr, basetp);
+            }
+            ObjectBase::Object => {
+                inherit_slots(refr, get_type("object"));
+            }
+        }
+    }
+
+    inherit_slots(refr, tp);
 }
 
 pub fn init_types() -> HashMap<String, Object> {

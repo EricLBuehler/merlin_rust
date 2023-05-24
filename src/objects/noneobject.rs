@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::objects::stringobject;
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, create_object_from_type};
+use super::{RawObject, Object, get_type, add_type, MethodValue, create_object_from_type, finalize_type};
 
 pub fn none_from() -> Object {
     create_object_from_type(get_type("NoneType"))
@@ -35,5 +35,7 @@ pub fn init(){
         pow: None,
     });
 
-    add_type(&tp.clone().typename, tp);
+    add_type(&tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
 }

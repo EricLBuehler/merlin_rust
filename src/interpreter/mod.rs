@@ -3,13 +3,14 @@ use std::collections::HashMap;
 // Interpret bytecode
 use crate::{objects::{Object, noneobject, utils::object_repr}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
 
-pub struct VM {
+pub struct VM<'a> {
     types: HashMap<String, Object>,
+    interpreters: Vec<Interpreter<'a>>,
 }
 
 pub struct Interpreter<'a> {
     frames: Vec<Frame>,
-    vm: &'a VM,
+    types: &'a HashMap<String, Object>,
 }
 
 #[derive(Clone)]
@@ -18,21 +19,21 @@ struct Frame {
     register2: Object,
 }
 
-impl VM {
-    pub fn new(types: HashMap<String, Object>) -> VM {
-        VM { types }
+impl<'a> VM<'a> {
+    pub fn new(types: HashMap<String, Object>) -> VM<'a> {
+        VM { types, interpreters: Vec::new() }
     }
 
-    pub fn execute(&mut self, bytecode: Bytecode) -> Object {
-        let mut interpreter = Interpreter::new(self);
-        
-        return interpreter.run_interpreter(bytecode);
+    pub fn execute(&'a mut self, bytecode: Bytecode) -> Object {
+        let interpreter = Interpreter::new(&self.types);
+        self.interpreters.push(interpreter);
+        return self.interpreters.last_mut().unwrap().run_interpreter(bytecode);
     }
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn new(vm: &'a VM) -> Interpreter<'a> {
-        Interpreter { frames: Vec::new(), vm, }
+    pub fn new(types: &'a HashMap<String, Object>) -> Interpreter<'a> {
+        Interpreter { frames: Vec::new(), types }
     }
 
     fn add_frame(&mut self) {

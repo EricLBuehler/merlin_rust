@@ -114,6 +114,10 @@ pub fn init(){
         mul: Some(int_mul),
         div: Some(int_div),
         pow: Some(int_pow),
+        
+        get: None,
+        set: None,
+        len: None,
     });
 
     add_type(&tp.clone().typename, tp.clone());

@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::objects::stringobject;
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, create_object_from_type, finalize_type};
+use super::{RawObject, Object, get_type, add_type, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject};
 
 pub fn none_from() -> Object {
     create_object_from_type(get_type("NoneType"))
@@ -27,12 +27,16 @@ pub fn init(){
         abs: None,
         neg: None,
 
-        eq: None,
+        eq: Some(|selfv, other| {MethodValue::Some(boolobject::bool_from(is_instance(&selfv, &other)))}),
         add: None,
         sub: None,
         mul: None,
         div: None,
         pow: None,
+        
+        get: None,
+        set: None,
+        len: None,
     });
 
     add_type(&tp.clone().typename, tp.clone());

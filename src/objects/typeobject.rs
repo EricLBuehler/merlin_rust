@@ -32,6 +32,10 @@ pub fn init(){
         mul: None,
         div: None,
         pow: None,
+        
+        get: None,
+        set: None,
+        len: None,
     });
 
     add_type(&tp.clone().typename, tp.clone());

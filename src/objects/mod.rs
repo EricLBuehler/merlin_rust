@@ -59,18 +59,26 @@ pub struct RawObject {
     pub typename: String,
     pub bases: Vec<ObjectBase>,
 
+    //instantiation
     pub new: Option<fn(Object, Object, Object) -> MethodValue<Object, Object>>, //self, args, kwargs
     
+    //unary
     pub repr: Option<fn(Object,) -> MethodValue<Object, Object>>, //self
     pub abs: Option<fn(Object) -> MethodValue<Object, Object>>, //self, other
     pub neg: Option<fn(Object) -> MethodValue<Object, Object>>, //self, other
 
+    //binary
     pub eq: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
     pub add: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
     pub sub: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
     pub mul: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
     pub div: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
     pub pow: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+
+    //sequences
+    pub get: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub set: Option<fn(Object, Object, Object) -> MethodValue<Object, Object>>, //self, other, value
+    pub len: Option<fn(Object) -> MethodValue<Object, Object>>, //self
 }
 pub type Object = Arc<RawObject>;
 
@@ -256,6 +264,10 @@ fn inherit_slots(tp: &mut RawObject, basetp: Object) {
     tp.mul = basetp.mul;
     tp.div = basetp.div;
     tp.pow = basetp.pow;
+    
+    tp.get = basetp.get;
+    tp.set = basetp.set;
+    tp.len = basetp.len;
 }
 
 fn finalize_type(tp: Object) {

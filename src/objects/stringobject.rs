@@ -1,4 +1,7 @@
 use std::{sync::Arc};
+use unicode_segmentation::UnicodeSegmentation;
+
+use crate::objects::{is_instance, boolobject, intobject};
 
 use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, finalize_type};
 
@@ -16,6 +19,23 @@ fn string_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Obj
 fn string_repr(selfv: Object) -> MethodValue<Object, Object> {
     MethodValue::Some(selfv)
 }
+fn string_eq(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    debug_assert!(is_instance(&selfv, &other));
+    MethodValue::Some(boolobject::bool_from(selfv.internals.get_str().unwrap() == other.internals.get_str().unwrap()))
+}
+
+fn string_get(selfv: Object, other: Object) -> MethodValue<Object, Object> {
+    is_instance(&other, &get_type("int"));
+    //NEGATIVE INDEX IS CONVERTED TO +
+    let out = UnicodeSegmentation::graphemes(selfv.internals.get_str().unwrap().as_str(), true).nth(other.internals.get_int().unwrap().clone().abs() as usize);
+    debug_assert!(out.is_some());
+    MethodValue::Some(string_from(out.unwrap().to_string()))
+}
+fn string_len(selfv: Object) -> MethodValue<Object, Object> {
+    let convert: Result<i128, _> = selfv.internals.get_str().unwrap().len().try_into();
+    debug_assert!(convert.is_ok());
+    MethodValue::Some(intobject::int_from(convert.unwrap()))
+}
 
 pub fn init(){
     let tp: Arc<RawObject> = Arc::new( RawObject{
@@ -30,12 +50,16 @@ pub fn init(){
         abs: None,
         neg: None,
 
-        eq: None,
+        eq: Some(string_eq),
         add: None,
         sub: None,
         mul: None,
         div: None,
         pow: None,
+        
+        get: Some(string_get),
+        set: None,
+        len: Some(string_len),
     });
 
     add_type(&tp.clone().typename, tp.clone());

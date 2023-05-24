@@ -10,8 +10,9 @@ pub mod boolobject;
 pub mod stringobject;
 pub mod listobject;
 pub mod noneobject;
+pub mod dictobject;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum ObjectType {
     Type,
     Other(Object)
@@ -32,7 +33,7 @@ impl ObjectType {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub enum ObjectBase {
     Object,
     Other(Object)
@@ -52,7 +53,7 @@ impl ObjectBase {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct RawObject {
     pub tp: ObjectType,
     pub internals: ObjectInternals,
@@ -64,8 +65,9 @@ pub struct RawObject {
     
     //unary
     pub repr: Option<fn(Object,) -> MethodValue<Object, Object>>, //self
-    pub abs: Option<fn(Object) -> MethodValue<Object, Object>>, //self, other
-    pub neg: Option<fn(Object) -> MethodValue<Object, Object>>, //self, other
+    pub abs: Option<fn(Object) -> MethodValue<Object, Object>>, //self
+    pub neg: Option<fn(Object) -> MethodValue<Object, Object>>, //self
+    pub hash_fn: Option<fn(Object) -> MethodValue<Object, Object>>, //self
 
     //binary
     pub eq: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
@@ -80,9 +82,20 @@ pub struct RawObject {
     pub set: Option<fn(Object, Object, Object) -> MethodValue<Object, Object>>, //self, other, value
     pub len: Option<fn(Object) -> MethodValue<Object, Object>>, //self
 }
+
+impl Hash for RawObject {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        debug_assert!(self.hash_fn.is_some());
+        let res = (self.hash_fn.unwrap())(Arc::new(self.clone()));
+        debug_assert!(res.is_some());
+        debug_assert!(is_instance(&res.unwrap(), &get_type("int")));
+        state.write_i128(res.unwrap().internals.get_int().unwrap().clone());
+    }
+}
+
 pub type Object = Arc<RawObject>;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ObjectInternals {
     #[default]
@@ -91,6 +104,7 @@ pub enum ObjectInternals {
     Int(i128),
     Str(String),
     Arr(Vec<Object>),
+    Map(HashMap<Object, Object>),
     None,
 }
 
@@ -163,6 +177,20 @@ impl ObjectInternals {
         match self {
             ObjectInternals::None => {
                 Some(())
+            }
+            _ => {
+                None
+            }
+        }
+    }
+
+    pub fn is_map(&self) -> bool {
+        matches!(self, ObjectInternals::Arr(_))
+    }
+    pub fn get_map(&self) -> Option<&HashMap<Object, Object>> {
+        match self {
+            ObjectInternals::Map(v) => {
+                Some(v)
             }
             _ => {
                 None
@@ -296,6 +324,7 @@ pub fn init_types() -> HashMap<String, Object> {
     stringobject::init();
     listobject::init();
     noneobject::init();
+    dictobject::init();
 
     let mut types = HashMap::new();
     for key in TYPES.read().unwrap().keys() {

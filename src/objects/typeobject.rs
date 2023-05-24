@@ -1,6 +1,6 @@
 use std::{sync::Arc};
 
-use super::{Object, add_type, MethodValue, boolobject, stringobject, RawObject, get_type, get_typeid, create_object_from_type, finalize_type};
+use super::{Object, add_type, MethodValue, boolobject, stringobject, RawObject, get_type, get_typeid, create_object_from_type, finalize_type, intobject};
 
 
 fn type_new(selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
@@ -25,6 +25,7 @@ pub fn init(){
         repr: Some(type_repr),
         abs: None,
         neg: None,
+        hash_fn: Some(|_: Object| { MethodValue::Some(intobject::int_from(-3)) }),
 
         eq: Some(type_eq),
         add: None,

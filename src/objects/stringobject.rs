@@ -1,5 +1,7 @@
-use std::{sync::Arc};
+use std::{sync::Arc, collections::hash_map::DefaultHasher};
 use unicode_segmentation::UnicodeSegmentation;
+use std::hash::Hash;
+use std::hash::Hasher;
 
 use crate::objects::{is_instance, boolobject, intobject};
 
@@ -49,6 +51,12 @@ pub fn init(){
         repr: Some(string_repr),
         abs: None,
         neg: None,
+        hash_fn: Some(|selfv: Object| {
+            let mut hasher = DefaultHasher::new();
+            selfv.internals.get_str().unwrap().hash(&mut hasher);
+            
+            MethodValue::Some(intobject::int_from(hasher.finish() as i128))
+        }),
 
         eq: Some(string_eq),
         add: None,

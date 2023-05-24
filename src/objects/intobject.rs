@@ -107,6 +107,7 @@ pub fn init(){
         repr: Some(int_repr),
         abs: Some(int_abs),
         neg: Some(int_neg),
+        hash_fn: Some(|selfv: Object| { MethodValue::Some(int_from(selfv.internals.get_int().unwrap().clone())) }),
 
         eq: Some(int_eq),
         add: Some(int_add),

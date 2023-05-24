@@ -33,14 +33,14 @@ fn list_repr(selfv: Object) -> MethodValue<Object, Object> {
 }
 
 fn list_get(selfv: Object, other: Object) -> MethodValue<Object, Object> {
-    is_instance(&other, &get_type("int"));
+    debug_assert!(is_instance(&other, &get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = selfv.internals.get_arr().unwrap().get(other.internals.get_int().unwrap().clone().abs() as usize);
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
 fn list_set(mut selfv: Object, other: Object, value: Object) -> MethodValue<Object, Object> {
-    is_instance(&other, &get_type("int"));
+    debug_assert!(is_instance(&other, &get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
     debug_assert!((other.internals.get_int().unwrap().clone().abs() as usize) < selfv.internals.get_arr().unwrap().len());
     let mut arr = selfv.internals.get_arr().unwrap().clone();
@@ -83,7 +83,7 @@ pub fn init(){
         repr: Some(list_repr),
         abs: None,
         neg: None,
-
+        hash_fn: None,
         eq: Some(list_eq),
         add: None,
         sub: None,

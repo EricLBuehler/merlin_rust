@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::objects::{stringobject, is_instance, boolobject};
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, finalize_type};
+use super::{RawObject, Object, get_type, add_type, MethodValue, ObjectInternals, create_object_from_type, finalize_type, intobject};
 
 
 pub fn bool_from(raw: bool) -> Object {
@@ -34,6 +34,7 @@ pub fn init(){
         repr: Some(bool_repr),
         abs: None,
         neg: None,
+        hash_fn: Some(|selfv: Object| { MethodValue::Some(intobject::int_from(selfv.internals.get_bool().unwrap().clone() as i128)) }),
 
         eq: Some(bool_eq),
         add: None,

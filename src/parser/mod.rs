@@ -19,7 +19,7 @@ pub struct Parser<'a> {
     info: &'a FileInfo<'a>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     pub startcol: usize,
     pub endcol: usize,
@@ -116,13 +116,29 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn ensure_not_eof(&mut self) {
+        if self.current_is_type(TokenType::Eof) {
+            self.raise_error("Unexpected EOF.", ErrorType::UnexpectedEOF)
+        }
+    }
+
+    fn expect(&mut self, typ: TokenType) {
+        if !self.current_is_type(typ.clone()) {
+            self.raise_error(format!("Invalid '{}', got '{}'.", typ.to_string(), self.current.tp.to_string()).as_str(), ErrorType::UnexpectedEOF)
+        }
+    }
+
     // ===========================================
     // ===========================================
 
     pub fn generate_ast(&mut self) -> Vec<Node> {
+        self.block()
+    }
+
+    fn block(&mut self) -> Vec<Node> {
         let mut nodes = Vec::new();
         
-        while !self.current_is_type(TokenType::Eof) {
+        while !self.current_is_type(TokenType::Eof) && !self.current_is_type(TokenType::RCurly) {
             nodes.push(self.parse_statement());
             self.skip_newlines();
         }
@@ -132,6 +148,9 @@ impl<'a> Parser<'a> {
 
     fn parse_statement(&mut self) -> Node {
         match self.current.tp {
+            TokenType::Keyword => {
+                self.keyword()
+            }
             _ => {
                 self.expr(Precedence::Lowest)
             }
@@ -147,6 +166,15 @@ impl<'a> Parser<'a> {
             TokenType::Decimal => Some(self.generate_decimal()),
             TokenType::Identifier => Some(self.generate_identifier()),
             _ => None,
+        }
+    }
+
+    fn keyword(&mut self) -> Node {
+        if self.current.data == "fn" {
+            self.parse_fn()
+        }
+        else {
+            self.raise_error("Unknown keyword.", ErrorType::UnknownKeyword);
         }
     }
 
@@ -224,4 +252,39 @@ impl<'a> Parser<'a> {
                                 nodes::NodeType::Binary, 
                                 Box::new(nodes::BinaryNode {left, right: self.expr(precedence), op: tp}))
     }
-}
+
+    // ============ Expr ==============
+
+    fn parse_fn(&mut self) -> Node {
+        self.advance();
+        self.ensure_not_eof();
+        let name = self.current.data.clone();
+        let mut args = Vec::new();
+        
+        self.advance();
+        self.expect(TokenType::LParen);
+        self.advance();
+        while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof) {
+            self.expect(TokenType::Identifier);
+            args.push(self.current.data.clone());
+            self.advance();
+            if self.current_is_type(TokenType::RParen) {
+                self.advance();
+                break;
+            }
+            self.expect(TokenType::Comma);
+        }
+        self.expect(TokenType::LCurly);
+        self.advance();
+        self.skip_newlines();
+        let code = self.block();
+        self.skip_newlines();
+        self.expect(TokenType::RCurly);
+        self.advance();
+        
+        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                nodes::NodeType::Function, 
+                                Box::new(nodes::FunctionNode {name, args, code}))
+    }
+} 

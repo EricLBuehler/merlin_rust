@@ -12,21 +12,33 @@ pub enum TokenType {
     Hyphen,
     Equals,
     Identifier,
+    LParen,
+    RParen,
+    LCurly,
+    RCurly,
+    Keyword,
+    Comma,
 }
 
 impl std::fmt::Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
        match *self {
-           TokenType::Decimal => write!(f, "Decimal"),
-           TokenType::Newline => write!(f, "Newline"),
+           TokenType::Decimal => write!(f, "decimal"),
+           TokenType::Newline => write!(f, "newline"),
            TokenType::Unknown => write!(f, "UNKNOWN"),
-           TokenType::Plus => write!(f, "Plus"),
-           TokenType::Eof => write!(f, "Eof"),
-           TokenType::Asterisk => write!(f, "Asterisk"),
-           TokenType::Slash => write!(f, "Slash"),
-           TokenType::Hyphen => write!(f, "Hyphen"),
-           TokenType::Equals => write!(f, "Equals"),
-           TokenType::Identifier => write!(f, "Identifier"),
+           TokenType::Plus => write!(f, "plus"),
+           TokenType::Eof => write!(f, "EOF"),
+           TokenType::Asterisk => write!(f, "asterisk"),
+           TokenType::Slash => write!(f, "slash"),
+           TokenType::Hyphen => write!(f, "hyphen"),
+           TokenType::Equals => write!(f, "equals"),
+           TokenType::Identifier => write!(f, "identifier"),
+           TokenType::LParen => write!(f, "l-paren"),
+           TokenType::RParen => write!(f, "r-paren"),
+           TokenType::LCurly => write!(f, "l-curly"),
+           TokenType::RCurly => write!(f, "r-curly"),
+           TokenType::Keyword => write!(f, "keyword"),
+           TokenType::Comma => write!(f, "comma"),
        }
     }
 }
@@ -86,6 +98,21 @@ impl<'a> Iterator for Lexer<'a> {
         }
         else if cur == '=' {
             Some(add_char_token(self, cur, TokenType::Equals))
+        }
+        else if cur == '(' {
+            Some(add_char_token(self, cur, TokenType::LParen))
+        }
+        else if cur == ')' {
+            Some(add_char_token(self, cur, TokenType::RParen))
+        }
+        else if cur == '{' {
+            Some(add_char_token(self, cur, TokenType::LCurly))
+        }
+        else if cur == '}' {
+            Some(add_char_token(self, cur, TokenType::RCurly))
+        }
+        else if cur == ',' {
+            Some(add_char_token(self, cur, TokenType::Comma))
         }
         else if cur == '\0' {
             None
@@ -210,6 +237,16 @@ fn make_identifier(lexer: &mut Lexer) -> Token {
             data.push(lexer.current as char);
             advance(lexer);
         }
+    }
+
+    if lexer.kwds.contains(&data) {
+        return Token {
+            data,
+            tp: TokenType::Keyword,
+            line,
+            startcol: start,
+            endcol: end+1,
+        };
     }
     
     Token {

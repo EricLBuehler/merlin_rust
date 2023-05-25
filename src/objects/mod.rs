@@ -1,5 +1,7 @@
 use std::{sync::{Arc, RwLock, }, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}, cell::Cell};
 
+use crate::compiler::Bytecode;
+
 
 pub mod utils;
 
@@ -11,6 +13,7 @@ pub mod stringobject;
 pub mod listobject;
 pub mod noneobject;
 pub mod dictobject;
+pub mod codeobject;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ObjectType {
@@ -105,6 +108,7 @@ pub enum ObjectInternals {
     Str(String),
     Arr(Vec<Object>),
     Map(HashMap<Object, Object>),
+    Code(Bytecode),
     None,
 }
 
@@ -185,11 +189,25 @@ impl ObjectInternals {
     }
 
     pub fn is_map(&self) -> bool {
-        matches!(self, ObjectInternals::Arr(_))
+        matches!(self, ObjectInternals::Map(_))
     }
     pub fn get_map(&self) -> Option<&HashMap<Object, Object>> {
         match self {
             ObjectInternals::Map(v) => {
+                Some(v)
+            }
+            _ => {
+                None
+            }
+        }
+    }
+
+    pub fn is_code(&self) -> bool {
+        matches!(self, ObjectInternals::Code(_))
+    }
+    pub fn get_code(&self) -> Option<&Bytecode> {
+        match self {
+            ObjectInternals::Code(v) => {
                 Some(v)
             }
             _ => {
@@ -325,6 +343,7 @@ pub fn init_types() -> HashMap<String, Object> {
     listobject::init();
     noneobject::init();
     dictobject::init();
+    codeobject::init();
 
     let mut types = HashMap::new();
     for key in TYPES.read().unwrap().keys() {

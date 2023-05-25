@@ -135,6 +135,9 @@ impl<'a> Interpreter<'a> {
                         self.assign_to_register(out.unwrap().clone(), register);
                     }
                 }
+                CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, _start, _end) => {
+                    todo!();
+                }
             }
         }
 

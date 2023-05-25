@@ -41,7 +41,7 @@ fn main() {
         name: filename.to_owned(),
     };
 
-    let keywords = vec![];
+    let keywords = vec![String::from("fn")];
     let lexer = lexer::new(file_data_bytes, &file_info, keywords);
 
     if cfg!(debug_assertions) {
@@ -55,19 +55,9 @@ fn main() {
 
     let types = objects::init_types();
 
-    if cfg!(debug_assertions) {
-        println!("\n===== Running type tests =====");
-        for base in &types.get("str").unwrap().clone().bases {
-            println!("{}", objects::utils::object_repr(&base.get_value()));
-        }
-        println!("{}", objects::utils::object_repr(&objects::intobject::int_from(1234567890)));
-        println!("{}", objects::utils::object_repr(&(objects::intobject::int_from(3).pow.unwrap())(objects::intobject::int_from(3), objects::intobject::int_from(25)).unwrap()));
-        println!("===== Done with type tests =====");
-    }
-
     if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
-    let mut compiler = compiler::Compiler::new();
-    let bytecode = compiler.generate_bytecode(ast);
+    let mut compiler = compiler::Compiler::new(&file_info);
+    let bytecode = compiler.generate_bytecode(&ast);
 
     if cfg!(debug_assertions) {
         println!("{:?}", &bytecode.instructions);

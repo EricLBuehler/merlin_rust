@@ -5,6 +5,9 @@ use colored::Colorize;
 #[derive(Clone)]
 pub enum ErrorType {
     UnexpectedToken,
+    UnknownKeyword,
+    UnexpectedEOF,
+    FunctionNotExpression,
 }
 
 impl std::fmt::Display for ErrorType {
@@ -16,6 +19,9 @@ impl std::fmt::Display for ErrorType {
 pub fn repr_err(tp: ErrorType) -> &'static str {
     match tp {
         ErrorType::UnexpectedToken => "unexpected token",
+        ErrorType::UnknownKeyword => "unknown keyword",
+        ErrorType::UnexpectedEOF => "unexpected EOF",
+        ErrorType::FunctionNotExpression => "function is not an expression",
     }
 }
 

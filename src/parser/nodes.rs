@@ -21,6 +21,7 @@ pub enum NodeType {
     Binary,
     StoreNode,
     Identifier,
+    Function,
 }
 
 #[derive(Debug)]
@@ -28,6 +29,8 @@ pub struct NodeValue<'a> {
     pub raw: HashMap<String, String>,
     pub nodes: HashMap<String, &'a Node>,
     pub op: Option<BinaryOpType>,
+    pub code: Option<&'a Vec<Node>>,
+    pub args: Option<Vec<String>>,
 }
 
 pub trait NodeData {
@@ -42,7 +45,7 @@ impl Debug for dyn NodeData {
 
 impl<'a> NodeValue<'a> {
     fn new() -> NodeValue<'a> {
-        NodeValue {raw: HashMap::new(), nodes: HashMap::new(), op: None}
+        NodeValue {raw: HashMap::new(), nodes: HashMap::new(), op: None, code: None, args: None}
     }
 }
 
@@ -116,6 +119,25 @@ impl NodeData for IdentifierNode {
     fn get_data(&self) -> NodeValue {
         let mut value = NodeValue::new();
         value.raw.insert(String::from("name"), self.name.clone());
+        
+        value
+    }
+}
+
+// ========================
+
+pub struct FunctionNode {
+    pub name: String,
+    pub args: Vec<String>,
+    pub code: Vec<Node>,
+}
+
+impl NodeData for FunctionNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.raw.insert(String::from("name"), self.name.clone());
+        value.code = Some(&self.code);
+        value.args = Some(self.args.clone());
         
         value
     }

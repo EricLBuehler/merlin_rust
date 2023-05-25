@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::object_repr, dictobject, stringobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
+use crate::{objects::{Object, noneobject, utils::object_repr, dictobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
 
 pub struct Namespaces {
     locals: Object,
@@ -121,8 +121,19 @@ impl<'a> Interpreter<'a> {
 
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
-                CompilerInstruction::StoreName(idx, _start, _end) => {
-                    (self.namespaces.locals.set.unwrap())(self.namespaces.locals.clone(), stringobject::string_from(bytecode.names.get(idx).unwrap().clone()), self.frames.last().unwrap().register1.clone());
+                CompilerInstruction::StoreName(idx, register, _start, _end) => {
+                    (self.namespaces.locals.set.unwrap())(self.namespaces.locals.clone(), bytecode.names.get(idx).unwrap().clone(), self.frames.last().unwrap().register1.clone());
+                    if !matches!(register, CompilerRegister::NA) {
+                        self.assign_to_register(noneobject::none_from(), register);
+                    }
+                }
+                CompilerInstruction::LoadName(idx, register, _start, _end) => {
+                    let map = self.namespaces.locals.clone();
+                    let out = map.internals.get_map().unwrap().get(&bytecode.names.get(idx).unwrap().clone());
+                    debug_assert!(out.is_some());
+                    if !matches!(register, CompilerRegister::NA) {
+                        self.assign_to_register(out.unwrap().clone(), register);
+                    }
                 }
             }
         }

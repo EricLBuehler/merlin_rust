@@ -39,7 +39,7 @@ fn list_get(selfv: Object, other: Object) -> MethodValue<Object, Object> {
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
-fn list_set(mut selfv: Object, other: Object, value: Object) -> MethodValue<Object, Object> {
+fn list_set(selfv: Object, other: Object, value: Object) -> MethodValue<Object, Object> {
     debug_assert!(is_instance(&other, &get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
     debug_assert!((other.internals.get_int().unwrap().clone().abs() as usize) < selfv.internals.get_arr().unwrap().len());

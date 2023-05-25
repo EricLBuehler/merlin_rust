@@ -197,10 +197,14 @@ impl<'a> Parser<'a> {
             self.reverse();
             return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                     Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    nodes::NodeType::Identifier, 
-                                    Box::new(nodes::IdentifierNode {name, expr}));
+                                    nodes::NodeType::StoreNode, 
+                                    Box::new(nodes::StoreNode {name, expr}));
         }
-        unimplemented!();
+        
+        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                    Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                    nodes::NodeType::Identifier, 
+                                    Box::new(nodes::IdentifierNode {name}))
     }
 
     // ============ Expr ==============

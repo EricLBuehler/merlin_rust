@@ -1,11 +1,11 @@
 //Generate bytecode from AST
 
-use crate::{objects::{Object, intobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}};
+use crate::{objects::{Object, intobject, stringobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}};
 
 pub struct Compiler {
     instructions: Vec<CompilerInstruction>,
     consts: Vec<Object>,
-    pub names: Vec<String>,
+    names: Vec<Object>,
 }
 
 //first Position is start, second is end
@@ -17,7 +17,8 @@ pub enum CompilerInstruction {
     BinarySub(CompilerRegister, Position, Position), //Subtract R2 (left) from R1 (right). Result in specified register
     BinaryMul(CompilerRegister, Position, Position), //Multiply R1 (right), and R2 (left). Result in specified register
     BinaryDiv(CompilerRegister, Position, Position), //Divide R1 (right) by R2 (left). Result in specified register
-    StoreName(usize, Position, Position), //store R1 to names[index]
+    StoreName(usize, CompilerRegister, Position, Position), //store R1 to names[index], loads None to specified register
+    LoadName(usize, CompilerRegister, Position, Position), //load names[index] from locals to specified register
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -30,7 +31,7 @@ pub enum CompilerRegister {
 pub struct Bytecode {
     pub instructions: Vec<CompilerInstruction>,
     pub consts: Vec<Object>,
-    pub names: Vec<String>,
+    pub names: Vec<Object>,
 }
 
 type Node = parser::nodes::Node;
@@ -57,6 +58,9 @@ impl Compiler {
             }
             NodeType::Identifier => {
                 self.compile_expr(&expr, CompilerRegister::R1);
+            }
+            NodeType::StoreNode => {
+                self.compile_expr(&expr, CompilerRegister::NA);
             }
         }
     }
@@ -105,10 +109,14 @@ impl Compiler {
                     }
                 }
             }
-            NodeType::Identifier => {
+            NodeType::StoreNode => {
                 self.compile_expr(expr.data.get_data().nodes.get("expr").unwrap(), CompilerRegister::R1);
-                self.names.push(expr.data.get_data().raw.get("name").unwrap().clone());
-                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, expr.start, expr.end));
+                self.names.push(stringobject::string_from(expr.data.get_data().raw.get("name").unwrap().clone()));
+                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, register, expr.start, expr.end));
+            }
+            NodeType::Identifier => {
+                self.names.push(stringobject::string_from(expr.data.get_data().raw.get("name").unwrap().clone()));
+                self.instructions.push(CompilerInstruction::LoadName(self.names.len()-1, register, expr.start, expr.end));
             }
         }
     }

@@ -1,7 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, env::args};
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::object_repr, dictobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
+use crate::{objects::{Object, noneobject, utils::object_repr, dictobject, fnobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
 
 pub struct Namespaces {
     locals: Object,
@@ -136,7 +136,11 @@ impl<'a> Interpreter<'a> {
                     }
                 }
                 CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, _start, _end) => {
-                    todo!();
+                    let code = bytecode.consts.get(codeidx).unwrap().clone();
+                    let args = bytecode.consts.get(argsidx).unwrap().clone();
+                    let name = bytecode.names.get(nameidx).unwrap().clone();
+                    let func = fnobject::fn_from(code, args.internals.get_arr().unwrap().clone(), name.internals.get_str().unwrap().clone());
+                    self.assign_to_register(func, CompilerRegister::R1);
                 }
             }
         }

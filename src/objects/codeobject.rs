@@ -19,18 +19,7 @@ fn code_repr(selfv: Object) -> MethodValue<Object, Object> {
 }
 fn code_eq(selfv: Object, other: Object) -> MethodValue<Object, Object> {
     debug_assert!(is_instance(&selfv, &other));
-    debug_assert!(selfv.internals.get_arr().unwrap().len() == other.internals.get_arr().unwrap().len());
-    for idx in 0..selfv.internals.get_arr().unwrap().len() {
-        debug_assert!(selfv.internals.get_arr().unwrap().get(idx).unwrap().eq.is_some());
-        let v = selfv.internals.get_arr().unwrap().get(idx).unwrap();
-        let res = (v.eq.unwrap())(v.clone(), other.internals.get_arr().unwrap().get(idx).unwrap().clone());
-        debug_assert!(res.is_some());
-        debug_assert!(is_instance(&res.unwrap(), &get_type("bool")));
-        if *res.unwrap().internals.get_bool().unwrap() {
-            return MethodValue::Some(boolobject::bool_from(false));
-        }
-    }
-    MethodValue::Some(boolobject::bool_from(true))
+    MethodValue::Some(boolobject::bool_from(selfv.internals.get_code().unwrap() == other.internals.get_code().unwrap()))
 }
 
 pub fn init(){

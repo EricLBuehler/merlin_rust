@@ -14,6 +14,7 @@ pub mod listobject;
 pub mod noneobject;
 pub mod dictobject;
 pub mod codeobject;
+pub mod fnobject;
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ObjectType {
@@ -98,6 +99,13 @@ impl Hash for RawObject {
 
 pub type Object = Arc<RawObject>;
 
+#[derive(Clone, PartialEq, Eq)]
+pub struct FnData {
+    code: Object,
+    args: Vec<Object>,
+    name: String,
+}
+
 #[derive(Clone, Default, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ObjectInternals {
@@ -109,6 +117,7 @@ pub enum ObjectInternals {
     Arr(Vec<Object>),
     Map(HashMap<Object, Object>),
     Code(Bytecode),
+    Fn(FnData),
     None,
 }
 
@@ -208,6 +217,20 @@ impl ObjectInternals {
     pub fn get_code(&self) -> Option<&Bytecode> {
         match self {
             ObjectInternals::Code(v) => {
+                Some(v)
+            }
+            _ => {
+                None
+            }
+        }
+    }
+
+    pub fn is_fn(&self) -> bool {
+        matches!(self, ObjectInternals::Fn(_))
+    }
+    pub fn get_fn(&self) -> Option<&FnData> {
+        match self {
+            ObjectInternals::Fn(v) => {
                 Some(v)
             }
             _ => {
@@ -344,6 +367,7 @@ pub fn init_types() -> HashMap<String, Object> {
     noneobject::init();
     dictobject::init();
     codeobject::init();
+    fnobject::init();
 
     let mut types = HashMap::new();
     for key in TYPES.read().unwrap().keys() {

@@ -20,7 +20,7 @@ pub enum CompilerInstruction {
     BinaryDiv(CompilerRegister, Position, Position), //Divide R1 (right) by R2 (left). Result in specified register
     StoreName(usize, CompilerRegister, Position, Position), //store R1 to names[index], loads None to specified register
     LoadName(usize, CompilerRegister, Position, Position), //load names[index] from locals to specified register
-    MakeFunction(usize, usize, usize, Position, Position), //build function with name as names[index1], args as consts[index2], code as consts[index3]
+    MakeFunction(usize, usize, usize, Position, Position), //build function with name as names[index1], args as consts[index2], code as consts[index3] to R1
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

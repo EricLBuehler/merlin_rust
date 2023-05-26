@@ -2,19 +2,19 @@ use std::{sync::Arc};
 
 use crate::interpreter::VM;
 
-use super::{Object, MethodValue, boolobject, stringobject, RawObject, create_object_from_type, finalize_type, intobject};
+use super::{Object, MethodValue, MethodType, boolobject, stringobject, RawObject, create_object_from_type, finalize_type, intobject};
 
 
-fn object_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn object_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(create_object_from_type(selfv))
 }
-fn object_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn object_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), "object".to_string()))
 }
-fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), Arc::ptr_eq(&selfv, &other)))
 }
-fn object_hash<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn object_hash<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 

@@ -71,29 +71,29 @@ pub struct RawObject<'a> {
     pub vm: Arc<VM<'a>>,
 
     //instantiation
-    pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, args, kwargs
+    pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
     
     //unary
-    pub repr: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
-    pub abs: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
-    pub neg: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
-    pub hash_fn: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
+    pub repr: Option<fn(Object<'a>) -> MethodType<'a>>, //self
+    pub abs: Option<fn(Object<'a>) -> MethodType<'a>>, //self
+    pub neg: Option<fn(Object<'a>) -> MethodType<'a>>, //self
+    pub hash_fn: Option<fn(Object<'a>) -> MethodType<'a>>, //self
 
     //binary
-    pub eq: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
-    pub add: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
-    pub sub: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
-    pub mul: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
-    pub div: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
-    pub pow: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub eq: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
+    pub add: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
+    pub sub: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
+    pub mul: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
+    pub div: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
+    pub pow: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
 
     //sequences
-    pub get: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
-    pub set: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other, value
-    pub len: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
+    pub get: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other
+    pub set: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, other, value
+    pub len: Option<fn(Object<'a>) -> MethodType<'a>>, //self
 
     //interaction
-    pub call: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, args
+    pub call: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args
 }
 
 impl<'a> Eq for RawObject<'a> {}
@@ -118,6 +118,7 @@ impl<'a> Hash for RawObject<'a> {
 }
 
 pub type Object<'a> = Arc<RawObject<'a>>;
+pub type MethodType<'a> = MethodValue<Object<'a>, Object<'a>>;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct FnData<'a> {

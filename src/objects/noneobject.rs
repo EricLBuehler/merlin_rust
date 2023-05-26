@@ -1,22 +1,22 @@
 use std::{sync::Arc};
 use crate::{objects::stringobject, interpreter::VM};
 
-use super::{RawObject, Object,MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject};
+use super::{RawObject, Object,MethodType, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject};
 
 pub fn none_from<'a>(vm: Arc<VM<'a>>) -> Object<'a> {
     create_object_from_type(vm.get_type("NoneType"))
 }
 
-fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn none_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn none_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), String::from("None")))
 }
-fn none_hash<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn none_hash<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
-fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), is_instance(&selfv, &other)))
 }
 

@@ -1,7 +1,7 @@
 use std::{sync::Arc};
 use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, interpreter::VM};
 
-use super::{RawObject, Object,MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
+use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
 
 pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
@@ -11,10 +11,10 @@ pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     tp
 }
 
-fn list_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn list_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn list_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn list_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     let mut res = String::from("[");
     for item in selfv.internals.get_arr().unwrap() {
         let repr = utils::object_repr_safe(item);
@@ -32,14 +32,14 @@ fn list_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
 }
 
-fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&other, &selfv.vm.get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = selfv.internals.get_arr().unwrap().get(other.internals.get_int().unwrap().clone().abs() as usize);
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
-fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&other, &selfv.vm.get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
     debug_assert!((other.internals.get_int().unwrap().clone().abs() as usize) < selfv.internals.get_arr().unwrap().len());
@@ -53,13 +53,13 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
 }
-fn list_len<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn list_len<'a>(selfv: Object<'a>) -> MethodType<'a> {
     let convert: Result<i128, _> = selfv.internals.get_arr().unwrap().len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
-fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     debug_assert!(selfv.internals.get_arr().unwrap().len() == other.internals.get_arr().unwrap().len());
     for idx in 0..selfv.internals.get_arr().unwrap().len() {

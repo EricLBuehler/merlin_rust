@@ -1,7 +1,7 @@
 use std::{sync::Arc, collections::HashMap};
 use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, interpreter::VM};
 
-use super::{RawObject, Object,MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
+use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
 
 pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
@@ -13,10 +13,10 @@ pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: HashMap<Object<'a>, Object<'a>>) -> O
     tp
 }
 
-fn dict_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn dict_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn dict_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn dict_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     let mut res = String::from("{");
     for (key, value) in selfv.internals.get_map().unwrap() {
         let repr = utils::object_repr_safe(key);
@@ -40,14 +40,14 @@ fn dict_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
 }
 
-fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     is_instance(&other, &selfv.vm.get_type("int"));
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = selfv.internals.get_map().unwrap().get(&other);
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
-fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     //DEBUG check for hash here!
     let mut map = selfv.internals.get_map().unwrap().clone();
     map.insert(other, value);
@@ -59,13 +59,13 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
 
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
 }
-fn dict_len<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn dict_len<'a>(selfv: Object<'a>) -> MethodType<'a> {
     let convert: Result<i128, _> = selfv.internals.get_map().unwrap().len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
-fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     debug_assert!(selfv.internals.get_map().unwrap().len() == other.internals.get_map().unwrap().len());
     for ((key1, value1), (key2, value2)) in std::iter::zip(selfv.internals.get_map().unwrap(), other.internals.get_map().unwrap()) {

@@ -2,16 +2,16 @@ use std::{sync::Arc};
 
 use crate::interpreter::VM;
 
-use super::{Object, MethodValue, boolobject, stringobject, RawObject, get_typeid, create_object_from_type, finalize_type, intobject};
+use super::{Object, MethodValue, MethodType, boolobject, stringobject, RawObject, get_typeid, create_object_from_type, finalize_type, intobject};
 
 
-fn type_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn type_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(create_object_from_type(selfv))
 }
-fn type_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn type_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<class '{}'>", selfv.typename)))
 }
-fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), get_typeid(selfv) == get_typeid(other)))
 }
 

@@ -1,7 +1,7 @@
 use std::{sync::Arc};
-use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
+use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM, compiler::Bytecode};
 
-use super::{RawObject, Object,MethodValue, finalize_type, create_object_from_type};
+use super::{RawObject, Object,MethodType, MethodValue, finalize_type, create_object_from_type};
 
 
 pub fn fn_from<'a>(vm: Arc<VM<'a>>, code: Object<'a>, args: Vec<Object<'a>>, name: String) -> Object<'a> {
@@ -11,18 +11,19 @@ pub fn fn_from<'a>(vm: Arc<VM<'a>>, code: Object<'a>, args: Vec<Object<'a>>, nam
     tp
 }
 
-fn fn_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn fn_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn fn_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn fn_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<fn '{}' @ 0x{:x}>",selfv.internals.get_fn().unwrap().name, Arc::as_ptr(&selfv) as i128)))
 }
-fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_fn().unwrap() == other.internals.get_fn().unwrap()))
 }
 
-fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
-    unimplemented!();
+fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
+    let code = selfv.internals.get_fn().unwrap().code.internals.get_code().unwrap();
+    MethodValue::Some(selfv.vm.clone().execute( Arc::new(code.clone())))
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

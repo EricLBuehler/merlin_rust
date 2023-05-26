@@ -2,7 +2,7 @@ use std::{sync::Arc};
 
 use crate::{objects::is_instance, interpreter::VM};
 
-use super::{RawObject, Object,MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
+use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
 
 pub fn int_from<'a>(vm: Arc<VM<'a>>, raw: i128) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("int"));
@@ -10,7 +10,7 @@ pub fn int_from<'a>(vm: Arc<VM<'a>>, raw: i128) -> Object<'a> {
     refr.internals = ObjectInternals::Int(raw);
     tp
 }
-pub fn int_from_str<'a>(vm: Arc<VM<'a>>, raw: String) -> MethodValue<Object<'a>, Object<'a>> {
+pub fn int_from_str<'a>(vm: Arc<VM<'a>>, raw: String) -> MethodType<'a> {
     let convert = raw.parse::<i128>();
     debug_assert!(convert.is_ok());
     let mut tp = create_object_from_type(vm.get_type("int"));
@@ -20,32 +20,32 @@ pub fn int_from_str<'a>(vm: Arc<VM<'a>>, raw: String) -> MethodValue<Object<'a>,
 }
 
 
-fn int_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
 
-fn int_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), selfv.internals.get_int().unwrap().to_string()))
 }
-fn int_abs<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_abs<'a>(selfv: Object<'a>) -> MethodType<'a> {
     let res = selfv.internals.get_int().unwrap().checked_abs();
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_int().unwrap() == other.internals.get_int().unwrap()))
 }
 
 
-fn int_neg<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_neg<'a>(selfv: Object<'a>) -> MethodType<'a> {
     let res = selfv.internals.get_int().unwrap().checked_neg();
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     let otherv = *other.internals.get_int().unwrap();
 
@@ -54,7 +54,7 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, 
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
 
     let otherv = *other.internals.get_int().unwrap();
@@ -64,7 +64,7 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, 
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     let otherv = *other.internals.get_int().unwrap();
 
@@ -73,7 +73,7 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, 
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     let otherv = *other.internals.get_int().unwrap();
     debug_assert!(otherv != 0);
@@ -83,7 +83,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, 
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     let otherv = *other.internals.get_int().unwrap();
 
@@ -94,7 +94,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, 
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
-fn int_hash<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+fn int_hash<'a>(selfv: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(int_from(selfv.vm.clone(), selfv.internals.get_int().unwrap().clone()))
 }
 

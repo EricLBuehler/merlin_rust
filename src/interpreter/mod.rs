@@ -70,6 +70,16 @@ impl<'a> VM<'a> {
             return (*interp_refr).run_interpreter(bytecode);
         }
     }
+
+    pub fn execute_vars(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
+        let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
+        unsafe {
+            let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
+            (*refr).interpreters.push(Arc::new(interpreter));
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().unwrap().clone()) as *mut Interpreter<'a>;
+            return (*interp_refr).run_interpreter_vars(bytecode, vars);
+        }
+    }
 }
 
 impl<'a> Interpreter<'a> {
@@ -126,10 +136,23 @@ impl<'a> Interpreter<'a> {
             }
         }
     }
+    
+    pub fn run_interpreter_vars(&mut self, bytecode: Arc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
+        self.add_frame();
+        unsafe {
+            let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
+            (*namespace_refr).locals.pop();
+            (*namespace_refr).locals.push(vars);
+        }
+        self.run_interpreter(bytecode)
+    }
 
     pub fn run_interpreter(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         self.add_frame();
+        self.run_interpreter_raw(bytecode)
+    }
 
+    pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         for instruction in bytecode.instructions.clone() {
             match instruction {
                 CompilerInstruction::LoadConstR1(idx, _start, _end) => {

@@ -1,5 +1,5 @@
-use std::{sync::Arc};
-use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM, compiler::Bytecode};
+use std::{sync::Arc, collections::HashMap};
+use crate::{objects::{stringobject, ObjectInternals, boolobject, is_instance, dictobject}, interpreter::VM, compiler::Bytecode};
 
 use super::{RawObject, Object,MethodType, MethodValue, finalize_type, create_object_from_type};
 
@@ -22,8 +22,16 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
+    debug_assert!(is_instance(&args, &selfv.vm.clone().get_type("list")));
+
+    debug_assert!(args.internals.get_arr().unwrap().len() == selfv.internals.get_fn().unwrap().args.len());
+    let mut map = HashMap::new();
+    for (name, value) in std::iter::zip(args.internals.get_arr().unwrap(), &selfv.internals.get_fn().unwrap().args) {
+        map.insert(name.clone(), value.clone());
+    }
+    let vars = dictobject::dict_from(selfv.vm.clone(), map);
     let code = selfv.internals.get_fn().unwrap().code.internals.get_code().unwrap();
-    MethodValue::Some(selfv.vm.clone().execute( Arc::new(code.clone())))
+    MethodValue::Some(selfv.vm.clone().execute_vars( Arc::new(code.clone()), vars))
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

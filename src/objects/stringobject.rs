@@ -9,7 +9,7 @@ use crate::objects::{is_instance, boolobject, intobject};
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, finalize_type};
 
 
-pub fn string_from<'a>(vm: Arc<VM<'a>>, raw: String) -> Object<'a> {
+pub fn string_from(vm: Arc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
     let mut refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Str(raw);
@@ -19,7 +19,7 @@ pub fn string_from<'a>(vm: Arc<VM<'a>>, raw: String) -> Object<'a> {
 fn string_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn string_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(selfv.vm.clone(), "\"".to_owned()+selfv.internals.get_str().unwrap()+"\""))
 }
 fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -30,11 +30,11 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     is_instance(&other, &selfv.vm.get_type("int"));
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = UnicodeSegmentation::graphemes(selfv.internals.get_str().unwrap().as_str(), true).nth(other.internals.get_int().unwrap().clone().abs() as usize);
+    let out = UnicodeSegmentation::graphemes(selfv.internals.get_str().unwrap().as_str(), true).nth((*other.internals.get_int().unwrap()).unsigned_abs() as usize);
     debug_assert!(out.is_some());
     MethodValue::Some(string_from(selfv.vm.clone(), out.unwrap().to_string()))
 }
-fn string_len<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn string_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_str().unwrap().len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))

@@ -3,17 +3,17 @@ use crate::{objects::stringobject, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject};
 
-pub fn none_from<'a>(vm: Arc<VM<'a>>) -> Object<'a> {
+pub fn none_from(vm: Arc<VM<'_>>) -> Object<'_> {
     create_object_from_type(vm.get_type("NoneType"))
 }
 
 fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn none_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn none_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), String::from("None")))
 }
-fn none_hash<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn none_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {

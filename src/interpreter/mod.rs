@@ -37,7 +37,7 @@ impl<'a> Eq for VM<'a> {}
 
 impl<'a> PartialEq for VM<'a> {
     fn eq(&self, other: &Self) -> bool {
-        return self.types == other.types && self.interpreters == other.interpreters && self.namespaces == other.namespaces;
+        self.types == other.types && self.interpreters == other.interpreters && self.namespaces == other.namespaces
     }
 }
 

@@ -14,7 +14,7 @@ pub fn fn_from<'a>(vm: Arc<VM<'a>>, code: Object<'a>, args: Vec<Object<'a>>, nam
 fn fn_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn fn_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<fn '{}' @ 0x{:x}>",selfv.internals.get_fn().unwrap().name, Arc::as_ptr(&selfv) as i128)))
 }
 fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {

@@ -16,7 +16,7 @@ pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: HashMap<Object<'a>, Object<'a>>) -> O
 fn dict_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn dict_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
     let mut res = String::from("{");
     for (key, value) in selfv.internals.get_map().unwrap() {
         let repr = utils::object_repr_safe(key);
@@ -59,7 +59,7 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
 
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
 }
-fn dict_len<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_map().unwrap().len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))

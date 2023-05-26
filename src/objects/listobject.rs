@@ -14,7 +14,7 @@ pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
 fn list_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn list_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
     let mut res = String::from("[");
     for item in selfv.internals.get_arr().unwrap() {
         let repr = utils::object_repr_safe(item);
@@ -35,16 +35,16 @@ fn list_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
 fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&other, &selfv.vm.get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = selfv.internals.get_arr().unwrap().get(other.internals.get_int().unwrap().clone().abs() as usize);
+    let out = selfv.internals.get_arr().unwrap().get((*other.internals.get_int().unwrap()).unsigned_abs() as usize);
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
 fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&other, &selfv.vm.get_type("int")));
     //NEGATIVE INDEX IS CONVERTED TO +
-    debug_assert!((other.internals.get_int().unwrap().clone().abs() as usize) < selfv.internals.get_arr().unwrap().len());
+    debug_assert!(((*other.internals.get_int().unwrap()).unsigned_abs() as usize) < selfv.internals.get_arr().unwrap().len());
     let mut arr = selfv.internals.get_arr().unwrap().clone();
-    arr[other.internals.get_int().unwrap().clone().abs() as usize] = value;
+    arr[(*other.internals.get_int().unwrap()).unsigned_abs() as usize] = value;
     
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
@@ -53,7 +53,7 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
 }
-fn list_len<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn list_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_arr().unwrap().len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))

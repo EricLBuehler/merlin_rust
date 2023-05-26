@@ -96,7 +96,7 @@ impl<'a> Parser<'a> {
             return true;
         }
         self.reverse();
-        return false;
+        false
     }
 
     fn raise_error(&mut self, error: &str, errtp: ErrorType) -> !{
@@ -125,7 +125,7 @@ impl<'a> Parser<'a> {
 
     fn expect(&mut self, typ: TokenType) {
         if !self.current_is_type(typ.clone()) {
-            self.raise_error(format!("Invalid '{}', got '{}'.", typ.to_string(), self.current.tp.to_string()).as_str(), ErrorType::UnexpectedEOF)
+            self.raise_error(format!("Invalid '{}', got '{}'.", typ, self.current.tp).as_str(), ErrorType::UnexpectedEOF)
         }
     }
 

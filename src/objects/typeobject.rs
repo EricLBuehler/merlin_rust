@@ -8,7 +8,7 @@ use super::{Object, MethodValue, MethodType, boolobject, stringobject, RawObject
 fn type_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(create_object_from_type(selfv))
 }
-fn type_repr<'a>(selfv: Object<'a>) -> MethodType<'a> {
+fn type_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<class '{}'>", selfv.typename)))
 }
 fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {

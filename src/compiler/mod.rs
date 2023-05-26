@@ -61,16 +61,16 @@ impl<'a> Compiler<'a> {
     fn compile_statement(&mut self, expr: &Node) {
         match expr.tp {
             NodeType::Decimal => {
-                self.compile_expr(&expr, CompilerRegister::NA);
+                self.compile_expr(expr, CompilerRegister::NA);
             }
             NodeType::Binary => {
-                self.compile_expr(&expr, CompilerRegister::R1);
+                self.compile_expr(expr, CompilerRegister::R1);
             }
             NodeType::Identifier => {
-                self.compile_expr(&expr, CompilerRegister::R1);
+                self.compile_expr(expr, CompilerRegister::R1);
             }
             NodeType::StoreNode => {
-                self.compile_expr(&expr, CompilerRegister::NA);
+                self.compile_expr(expr, CompilerRegister::NA);
             }
             NodeType::Function => {
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").unwrap().clone()));
@@ -92,7 +92,7 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, CompilerRegister::NA, expr.start, expr.end));
             }
             NodeType::Call => {
-                self.compile_expr(&expr, CompilerRegister::R1);
+                self.compile_expr(expr, CompilerRegister::R1);
             }
         }
     }
@@ -155,9 +155,8 @@ impl<'a> Compiler<'a> {
             }
             NodeType::Call => {
                 self.instructions.push(CompilerInstruction::InitArgs(expr.start, expr.end));
-                let mut args = Vec::new();
                 for arg in expr.data.get_data().nodearr.unwrap() {
-                    args.push(self.compile_expr(arg, register));
+                    self.compile_expr(arg, register);
                     self.instructions.push(CompilerInstruction::AddArgument(register, expr.start, expr.end));
                 }
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").unwrap().clone()));

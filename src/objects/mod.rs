@@ -29,11 +29,11 @@ impl<'a> ObjectType<'a> {
     pub fn get_value(&self) -> Object<'a> {
         match self {
             ObjectType::Other(v) => {
-                return v.clone();
+                v.clone()
             }
             ObjectType::Type(vm) => {
                 let tp = vm.get_type("type");
-                return tp;
+                tp
             }
             _ => {
                 unimplemented!();
@@ -53,11 +53,11 @@ impl<'a> ObjectBase<'a> {
     pub fn get_value(&self) -> Object<'a> {
         match self {
             ObjectBase::Other(v) => {
-                return v.clone();
+                v.clone()
             }
             ObjectBase::Object(vm) => {
                 let tp = vm.get_type("object");
-                return tp;
+                tp
             }
         }
     }
@@ -101,10 +101,10 @@ impl<'a> Eq for RawObject<'a> {}
 
 impl<'a> PartialEq for RawObject<'a> {
     fn eq(&self, other: &Self) -> bool {
-        return  self.tp == other.tp &&
+        self.tp == other.tp &&
                 self.typename == other.typename &&
                 self.internals == other.internals &&
-                self.bases == other.bases;
+                self.bases == other.bases
     }
 }
 
@@ -114,7 +114,7 @@ impl<'a> Hash for RawObject<'a> {
         let res = (self.hash_fn.unwrap())(Arc::new(self.clone()));
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
-        state.write_i128(res.unwrap().internals.get_int().unwrap().clone());
+        state.write_i128(*res.unwrap().internals.get_int().unwrap());
     }
 }
 
@@ -311,7 +311,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     }
 }
 
-fn create_object_from_type<'a>(tp: Object<'a>) -> Object<'a> {
+fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
     let mut tp = tp.clone();
     let alt = tp.clone();
     
@@ -320,14 +320,14 @@ fn create_object_from_type<'a>(tp: Object<'a>) -> Object<'a> {
     tp
 }
 
-fn get_typeid<'a>(selfv: Object<'a>) -> u64 {
+fn get_typeid(selfv: Object<'_>) -> u64 {
     let mut hasher = DefaultHasher::new();
     selfv.typename.hash(&mut hasher);
     hasher.finish()
 }
 
 fn is_instance<'a>(selfv: &Object<'a>, other: &Object<'a>) -> bool {
-    return get_typeid(selfv.clone()) == get_typeid(other.clone());
+    get_typeid(selfv.clone()) == get_typeid(other.clone())
 }
 
 fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
@@ -349,7 +349,7 @@ fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
     tp.len = basetp.len;
 }
 
-fn finalize_type<'a>(tp: Object<'a>) {
+fn finalize_type(tp: Object<'_>) {
     let mut cpy = tp.clone();
     let refr = Arc::make_mut(&mut cpy);
 
@@ -367,7 +367,7 @@ fn finalize_type<'a>(tp: Object<'a>) {
     inherit_slots(refr, tp);
 }
 
-pub fn init_types<'a>(vm: Arc<VM<'a>>) {
+pub fn init_types(vm: Arc<VM<'_>>) {
     objectobject::init(vm.clone());
     typeobject::init(vm.clone());
     intobject::init(vm.clone());

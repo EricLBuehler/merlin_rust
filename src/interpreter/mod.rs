@@ -233,8 +233,15 @@ impl<'a> Interpreter<'a> {
                     debug_assert!(value.is_some());
                     self.assign_to_register(value.unwrap(), register);
                 }
+                CompilerInstruction::Return(register, _start, _end) => {
+                    let res = self.read_register(register);
+                    self.frames.pop();
+                    return res.clone();
+                }
             }
         }
+
+        self.frames.pop();
 
         return noneobject::none_from(self.vm.clone());
     }

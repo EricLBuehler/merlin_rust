@@ -23,6 +23,7 @@ pub enum NodeType {
     Identifier,
     Function,
     Call,
+    Return
 }
 
 #[derive(Debug)]
@@ -156,6 +157,21 @@ impl NodeData for CallNode {
         let mut value = NodeValue::new();
         value.raw.insert(String::from("name"), self.name.clone());
         value.nodearr = Some(&self.args);
+        
+        value
+    }
+}
+
+// ========================
+
+pub struct ReturnNode {
+    pub expr: Node,
+}
+
+impl NodeData for ReturnNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.nodes.insert(String::from("expr"), &self.expr);
         
         value
     }

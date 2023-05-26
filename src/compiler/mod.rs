@@ -27,6 +27,7 @@ pub enum CompilerInstruction {
     InitArgs(Position, Position), //Initialize argument collector
     AddArgument(CompilerRegister, Position, Position), //Add argument from specified register to latest argument collector
     Call(CompilerRegister, CompilerRegister, Position, Position), //Call callable in specified register 1, result in specified register 2
+    Return(CompilerRegister, Position, Position), //Return from specified register
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -92,6 +93,9 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, CompilerRegister::NA, expr.start, expr.end));
             }
             NodeType::Call => {
+                self.compile_expr(expr, CompilerRegister::R1);
+            }
+            NodeType::Return => {
                 self.compile_expr(expr, CompilerRegister::R1);
             }
         }
@@ -163,6 +167,10 @@ impl<'a> Compiler<'a> {
                 let nameidx = self.names.len() - 1;
                 self.instructions.push(CompilerInstruction::LoadName(nameidx, register, expr.start, expr.end));
                 self.instructions.push(CompilerInstruction::Call(register, register, expr.start, expr.end));
+            }
+            NodeType::Return => {
+                self.compile_expr(expr.data.get_data().nodes.get("expr").unwrap(), register);
+                self.instructions.push(CompilerInstruction::Return(register, expr.start, expr.end));
             }
         }
     }

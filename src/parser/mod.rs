@@ -174,6 +174,9 @@ impl<'a> Parser<'a> {
         if self.current.data == "fn" {
             self.parse_fn()
         }
+        else if self.current.data == "return" {
+            self.parse_return()
+        }
         else {
             self.raise_error("Unknown keyword.", ErrorType::UnknownKeyword);
         }
@@ -307,5 +310,16 @@ impl<'a> Parser<'a> {
                                 Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                 nodes::NodeType::Function, 
                                 Box::new(nodes::FunctionNode {name, args, code}))
+    }
+    
+    fn parse_return(&mut self) -> Node {
+        self.advance();
+        
+        let expr = self.expr(Precedence::Lowest);
+        
+        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                nodes::NodeType::Return, 
+                                Box::new(nodes::ReturnNode {expr}))
     }
 } 

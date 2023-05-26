@@ -48,6 +48,7 @@ pub enum ObjectBase<'a> {
     Other(Object<'a>)
 }
 
+#[allow(dead_code)]
 impl<'a> ObjectBase<'a> {
     pub fn get_value(&self) -> Object<'a> {
         match self {

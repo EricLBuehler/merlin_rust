@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::HashMap};
-use crate::{objects::{stringobject, ObjectInternals, boolobject, is_instance, dictobject}, interpreter::VM, compiler::Bytecode};
+use crate::{objects::{stringobject, ObjectInternals, boolobject, is_instance, dictobject}, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, finalize_type, create_object_from_type};
 

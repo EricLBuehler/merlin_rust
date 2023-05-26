@@ -1,6 +1,7 @@
-mod fileinfo;
- 
+use clap::Parser;
 use std::sync::Arc;
+
+mod fileinfo;
 
 use fileinfo::FileInfo;
 mod lexer;
@@ -72,13 +73,20 @@ fn run_data(file_data: String, name: String) {
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
 }
 
+
+//Version: major.minor
+#[derive(Parser, Debug)]
+#[command(author, version = "1.1", about, long_about = None)]
+struct Args {
+    /// File to execute
+    #[arg(required = true, name = "file")]
+    file: String,
+}
+
 fn main() {
-    let args: Vec<String> = std::env::args().collect();
+    let args = Args::parse();
 
-    debug_assert!(args.len()==2);
-
-    let filename = &args[1];
-    run_file(filename);
+    run_file(&args.file);
 }
 
 #[cfg(test)]

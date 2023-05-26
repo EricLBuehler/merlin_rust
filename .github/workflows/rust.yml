@@ -20,5 +20,7 @@ jobs:
       run: cargo build --verbose
     - name: Clippy
       run: cargo check --verbose
-    - name: Run exampe program
+    - name: Run example program (debug)
       run: cargo run program.me
+    - name: Run example program (release)
+      run: cargo run -r program.me

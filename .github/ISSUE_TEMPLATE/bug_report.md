@@ -25,7 +25,7 @@ If applicable, paste the `Merlin` code here that caused the error.
 A clear and concise description of what you expected to happen.
 
 **Debug output**
-Output
+Output when built in debug mode and run using the steps to reproduce the behavior.
 
 **Conextual information**
 Add system information and version here.

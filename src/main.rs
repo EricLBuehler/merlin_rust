@@ -15,13 +15,7 @@ mod compiler;
 
 mod interpreter;
 
-fn main() {
-    let args: Vec<String> = std::env::args().collect();
-
-    debug_assert!(args.len()==2);
-
-    let filename = &args[1];    
-    
+fn run_file(filename: &String) {
     let res = std::fs::read_to_string(filename);
     let file_data = match res {
         Ok(_) => {
@@ -33,11 +27,15 @@ fn main() {
         }
     };
 
+    run_data(file_data, filename.clone());
+}
+
+fn run_data(file_data: String, name: String) {
     let file_data_bytes = file_data.as_bytes();
 
     let file_info = FileInfo {
         data: file_data_bytes,
-        name: filename.to_owned(),
+        name,
     };
 
     let keywords = vec![String::from("fn")];
@@ -56,7 +54,7 @@ fn main() {
     objects::init_types(vm.clone());
 
     if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
-    
+
     let mut compiler = compiler::Compiler::new(&file_info, vm.clone());
     let bytecode = compiler.generate_bytecode(&ast);
 
@@ -72,4 +70,33 @@ fn main() {
 
     vm.execute(bytecode);
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    debug_assert!(args.len()==2);
+
+    let filename = &args[1];
+    run_file(filename);
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::run_file;
+
+    #[test]
+    fn test_literals() {
+        run_file(&String::from("tests/literals.me"));
+    }
+
+    #[test]
+    fn test_operators() {
+        run_file(&String::from("tests/operators.me"));
+    }
+
+    #[test]
+    fn test_functions() {
+        run_file(&String::from("tests/functions.me"));
+    }
 }

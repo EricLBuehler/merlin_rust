@@ -18,9 +18,18 @@ jobs:
     - name: Build
       run: cargo build --verbose
 
-  run:
+  test:
     runs-on: ubuntu-latest
     needs: build
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Tests
+      run: cargo test --test
+
+  run:
+    runs-on: ubuntu-latest
+    needs: [build, test]
     steps:
     - uses: actions/checkout@v3
     - name: Run example program (debug)

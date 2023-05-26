@@ -1,38 +1,34 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Submit a bug report to help Merlin improve
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-**Describe the bug**
+**Bug overview**
 A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+1. ...
+2. ...
+3. ...
+
+If it is not reproducable, see `Additional context`
+
+**Code**
+If applicable, paste the `Merlin` code here that caused the error.
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Debug output**
+Output
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
-
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+**Conextual information**
+Add system information and version here.
 
 **Additional context**
-Add any other context about the problem here.
+Add any other context about the problem here (including, if applicable, why the error is not reproducable).

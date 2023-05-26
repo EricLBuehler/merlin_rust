@@ -1,6 +1,6 @@
-use std::{sync::{Arc, RwLock, }, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}, cell::Cell};
+use std::{sync::{Arc}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
 
-use crate::compiler::Bytecode;
+use crate::{compiler::Bytecode, interpreter::VM};
 
 
 pub mod utils;
@@ -16,113 +16,133 @@ pub mod dictobject;
 pub mod codeobject;
 pub mod fnobject;
 
-#[derive(Clone, PartialEq, Eq)]
-pub enum ObjectType {
-    Type,
-    Other(Object)
+#[derive(Clone, PartialEq, Eq, Default)]
+pub enum ObjectType<'a> {
+    #[default]
+    No,
+    Type(Arc<VM<'a>>),
+    Other(Object<'a>)
 }
 
 #[allow(dead_code)]
-impl ObjectType {
-    pub fn get_value(&self) -> Object {
+impl<'a> ObjectType<'a> {
+    pub fn get_value(&self) -> Object<'a> {
         match self {
             ObjectType::Other(v) => {
                 return v.clone();
             }
-            _ => {
-                let tp = get_type("type");
+            ObjectType::Type(vm) => {
+                let tp = vm.get_type("type");
                 return tp;
+            }
+            _ => {
+                unimplemented!();
             }
         }
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
-pub enum ObjectBase {
-    Object,
-    Other(Object)
+#[derive(Clone, PartialEq, Eq)]
+pub enum ObjectBase<'a> {
+    Object(Arc<VM<'a>>),
+    Other(Object<'a>)
 }
 
-impl ObjectBase {
-    pub fn get_value(&self) -> Object {
+impl<'a> ObjectBase<'a> {
+    pub fn get_value(&self) -> Object<'a> {
         match self {
             ObjectBase::Other(v) => {
                 return v.clone();
             }
-            _ => {
-                let tp = get_type("object");
+            ObjectBase::Object(vm) => {
+                let tp = vm.get_type("object");
                 return tp;
             }
         }
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
-pub struct RawObject {
-    pub tp: ObjectType,
-    pub internals: ObjectInternals,
+#[derive(Clone)]
+pub struct RawObject<'a> {
+    pub tp: ObjectType<'a>,
+    pub internals: ObjectInternals<'a>,
     pub typename: String,
-    pub bases: Vec<ObjectBase>,
+    pub bases: Vec<ObjectBase<'a>>,
+    pub vm: Arc<VM<'a>>,
 
     //instantiation
-    pub new: Option<fn(Object, Object, Object) -> MethodValue<Object, Object>>, //self, args, kwargs
+    pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, args, kwargs
     
     //unary
-    pub repr: Option<fn(Object,) -> MethodValue<Object, Object>>, //self
-    pub abs: Option<fn(Object) -> MethodValue<Object, Object>>, //self
-    pub neg: Option<fn(Object) -> MethodValue<Object, Object>>, //self
-    pub hash_fn: Option<fn(Object) -> MethodValue<Object, Object>>, //self
+    pub repr: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
+    pub abs: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
+    pub neg: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
+    pub hash_fn: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
 
     //binary
-    pub eq: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
-    pub add: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
-    pub sub: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
-    pub mul: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
-    pub div: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
-    pub pow: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
+    pub eq: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub add: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub sub: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub mul: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub div: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub pow: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
 
     //sequences
-    pub get: Option<fn(Object, Object) -> MethodValue<Object, Object>>, //self, other
-    pub set: Option<fn(Object, Object, Object) -> MethodValue<Object, Object>>, //self, other, value
-    pub len: Option<fn(Object) -> MethodValue<Object, Object>>, //self
+    pub get: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other
+    pub set: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, other, value
+    pub len: Option<fn(Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self
+
+    //interaction
+    pub call: Option<fn(Object<'a>, Object<'a>) -> MethodValue<Object<'a>, Object<'a>>>, //self, args
 }
 
-impl Hash for RawObject {
+impl<'a> Eq for RawObject<'a> {}
+
+impl<'a> PartialEq for RawObject<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        return  self.tp == other.tp &&
+                self.typename == other.typename &&
+                self.internals == other.internals &&
+                self.bases == other.bases;
+    }
+}
+
+impl<'a> Hash for RawObject<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.hash_fn.is_some());
         let res = (self.hash_fn.unwrap())(Arc::new(self.clone()));
         debug_assert!(res.is_some());
-        debug_assert!(is_instance(&res.unwrap(), &get_type("int")));
+        debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
         state.write_i128(res.unwrap().internals.get_int().unwrap().clone());
     }
 }
 
-pub type Object = Arc<RawObject>;
+pub type Object<'a> = Arc<RawObject<'a>>;
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct FnData {
-    code: Object,
-    args: Vec<Object>,
+pub struct FnData<'a> {
+    code: Object<'a>,
+    args: Vec<Object<'a>>,
     name: String,
 }
 
 #[derive(Clone, Default, PartialEq, Eq)]
 #[allow(dead_code)]
-pub enum ObjectInternals {
+pub enum ObjectInternals<'a> {
     #[default]
     No,
     Bool(bool),
     Int(i128),
     Str(String),
-    Arr(Vec<Object>),
-    Map(HashMap<Object, Object>),
-    Code(Bytecode),
-    Fn(FnData),
+    Arr(Vec<Object<'a>>),
+    Map(HashMap<Object<'a>, Object<'a>>),
+    Code(Arc<Bytecode<'a>>),
+    Fn(FnData<'a>),
     None,
 }
 
 #[allow(dead_code)]
-impl ObjectInternals {
+impl<'a> ObjectInternals<'a> {
     pub fn is_no(&self) -> bool {
         matches!(self, ObjectInternals::No)
     }
@@ -172,7 +192,7 @@ impl ObjectInternals {
     pub fn is_arr(&self) -> bool {
         matches!(self, ObjectInternals::Arr(_))
     }
-    pub fn get_arr(&self) -> Option<&Vec<Object>> {
+    pub fn get_arr(&self) -> Option<&Vec<Object<'a>>> {
         match self {
             ObjectInternals::Arr(v) => {
                 Some(v)
@@ -200,7 +220,7 @@ impl ObjectInternals {
     pub fn is_map(&self) -> bool {
         matches!(self, ObjectInternals::Map(_))
     }
-    pub fn get_map(&self) -> Option<&HashMap<Object, Object>> {
+    pub fn get_map(&self) -> Option<&HashMap<Object<'a>, Object<'a>>> {
         match self {
             ObjectInternals::Map(v) => {
                 Some(v)
@@ -214,7 +234,7 @@ impl ObjectInternals {
     pub fn is_code(&self) -> bool {
         matches!(self, ObjectInternals::Code(_))
     }
-    pub fn get_code(&self) -> Option<&Bytecode> {
+    pub fn get_code(&self) -> Option<&Bytecode<'a>> {
         match self {
             ObjectInternals::Code(v) => {
                 Some(v)
@@ -228,7 +248,7 @@ impl ObjectInternals {
     pub fn is_fn(&self) -> bool {
         matches!(self, ObjectInternals::Fn(_))
     }
-    pub fn get_fn(&self) -> Option<&FnData> {
+    pub fn get_fn(&self) -> Option<&FnData<'a>> {
         match self {
             ObjectInternals::Fn(v) => {
                 Some(v)
@@ -289,19 +309,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     }
 }
 
-lazy_static! {
-    pub static ref TYPES: RwLock<HashMap<String, Object>> = RwLock::new(HashMap::new());
-}
-
-//helper functions
-pub fn get_type(key: &str) -> Object {
-    TYPES.read().unwrap().get(key).unwrap().clone()
-}
-fn add_type(key: &str, obj: Object) {
-    TYPES.write().unwrap().insert(key.to_string(), obj);
-}
-
-fn create_object_from_type(tp: Object) -> Object {
+fn create_object_from_type<'a>(tp: Object<'a>) -> Object<'a> {
     let mut tp = tp.clone();
     let alt = tp.clone();
     
@@ -310,17 +318,17 @@ fn create_object_from_type(tp: Object) -> Object {
     tp
 }
 
-fn get_typeid(selfv: Object) -> u64 {
+fn get_typeid<'a>(selfv: Object<'a>) -> u64 {
     let mut hasher = DefaultHasher::new();
     selfv.typename.hash(&mut hasher);
     hasher.finish()
 }
 
-fn is_instance(selfv: &Object, other: &Object) -> bool {
+fn is_instance<'a>(selfv: &Object<'a>, other: &Object<'a>) -> bool {
     return get_typeid(selfv.clone()) == get_typeid(other.clone());
 }
 
-fn inherit_slots(tp: &mut RawObject, basetp: Object) {
+fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
     tp.new = basetp.new;
 
     tp.repr = basetp.repr;
@@ -339,7 +347,7 @@ fn inherit_slots(tp: &mut RawObject, basetp: Object) {
     tp.len = basetp.len;
 }
 
-fn finalize_type(tp: Object) {
+fn finalize_type<'a>(tp: Object<'a>) {
     let mut cpy = tp.clone();
     let refr = Arc::make_mut(&mut cpy);
 
@@ -348,8 +356,8 @@ fn finalize_type(tp: Object) {
             ObjectBase::Other(basetp) => {
                 inherit_slots(refr, basetp);
             }
-            ObjectBase::Object => {
-                inherit_slots(refr, get_type("object"));
+            ObjectBase::Object(_) => {
+                inherit_slots(refr, tp.vm.get_type("object"));
             }
         }
     }
@@ -357,23 +365,15 @@ fn finalize_type(tp: Object) {
     inherit_slots(refr, tp);
 }
 
-pub fn init_types() -> HashMap<String, Object> {
-    objectobject::init();
-    typeobject::init();
-    intobject::init();
-    boolobject::init();
-    stringobject::init();
-    listobject::init();
-    noneobject::init();
-    dictobject::init();
-    codeobject::init();
-    fnobject::init();
-
-    let mut types = HashMap::new();
-    for key in TYPES.read().unwrap().keys() {
-        let typ = get_type(key);
-        types.insert(key.clone(), typ);
-    }
-
-    types
+pub fn init_types<'a>(vm: Arc<VM<'a>>) {
+    objectobject::init(vm.clone());
+    typeobject::init(vm.clone());
+    intobject::init(vm.clone());
+    boolobject::init(vm.clone());
+    stringobject::init(vm.clone());
+    listobject::init(vm.clone());
+    noneobject::init(vm.clone());
+    dictobject::init(vm.clone());
+    codeobject::init(vm.clone());
+    fnobject::init(vm.clone());
 }

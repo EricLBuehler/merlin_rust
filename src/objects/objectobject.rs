@@ -1,31 +1,37 @@
 use std::{sync::Arc};
 
-use super::{Object, add_type, MethodValue, boolobject, stringobject, RawObject, create_object_from_type, finalize_type, intobject};
+use crate::interpreter::VM;
+
+use super::{Object, MethodValue, boolobject, stringobject, RawObject, create_object_from_type, finalize_type, intobject};
 
 
-fn object_new(selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+fn object_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
     MethodValue::Some(create_object_from_type(selfv))
 }
-fn object_repr(_selfv: Object) -> MethodValue<Object, Object> {
-    MethodValue::Some(stringobject::string_from("object".to_string()))
+fn object_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), "object".to_string()))
 }
-fn object_eq(selfv: Object, other: Object) -> MethodValue<Object, Object> {
-    MethodValue::Some(boolobject::bool_from(Arc::ptr_eq(&selfv, &other)))
+fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), Arc::ptr_eq(&selfv, &other)))
+}
+fn object_hash<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 
-pub fn init(){
-    let tp: Arc<RawObject> = Arc::new( RawObject{
-        tp: super::ObjectType::Type,
+pub fn init<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+        tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("object"),
-        bases: vec![super::ObjectBase::Object],
+        bases: vec![super::ObjectBase::Object(vm.clone())],
+        vm: vm.clone(),
 
         new: Some(object_new),
 
         repr: Some(object_repr),
         abs: None,
         neg: None,
-        hash_fn: Some(|_: Object| { MethodValue::Some(intobject::int_from(-1)) }),
+        hash_fn: Some(object_hash),
 
         eq: Some(object_eq),
         add: None,
@@ -37,9 +43,11 @@ pub fn init(){
         get: None,
         set: None,
         len: None,
+
+        call: None,
     });
 
-    add_type(&tp.clone().typename, tp.clone());
+    vm.clone().add_type(&tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

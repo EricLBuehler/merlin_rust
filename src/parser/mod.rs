@@ -95,6 +95,7 @@ impl<'a> Parser<'a> {
             self.reverse();
             return true;
         }
+        self.reverse();
         return false;
     }
 
@@ -201,6 +202,7 @@ impl<'a> Parser<'a> {
             }
         }
         if self.is_atomic() {
+            self.reverse();
             self.raise_error("Invalid or unexpected token.", ErrorType::UnexpectedToken);
         }
         
@@ -228,7 +230,26 @@ impl<'a> Parser<'a> {
                                     nodes::NodeType::StoreNode, 
                                     Box::new(nodes::StoreNode {name, expr}));
         }
-        
+        else if self.next_is_type(TokenType::LParen) {
+            self.advance();
+            self.advance();
+
+            let mut args = Vec::new();            
+            while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof) {
+                args.push(self.expr(Precedence::Lowest));
+                if self.current_is_type(TokenType::RParen) {
+                    self.advance();
+                    break;
+                }
+                self.expect(TokenType::Comma);
+            }
+
+            return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                    Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                    nodes::NodeType::Call, 
+                                    Box::new(nodes::CallNode {name, args}));
+        }
+
         nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                     Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
                                     nodes::NodeType::Identifier, 

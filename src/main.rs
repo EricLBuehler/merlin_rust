@@ -1,8 +1,7 @@
 mod fileinfo;
-
-#[macro_use]
-extern crate lazy_static;
  
+use std::sync::Arc;
+
 use fileinfo::FileInfo;
 mod lexer;
 
@@ -53,10 +52,12 @@ fn main() {
     let ast = parser::new(lexer, &file_info).generate_ast();
     if cfg!(debug_assertions) { println!("===== Done with parsing ====="); }
 
-    let types = objects::init_types();
+    let vm = Arc::new(interpreter::VM::new());
+    objects::init_types(vm.clone());
 
     if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
-    let mut compiler = compiler::Compiler::new(&file_info);
+    
+    let mut compiler = compiler::Compiler::new(&file_info, vm.clone());
     let bytecode = compiler.generate_bytecode(&ast);
 
     if cfg!(debug_assertions) {
@@ -68,7 +69,6 @@ fn main() {
     }
 
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
-    let mut vm = interpreter::VM::new(types);
 
     vm.execute(bytecode);
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }

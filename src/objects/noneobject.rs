@@ -1,34 +1,41 @@
 use std::{sync::Arc};
-use crate::objects::stringobject;
+use crate::{objects::stringobject, interpreter::VM};
 
-use super::{RawObject, Object, get_type, add_type, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject};
+use super::{RawObject, Object,MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject};
 
-pub fn none_from() -> Object {
-    create_object_from_type(get_type("NoneType"))
+pub fn none_from<'a>(vm: Arc<VM<'a>>) -> Object<'a> {
+    create_object_from_type(vm.get_type("NoneType"))
 }
 
-fn none_new(_selfv: Object, _args: Object, _kwargs: Object) -> MethodValue<Object, Object> {
+fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
     unimplemented!();
 }
-fn none_repr(_selfv: Object) -> MethodValue<Object, Object> {
-    MethodValue::Some(stringobject::string_from(String::from("None")))
+fn none_repr<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), String::from("None")))
+}
+fn none_hash<'a>(selfv: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+}
+fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodValue<Object<'a>, Object<'a>> {
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), is_instance(&selfv, &other)))
 }
 
-pub fn init(){
-    let tp: Arc<RawObject> = Arc::new( RawObject{
-        tp: super::ObjectType::Other(get_type("type")),
+pub fn init<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+        tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("NoneType"),
-        bases: vec![super::ObjectBase::Other(get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        vm: vm.clone(),
 
         new: Some(none_new),
 
         repr: Some(none_repr),
         abs: None,
         neg: None,
-        hash_fn: Some(|_: Object| { MethodValue::Some(intobject::int_from(-2)) }),
+        hash_fn: Some(none_hash),
 
-        eq: Some(|selfv, other| {MethodValue::Some(boolobject::bool_from(is_instance(&selfv, &other)))}),
+        eq: Some(none_eq),
         add: None,
         sub: None,
         mul: None,
@@ -38,9 +45,11 @@ pub fn init(){
         get: None,
         set: None,
         len: None,
+
+        call: None,
     });
 
-    add_type(&tp.clone().typename, tp.clone());
+    vm.clone().add_type(&tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

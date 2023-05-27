@@ -21,8 +21,8 @@ mod interpreter;
 fn run_file(file: &String, time: Option<i32>) {
     let res = std::fs::read_to_string(file);
     let file_data = match res {
-        Ok(_) => {
-            res.unwrap()
+        Ok(v) => {
+            v
         }
         Err(_) => {
             println!("File '{}' is unable to be opened or read.", file);
@@ -75,9 +75,9 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if let Some(n_exec) = time {
         let mut sum = 0;
         for _ in 0..n_exec {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros();
+            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Unexpected None").as_micros();
             vm.clone().execute(bytecode.clone());
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros();
+            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Unexpected None").as_micros();
             sum += end-start;
         }
         println!("Average execution time: {} µs.", sum / n_exec as u128);

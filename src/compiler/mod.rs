@@ -74,18 +74,18 @@ impl<'a> Compiler<'a> {
                 self.compile_expr(expr, CompilerRegister::NA);
             }
             NodeType::Function => {
-                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").unwrap().clone()));
+                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 let nameidx = self.names.len() - 1;
 
                 let mut args = Vec::new();
-                for arg in expr.data.get_data().args.unwrap() {
+                for arg in expr.data.get_data().args.expect("Node.args is not present") {
                     args.push(stringobject::string_from(self.vm.clone(), arg));
                 }
                 self.consts.push(listobject::list_from(self.vm.clone(), args));
                 let argsidx = self.consts.len() - 1;
 
                 let mut compiler = Compiler::new(self.info, self.vm.clone());
-                let bytecode = compiler.generate_bytecode(expr.data.get_data().nodearr.unwrap());
+                let bytecode = compiler.generate_bytecode(expr.data.get_data().nodearr.expect("Node.nodearr is not present"));
                 self.consts.push(codeobject::code_from(self.vm.clone(), bytecode));
                 let codeidx = self.consts.len() - 1;
 
@@ -104,7 +104,7 @@ impl<'a> Compiler<'a> {
     fn compile_expr(&mut self, expr: &Node, register: CompilerRegister) {
         match expr.tp {
             NodeType::Decimal => {
-                let int = intobject::int_from_str(self.vm.clone(), expr.data.get_data().raw.get("value").unwrap().to_string());
+                let int = intobject::int_from_str(self.vm.clone(), expr.data.get_data().raw.get("value").expect("Node.raw.value not found").to_string());
                 
                 debug_assert!(int.is_some());
                 
@@ -122,13 +122,13 @@ impl<'a> Compiler<'a> {
                 }
             }
             NodeType::Binary => {
-                self.compile_expr(expr.data.get_data().nodes.get("left").unwrap(), CompilerRegister::R1);
-                self.compile_expr(expr.data.get_data().nodes.get("right").unwrap(), CompilerRegister::R2);
+                self.compile_expr(expr.data.get_data().nodes.get("left").expect("Node.nodes.left not found"), CompilerRegister::R1);
+                self.compile_expr(expr.data.get_data().nodes.get("right").expect("Node.nodes.right not found"), CompilerRegister::R2);
 
                 match register {
                     CompilerRegister::NA => {}
                     _ => {
-                        match expr.data.get_data().op.unwrap() {
+                        match expr.data.get_data().op.expect("Node.op is not present") {
                             BinaryOpType::Add => {
                                 self.instructions.push(CompilerInstruction::BinaryAdd(register, expr.start, expr.end));
                             }
@@ -146,12 +146,12 @@ impl<'a> Compiler<'a> {
                 }
             }
             NodeType::StoreNode => {
-                self.compile_expr(expr.data.get_data().nodes.get("expr").unwrap(), CompilerRegister::R1);
-                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").unwrap().clone()));
+                self.compile_expr(expr.data.get_data().nodes.get("expr").expect("Node.nodes.expr not found"), CompilerRegister::R1);
+                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, register, expr.start, expr.end));
             }
             NodeType::Identifier => {
-                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").unwrap().clone()));
+                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 self.instructions.push(CompilerInstruction::LoadName(self.names.len()-1, register, expr.start, expr.end));
             }
             NodeType::Function => {
@@ -159,17 +159,17 @@ impl<'a> Compiler<'a> {
             }
             NodeType::Call => {
                 self.instructions.push(CompilerInstruction::InitArgs(expr.start, expr.end));
-                for arg in expr.data.get_data().nodearr.unwrap() {
+                for arg in expr.data.get_data().nodearr.expect("Node.nodearr is not present") {
                     self.compile_expr(arg, register);
                     self.instructions.push(CompilerInstruction::AddArgument(register, expr.start, expr.end));
                 }
-                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").unwrap().clone()));
+                self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 let nameidx = self.names.len() - 1;
                 self.instructions.push(CompilerInstruction::LoadName(nameidx, register, expr.start, expr.end));
                 self.instructions.push(CompilerInstruction::Call(register, register, expr.start, expr.end));
             }
             NodeType::Return => {
-                self.compile_expr(expr.data.get_data().nodes.get("expr").unwrap(), register);
+                self.compile_expr(expr.data.get_data().nodes.get("expr").expect("Node.nodes.expr not found"), register);
                 self.instructions.push(CompilerInstruction::Return(register, expr.start, expr.end));
             }
         }

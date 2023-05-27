@@ -18,7 +18,7 @@ fn dict_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
     let mut res = String::from("{");
-    for (key, value) in selfv.internals.get_map().unwrap() {
+    for (key, value) in selfv.internals.get_map().expect("Expected map internal value") {
         let repr = utils::object_repr_safe(key);
         if !repr.is_some() {
             return MethodValue::NotImplemented;
@@ -43,13 +43,13 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
 fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     is_instance(&other, &selfv.vm.get_type("int"));
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = selfv.internals.get_map().unwrap().get(&other);
+    let out = selfv.internals.get_map().expect("Expected map internal value").get(&other);
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
 fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     //DEBUG check for hash here!
-    let mut map = selfv.internals.get_map().unwrap().clone();
+    let mut map = selfv.internals.get_map().expect("Expected map internal value").clone();
     map.insert(other, value);
 
     unsafe {
@@ -60,31 +60,31 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert: Result<i128, _> = selfv.internals.get_map().unwrap().len().try_into();
+    let convert: Result<i128, _> = selfv.internals.get_map().expect("Expected map internal value").len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
 fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    debug_assert!(selfv.internals.get_map().unwrap().len() == other.internals.get_map().unwrap().len());
-    for ((key1, value1), (key2, value2)) in std::iter::zip(selfv.internals.get_map().unwrap(), other.internals.get_map().unwrap()) {
+    debug_assert!(selfv.internals.get_map().expect("Expected map internal value").len() == other.internals.get_map().expect("Expected map internal value").len());
+    for ((key1, value1), (key2, value2)) in std::iter::zip(selfv.internals.get_map().expect("Expected map internal value"), other.internals.get_map().expect("Expected map internal value")) {
         debug_assert!(key1.eq.is_some());
         debug_assert!(value1.eq.is_some());
         debug_assert!(key2.eq.is_some());
         debug_assert!(value2.eq.is_some());
         
-        let res = (key1.eq.unwrap())(key1.clone(), key2.clone());
+        let res = (key1.eq.expect("Method is not defined"))(key1.clone(), key2.clone());
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &selfv.vm.get_type("bool")));
-        if *res.unwrap().internals.get_bool().unwrap() {
+        if *res.unwrap().internals.get_bool().expect("Expected bool internal value") {
             return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
         
-        let res: MethodValue<Arc<RawObject<'a>>, Arc<RawObject<'a>>> = (value1.eq.unwrap())(value1.clone(), value2.clone());
+        let res: MethodValue<Arc<RawObject<'a>>, Arc<RawObject<'a>>> = (value1.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &selfv.vm.get_type("bool")));
-        if *res.unwrap().internals.get_bool().unwrap() {
+        if *res.unwrap().internals.get_bool().expect("Expected bool internal value") {
             return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
     }

@@ -20,22 +20,22 @@ fn string_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
     unimplemented!();
 }
 fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(string_from(selfv.vm.clone(), "\"".to_owned()+selfv.internals.get_str().unwrap()+"\""))
+    MethodValue::Some(string_from(selfv.vm.clone(), "\"".to_owned()+selfv.internals.get_str().expect("Expected str internal value")+"\""))
 }
 fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_str().unwrap() == other.internals.get_str().unwrap()))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_str().expect("Expected str internal value") == other.internals.get_str().expect("Expected str internal value")))
 }
 
 fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     is_instance(&other, &selfv.vm.get_type("int"));
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = UnicodeSegmentation::graphemes(selfv.internals.get_str().unwrap().as_str(), true).nth((*other.internals.get_int().unwrap()).unsigned_abs() as usize);
+    let out = UnicodeSegmentation::graphemes(selfv.internals.get_str().expect("Expected str internal value").as_str(), true).nth((*other.internals.get_int().expect("Expected int internal value")).unsigned_abs() as usize);
     debug_assert!(out.is_some());
     MethodValue::Some(string_from(selfv.vm.clone(), out.unwrap().to_string()))
 }
 fn string_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert: Result<i128, _> = selfv.internals.get_str().unwrap().len().try_into();
+    let convert: Result<i128, _> = selfv.internals.get_str().expect("Expected str internal value").len().try_into();
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
@@ -55,7 +55,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         neg: None,
         hash_fn: Some(|selfv: Object<'a>| {
             let mut hasher = DefaultHasher::new();
-            selfv.internals.get_str().unwrap().hash(&mut hasher);
+            selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
             
             MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128))
         }),

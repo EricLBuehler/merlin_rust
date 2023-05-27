@@ -111,10 +111,10 @@ impl<'a> PartialEq for RawObject<'a> {
 impl<'a> Hash for RawObject<'a> {
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.hash_fn.is_some());
-        let res = (self.hash_fn.unwrap())(Arc::new(self.clone()));
+        let res = (self.hash_fn.expect("Hash function not found"))(Arc::new(self.clone()));
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
-        state.write_i128(*res.unwrap().internals.get_int().unwrap());
+        state.write_i128(*res.unwrap().internals.get_int().expect("Expected int internal value"));
     }
 }
 

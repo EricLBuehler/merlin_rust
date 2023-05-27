@@ -19,7 +19,7 @@ fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_code().unwrap() == other.internals.get_code().unwrap()))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_code().expect("Expected Bytecode internal value") == other.internals.get_code().expect("Expected Bytecode internal value")))
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

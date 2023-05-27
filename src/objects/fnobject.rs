@@ -15,22 +15,22 @@ fn fn_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Met
     unimplemented!();
 }
 fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<fn '{}' @ 0x{:x}>",selfv.internals.get_fn().unwrap().name, Arc::as_ptr(&selfv) as i128)))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<fn '{}' @ 0x{:x}>",selfv.internals.get_fn().expect("Expected Fn internal value").name, Arc::as_ptr(&selfv) as i128)))
 }
 fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_fn().unwrap() == other.internals.get_fn().unwrap()))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_fn().expect("Expected Fn internal value") == other.internals.get_fn().expect("Expected Fn internal value")))
 }
 
 fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&args, &selfv.vm.clone().get_type("list")));
 
-    debug_assert!(args.internals.get_arr().unwrap().len() == selfv.internals.get_fn().unwrap().args.len());
+    debug_assert!(args.internals.get_arr().expect("Expected arr internal value").len() == selfv.internals.get_fn().expect("Expected Fn internal value").args.len());
     let mut map = HashMap::new();
-    for (name, value) in std::iter::zip(args.internals.get_arr().unwrap(), &selfv.internals.get_fn().unwrap().args) {
+    for (name, value) in std::iter::zip(args.internals.get_arr().expect("Expected arr internal value"), &selfv.internals.get_fn().expect("Expected Fn internal value").args) {
         map.insert(name.clone(), value.clone());
     }
     let vars = dictobject::dict_from(selfv.vm.clone(), map);
-    let code = selfv.internals.get_fn().unwrap().code.internals.get_code().unwrap();
+    let code = selfv.internals.get_fn().expect("Expected Fn internal value").code.internals.get_code().expect("Expected Bytecode internal value");
     MethodValue::Some(selfv.vm.clone().execute_vars( Arc::new(code.clone()), vars))
 }
 

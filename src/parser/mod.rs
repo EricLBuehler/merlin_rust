@@ -38,7 +38,7 @@ impl Position {
 pub fn new<'a>(lexer: Lexer, info: &'a FileInfo) -> Parser<'a> {
     let tokens: Vec<_> = lexer.collect();
     return Parser   {   tokens: tokens.to_owned(), 
-                        current: tokens.first().unwrap().to_owned(),
+                        current: tokens.first().expect("No tokens").to_owned(),
                         idx: 1,
                         info,
                     };
@@ -57,7 +57,7 @@ impl<'a> Parser<'a> {
             };
             return self.current.to_owned();
         }
-        self.current = self.tokens.get(self.idx-1).unwrap().to_owned();
+        self.current = self.tokens.get(self.idx-1).expect("Tokens index out of range").to_owned();
         
         self.current.to_owned()
     }
@@ -74,7 +74,7 @@ impl<'a> Parser<'a> {
             };
             return self.current.to_owned();
         }
-        self.current = self.tokens.get(self.idx-1).unwrap().to_owned();
+        self.current = self.tokens.get(self.idx-1).expect("Tokens index out of range").to_owned();
         
         self.current.to_owned()
     }

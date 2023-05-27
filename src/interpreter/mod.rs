@@ -22,7 +22,7 @@ pub struct VM<'a> {
 
 impl<'a> VM<'a> {
     pub fn get_type(&self, name: &str) -> Object<'a> {
-        return self.types.get(name).unwrap().clone();
+        return self.types.get(name).expect("Type not found").clone();
     }
     pub fn add_type(self: Arc<Self>, name: &str, value: Object<'a>) {
         unsafe {
@@ -66,7 +66,7 @@ impl<'a> VM<'a> {
         unsafe {
             let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
-            let interp_refr = Arc::into_raw((*refr).interpreters.last().unwrap().clone()) as *mut Interpreter<'a>;
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             return (*interp_refr).run_interpreter(bytecode);
         }
     }
@@ -76,7 +76,7 @@ impl<'a> VM<'a> {
         unsafe {
             let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
-            let interp_refr = Arc::into_raw((*refr).interpreters.last().unwrap().clone()) as *mut Interpreter<'a>;
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             return (*interp_refr).run_interpreter_vars(bytecode, vars);
         }
     }
@@ -98,10 +98,10 @@ impl<'a> Interpreter<'a> {
     fn assign_to_register(&mut self, value: Object<'a>, register: CompilerRegister) {
         match register {
             CompilerRegister::R1 => {
-                self.frames.last_mut().unwrap().register1 = value.clone();
+                self.frames.last_mut().expect("No frames").register1 = value.clone();
             }
             CompilerRegister::R2 => {
-                self.frames.last_mut().unwrap().register2 = value.clone();
+                self.frames.last_mut().expect("No frames").register2 = value.clone();
             }
             CompilerRegister::NA => {
                 unimplemented!("Cannot store to NA register");
@@ -112,10 +112,10 @@ impl<'a> Interpreter<'a> {
     fn read_register(&mut self, register: CompilerRegister) -> Object<'a> {
         match register {
             CompilerRegister::R1 => {
-                return self.frames.last_mut().unwrap().register1.clone();
+                return self.frames.last_mut().expect("No frames").register1.clone();
             }
             CompilerRegister::R2 => {
-                return self.frames.last_mut().unwrap().register2.clone();
+                return self.frames.last_mut().expect("No frames").register2.clone();
             }
             CompilerRegister::NA => {
                 unimplemented!("Cannot read from NA register");
@@ -126,10 +126,10 @@ impl<'a> Interpreter<'a> {
     fn output_register(&mut self, register: CompilerRegister) {
         match register {
             CompilerRegister::R1 => {
-                println!("{}", object_repr(&self.frames.last().unwrap().register1));
+                println!("{}", object_repr(&self.frames.last().expect("No frames").register1));
             }
             CompilerRegister::R2 => {
-                println!("{}", object_repr(&self.frames.last().unwrap().register2));
+                println!("{}", object_repr(&self.frames.last().expect("No frames").register2));
             }
             CompilerRegister::NA => {
                 unimplemented!("Cannot have NA register");
@@ -156,80 +156,80 @@ impl<'a> Interpreter<'a> {
         for instruction in bytecode.instructions.clone() {
             match instruction {
                 CompilerInstruction::LoadConstR1(idx, _start, _end) => {
-                    self.frames.last_mut().unwrap().register1 = bytecode.consts.get(idx).unwrap().clone();
+                    self.frames.last_mut().expect("No frames").register1 = bytecode.consts.get(idx).expect("Bytecode consts index out of range").clone();
                 }
                 CompilerInstruction::LoadConstR2(idx, _start, _end) => {
-                    self.frames.last_mut().unwrap().register2 = bytecode.consts.get(idx).unwrap().clone();
+                    self.frames.last_mut().expect("No frames").register2 = bytecode.consts.get(idx).expect("Bytecode consts index out of range").clone();
                 }
                 CompilerInstruction::BinaryAdd(out, _start, _end) => {
-                    let last = self.frames.last().unwrap();
+                    let last = self.frames.last().expect("No frames");
                     debug_assert!(last.register1.clone().add.is_some());
-                    let res = (last.register1.clone().add.unwrap())(last.register1.clone(), last.register2.clone());
+                    let res = (last.register1.clone().add.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::BinarySub(out, _start, _end) => {
-                    let last = self.frames.last().unwrap();
+                    let last = self.frames.last().expect("No frames");
                     debug_assert!(last.register1.clone().sub.is_some());
-                    let res = (last.register1.clone().sub.unwrap())(last.register1.clone(), last.register2.clone());
+                    let res = (last.register1.clone().sub.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::BinaryMul(out, _start, _end) => {
-                    let last = self.frames.last().unwrap();
+                    let last = self.frames.last().expect("No frames");
                     debug_assert!(last.register1.clone().mul.is_some());
-                    let res = (last.register1.clone().mul.unwrap())(last.register1.clone(), last.register2.clone());
+                    let res = (last.register1.clone().mul.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::BinaryDiv(out, _start, _end) => {
-                    let last = self.frames.last().unwrap();
+                    let last = self.frames.last().expect("No frames");
                     debug_assert!(last.register1.clone().div.is_some());
-                    let res = (last.register1.clone().div.unwrap())(last.register1.clone(), last.register2.clone());
+                    let res = (last.register1.clone().div.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
 
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::StoreName(idx, register, _start, _end) => {
-                    (self.namespaces.locals.last().unwrap().set.unwrap())(self.namespaces.locals.last().unwrap().clone(), bytecode.names.get(idx).unwrap().clone(), self.frames.last().unwrap().register1.clone());
+                    (self.namespaces.locals.last().expect("No locals").set.expect("Method is not defined"))(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.frames.last().expect("No frames").register1.clone());
                     if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
                     }
                 }
                 CompilerInstruction::LoadName(idx, register, _start, _end) => {
-                    let map = self.namespaces.locals.last().unwrap().clone();
-                    let out = map.internals.get_map().unwrap().get(&bytecode.names.get(idx).unwrap().clone());
+                    let map = self.namespaces.locals.last().expect("No locals").clone();
+                    let out = map.internals.get_map().expect("Expected map internal value").get(&bytecode.names.get(idx).expect("Bytecode names index out of range").clone());
                     debug_assert!(out.is_some());
                     if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(out.unwrap().clone(), register);
                     }
                 }
                 CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, _start, _end) => {
-                    let code = bytecode.consts.get(codeidx).unwrap().clone();
-                    let args = bytecode.consts.get(argsidx).unwrap().clone();
-                    let name = bytecode.names.get(nameidx).unwrap().clone();
-                    let func = fnobject::fn_from(self.vm.clone(), code, args.internals.get_arr().unwrap().clone(), name.internals.get_str().unwrap().clone());
+                    let code = bytecode.consts.get(codeidx).expect("Bytecode consts index out of range").clone();
+                    let args = bytecode.consts.get(argsidx).expect("Bytecode consts index out of range").clone();
+                    let name = bytecode.names.get(nameidx).expect("Bytecode names index out of range").clone();
+                    let func = fnobject::fn_from(self.vm.clone(), code, args.internals.get_arr().expect("Expected arr internal value").clone(), name.internals.get_str().expect("Expected str internal value").clone());
                     self.assign_to_register(func, CompilerRegister::R1);
                 }
                 CompilerInstruction::InitArgs(_start, _end) => {
-                    self.frames.last_mut().unwrap().args.push(Arguments { args: Vec::new() });
+                    self.frames.last_mut().expect("No frames").args.push(Arguments { args: Vec::new() });
                 }
                 CompilerInstruction::AddArgument(register, _start, _end) => {
                     let reg = self.read_register(register);
-                    self.frames.last_mut().unwrap().args.last_mut().unwrap().args.push(reg);
+                    self.frames.last_mut().expect("No frames").args.last_mut().expect("No arguments prepared").args.push(reg);
                 }
                 CompilerInstruction::Call(callableregister, register, _start, _end) => {
                     let callable = self.read_register(callableregister);
-                    let args = self.frames.last().unwrap().args.last().unwrap();
+                    let args = self.frames.last().expect("No frames").args.last().expect("No arguments for call");
                     debug_assert!(callable.call.is_some());
-                    let value = (callable.call.unwrap())(callable, listobject::list_from(self.vm.clone(), args.args.clone()));
+                    let value = (callable.call.expect("Method is not defined"))(callable, listobject::list_from(self.vm.clone(), args.args.clone()));
                     debug_assert!(value.is_some());
                     self.assign_to_register(value.unwrap(), register);
                 }

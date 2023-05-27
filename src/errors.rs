@@ -32,7 +32,7 @@ pub fn raise_error(error: &str, errtp: ErrorType, pos: &crate::parser::Position,
     println!("{}", location.red());
     let lines = Vec::from_iter(info.data.split(|num| *num as char == '\n'));
 
-    let snippet: String = format!("{}", String::from_utf8(lines.get(pos.line).unwrap().to_vec()).unwrap().blue());
+    let snippet: String = format!("{}", String::from_utf8(lines.get(pos.line).expect("Line index out of range").to_vec()).expect("utf8 conversion failed").blue());
     let mut arrows: String = String::new();
     for idx in 0..snippet.len() {
         if idx>=pos.startcol && idx<pos.endcol {

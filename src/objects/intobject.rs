@@ -25,31 +25,31 @@ fn int_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Me
 }
 
 fn int_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), selfv.internals.get_int().unwrap().to_string()))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), selfv.internals.get_int().expect("Expected int internal value").to_string()))
 }
 fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
-    let res = selfv.internals.get_int().unwrap().checked_abs();
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_abs();
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_int().unwrap() == other.internals.get_int().unwrap()))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_int().expect("Expected int internal value") == other.internals.get_int().expect("Expected int internal value")))
 }
 
 
 fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
-    let res = selfv.internals.get_int().unwrap().checked_neg();
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_neg();
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    let otherv = *other.internals.get_int().unwrap();
+    let otherv = *other.internals.get_int().expect("Expected int internal value");
 
-    let res = selfv.internals.get_int().unwrap().checked_add(otherv);
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_add(otherv);
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
@@ -57,45 +57,45 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
 
-    let otherv = *other.internals.get_int().unwrap();
+    let otherv = *other.internals.get_int().expect("Expected int internal value");
 
-    let res = selfv.internals.get_int().unwrap().checked_sub(otherv);
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_sub(otherv);
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    let otherv = *other.internals.get_int().unwrap();
+    let otherv = *other.internals.get_int().expect("Expected int internal value");
 
-    let res = selfv.internals.get_int().unwrap().checked_mul(otherv);
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_mul(otherv);
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    let otherv = *other.internals.get_int().unwrap();
+    let otherv = *other.internals.get_int().expect("Expected int internal value");
     debug_assert!(otherv != 0);
 
-    let res = selfv.internals.get_int().unwrap().checked_div(otherv);
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_div(otherv);
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    let otherv = *other.internals.get_int().unwrap();
+    let otherv = *other.internals.get_int().expect("Expected int internal value");
 
     debug_assert!(otherv < std::u32::MAX as i128);
 
-    let res = selfv.internals.get_int().unwrap().checked_pow(otherv as u32);
+    let res = selfv.internals.get_int().expect("Expected int internal value").checked_pow(otherv as u32);
     debug_assert!(res.is_some());
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(int_from(selfv.vm.clone(), *selfv.internals.get_int().unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), *selfv.internals.get_int().expect("Expected int internal value")))
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

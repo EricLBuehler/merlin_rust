@@ -35,7 +35,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Run example program (debug)
-      run: cargo run program.me
+      run: cargo run -- program.me --time 1000
     - name: Run example program (release)
       run: cargo run -r program.me
       

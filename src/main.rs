@@ -1,5 +1,6 @@
 use clap::Parser;
 use std::sync::Arc;
+use std::time::{SystemTime};
 
 mod fileinfo;
 
@@ -15,6 +16,7 @@ mod objects;
 mod compiler;
 
 mod interpreter;
+
 
 fn run_file(filename: &String) {
     let res = std::fs::read_to_string(filename);
@@ -69,7 +71,18 @@ fn run_data(file_data: String, name: String) {
 
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
+    let mut start: u128 = 0;
+    if cfg!(debug_assertions) {
+        let dur_start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+        start = dur_start.as_micros(); // u128    
+    }
     vm.execute(bytecode);
+    if cfg!(debug_assertions) {
+        let dur_end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+        let end = dur_end.as_micros(); // u128  
+        println!("{} us", end-start);
+        println!("{} ms", ((end-start) as f64)/1000.0);
+    }
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
 }
 

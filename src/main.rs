@@ -18,22 +18,22 @@ mod compiler;
 mod interpreter;
 
 
-fn run_file(filename: &String) {
-    let res = std::fs::read_to_string(filename);
+fn run_file(file: &String, time: Option<i32>) {
+    let res = std::fs::read_to_string(file);
     let file_data = match res {
         Ok(_) => {
             res.unwrap()
         }
         Err(_) => {
-            println!("File '{}' is unable to be opened or read.", filename);
+            println!("File '{}' is unable to be opened or read.", file);
             return;
         }
     };
 
-    run_data(file_data, filename.clone());
+    run_data(file_data, file.clone(), time);
 }
 
-fn run_data(file_data: String, name: String) {
+fn run_data(file_data: String, name: String, time: Option<i32>) {
     let file_data_bytes = file_data.as_bytes();
 
     let file_info = FileInfo {
@@ -71,17 +71,20 @@ fn run_data(file_data: String, name: String) {
 
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
-    let mut start: u128 = 0;
-    if cfg!(debug_assertions) {
-        let dur_start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
-        start = dur_start.as_micros(); // u128    
+
+    if time.is_none() {
+        vm.execute(bytecode);
     }
-    vm.execute(bytecode);
-    if cfg!(debug_assertions) {
-        let dur_end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
-        let end = dur_end.as_micros(); // u128  
-        println!("{} us", end-start);
-        println!("{} ms", ((end-start) as f64)/1000.0);
+    else {
+        let mut sum = 0;
+        for _ in 0..time.unwrap() {
+            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros();
+            vm.clone().execute(bytecode.clone());
+            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros();
+            sum += end-start;
+        }
+        println!("Average execution time: {} µs.", sum / time.unwrap() as u128);
+        println!("Average execution time: {} ms.", (sum as f64 / time.unwrap() as f64) / 1000.0);
     }
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
 }
@@ -94,12 +97,25 @@ struct Args {
     /// File to execute
     #[arg(required = true, name = "file")]
     file: String,
+
+    /// Run the code n times to get the average execution time
+    #[arg(long, short, name = "time", default_value_t = 0)]
+    time: i32
 }
 
 fn main() {
     let args = Args::parse();
 
-    run_file(&args.file);
+    let time = match args.time {
+        0 => {
+            None
+        }
+        v @ _=> {
+            Some(v)
+        }
+    };
+
+    run_file(&args.file, time);
 }
 
 #[cfg(test)]
@@ -108,16 +124,16 @@ mod tests {
 
     #[test]
     fn test_literals() {
-        run_file(&String::from("tests/literals.me"));
+        run_file(&String::from("tests/literals.me"), None);
     }
 
     #[test]
     fn test_operators() {
-        run_file(&String::from("tests/operators.me"));
+        run_file(&String::from("tests/operators.me"), None);
     }
 
     #[test]
     fn test_functions() {
-        run_file(&String::from("tests/functions.me"));
+        run_file(&String::from("tests/functions.me"), None);
     }
 }

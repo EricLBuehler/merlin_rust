@@ -72,19 +72,19 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
 
-    if time.is_none() {
-        vm.execute(bytecode);
-    }
-    else {
+    if let Some(n_exec) = time {
         let mut sum = 0;
-        for _ in 0..time.unwrap() {
+        for _ in 0..n_exec {
             let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros();
             vm.clone().execute(bytecode.clone());
             let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_micros();
             sum += end-start;
         }
-        println!("Average execution time: {} µs.", sum / time.unwrap() as u128);
-        println!("Average execution time: {} ms.", (sum as f64 / time.unwrap() as f64) / 1000.0);
+        println!("Average execution time: {} µs.", sum / n_exec as u128);
+        println!("Average execution time: {} ms.", (sum as f64 / n_exec as f64) / 1000.0);
+    }
+    else {
+        vm.execute(bytecode);
     }
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
 }
@@ -110,7 +110,7 @@ fn main() {
         0 => {
             None
         }
-        v @ _=> {
+        v=> {
             Some(v)
         }
     };

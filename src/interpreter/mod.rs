@@ -236,13 +236,13 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::Return(register, _start, _end) => {
                     let res = self.read_register(register);
                     self.frames.pop();
-                    return res.clone();
+                    return res;
                 }
             }
         }
 
         self.frames.pop();
 
-        return noneobject::none_from(self.vm.clone());
+        noneobject::none_from(self.vm.clone())
     }
 }

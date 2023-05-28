@@ -6,6 +6,7 @@ use crate::{objects::{Object, noneobject, utils::object_repr, fnobject, listobje
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {
     locals: Vec<Object<'a>>,
+    globals: *mut Object<'a>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -58,7 +59,7 @@ struct Frame<'a> {
 
 impl<'a> VM<'a> {
     pub fn new() -> VM<'a> {
-        VM { types: Arc::new(HashMap::new()), interpreters: Vec::new(), namespaces: Arc::new(Namespaces { locals: Vec::new() }) }
+        VM { types: Arc::new(HashMap::new()), interpreters: Vec::new(), namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: std::ptr::null_mut()  }) }
     }
 
     pub fn execute(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
@@ -90,7 +91,11 @@ impl<'a> Interpreter<'a> {
     fn add_frame(&mut self) {
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
-            (*namespace_refr).locals.push(dictobject::dict_from(self.vm.clone(), HashMap::new()))
+            let dict = dictobject::dict_from(self.vm.clone(), HashMap::new());
+            (*namespace_refr).locals.push(dict.clone());
+            if (*namespace_refr).globals == std::ptr::null_mut() {
+                (*namespace_refr).globals = Arc::into_raw(dict) as *mut Object;
+            }
         }
         self.frames.push(Frame { register1: noneobject::none_from(self.vm.clone()), register2: noneobject::none_from(self.vm.clone()), args: Vec::new() })
     }
@@ -198,7 +203,7 @@ impl<'a> Interpreter<'a> {
                     if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::StoreName(idx, register, _start, _end) => {
-                    (self.namespaces.locals.last().expect("No locals").set.expect("Method is not defined"))(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.frames.last().expect("No frames").register1.clone());
+                    (self.namespaces.locals.last().expect("No locals").set.expect("Method is not defined"))(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
                     if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
                     }
@@ -237,6 +242,24 @@ impl<'a> Interpreter<'a> {
                     let res = self.read_register(register);
                     self.frames.pop();
                     return res;
+                }
+                CompilerInstruction::StoreGlobal(idx, register, _start, _end) => {
+                    let globals = unsafe { (*self.namespaces.globals).clone() };
+
+                    globals.set.expect("Method is not defined")(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
+
+                    if !matches!(register, CompilerRegister::NA) {
+                        self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
+                    }
+                }
+                CompilerInstruction::LoadGlobal(idx, register, _start, _end) => {
+                    let globals = unsafe { (*self.namespaces.globals).clone() };
+
+                    let out = globals.internals.get_map().expect("Expected map internal value").get(&bytecode.names.get(idx).expect("Bytecode names index out of range").clone());
+                    debug_assert!(out.is_some());
+                    if !matches!(register, CompilerRegister::NA) {
+                        self.assign_to_register(out.unwrap().clone(), register);
+                    }
                 }
             }
         }

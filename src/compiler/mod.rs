@@ -10,6 +10,12 @@ pub struct Compiler<'a> {
     names: Vec<Object<'a>>,
     info: &'a FileInfo<'a>,
     vm: Arc<VM<'a>>,
+    scope: CompilerScope
+}
+
+pub enum CompilerScope {
+    Local,
+    Global,
 }
 
 //first Position is start, second is end
@@ -28,6 +34,8 @@ pub enum CompilerInstruction {
     AddArgument(CompilerRegister, Position, Position), //Add argument from specified register to latest argument collector
     Call(CompilerRegister, CompilerRegister, Position, Position), //Call callable in specified register 1, result in specified register 2
     Return(CompilerRegister, Position, Position), //Return from specified register
+    StoreGlobal(usize, CompilerRegister, Position, Position), //store R1 to names[index], loads None to specified register
+    LoadGlobal(usize, CompilerRegister, Position, Position), //load names[index] from locals to specified register
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -48,8 +56,8 @@ pub struct Bytecode<'a> {
 type Node = parser::nodes::Node;
 
 impl<'a> Compiler<'a> {
-    pub fn new(info: &'a FileInfo<'a>, vm: Arc<VM<'a>>) -> Compiler<'a> {
-        Compiler{instructions: Vec::new(), consts: Vec::new(), names: Vec::new(), info, vm}
+    pub fn new(info: &'a FileInfo<'a>, vm: Arc<VM<'a>>, scope: CompilerScope) -> Compiler<'a> {
+        Compiler{instructions: Vec::new(), consts: Vec::new(), names: Vec::new(), info, vm, scope}
     }
 
     pub fn generate_bytecode(&mut self, ast: &Vec<Node>) -> Arc<Bytecode<'a>> {
@@ -71,7 +79,7 @@ impl<'a> Compiler<'a> {
                 self.compile_expr(expr, CompilerRegister::R1);
             }
             NodeType::StoreNode => {
-                self.compile_expr(expr, CompilerRegister::NA);
+                self.compile_expr(expr, CompilerRegister::R1);
             }
             NodeType::Function => {
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
@@ -84,13 +92,13 @@ impl<'a> Compiler<'a> {
                 self.consts.push(listobject::list_from(self.vm.clone(), args));
                 let argsidx = self.consts.len() - 1;
 
-                let mut compiler = Compiler::new(self.info, self.vm.clone());
+                let mut compiler = Compiler::new(self.info, self.vm.clone(), CompilerScope::Local);
                 let bytecode = compiler.generate_bytecode(expr.data.get_data().nodearr.expect("Node.nodearr is not present"));
                 self.consts.push(codeobject::code_from(self.vm.clone(), bytecode));
                 let codeidx = self.consts.len() - 1;
 
                 self.instructions.push(CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, expr.start, expr.end));
-                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, CompilerRegister::NA, expr.start, expr.end));
+                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, CompilerRegister::R1, expr.start, expr.end));
             }
             NodeType::Call => {
                 self.compile_expr(expr, CompilerRegister::R1);
@@ -146,13 +154,27 @@ impl<'a> Compiler<'a> {
                 }
             }
             NodeType::StoreNode => {
-                self.compile_expr(expr.data.get_data().nodes.get("expr").expect("Node.nodes.expr not found"), CompilerRegister::R1);
+                self.compile_expr(expr.data.get_data().nodes.get("expr").expect("Node.nodes.expr not found"), register);
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
-                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, register, expr.start, expr.end));
+                match self.scope {
+                    CompilerScope::Local => {
+                        self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, register, expr.start, expr.end));
+                    }
+                    CompilerScope::Global => {
+                        self.instructions.push(CompilerInstruction::StoreGlobal(self.names.len()-1, register, expr.start, expr.end));
+                    }
+                }
             }
             NodeType::Identifier => {
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
-                self.instructions.push(CompilerInstruction::LoadName(self.names.len()-1, register, expr.start, expr.end));
+                match self.scope {
+                    CompilerScope::Local => {
+                        self.instructions.push(CompilerInstruction::LoadName(self.names.len()-1, register, expr.start, expr.end));
+                    }
+                    CompilerScope::Global => {
+                        self.instructions.push(CompilerInstruction::LoadGlobal(self.names.len()-1, register, expr.start, expr.end));
+                    }
+                }
             }
             NodeType::Function => {
                 raise_error("Function definition is not an expression", ErrorType::FunctionNotExpression, &expr.start, self.info);

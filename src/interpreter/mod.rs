@@ -251,7 +251,7 @@ impl<'a> Interpreter<'a> {
                         }
                     }
                     
-                    let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found in locals", name.internals.get_str().unwrap()), start, end);
+                    let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' not found  (searched in all locals and also globals)", name.internals.get_str().unwrap()), start, end);
                     self.raise_exc(exc);
                 }
                 CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, _start, _end) => {
@@ -303,7 +303,7 @@ impl<'a> Interpreter<'a> {
                             }
                         }
                         None => {
-                            let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found in globals", name.internals.get_str().unwrap()), start, end);
+                            let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' not found (searched in globals)", name.internals.get_str().unwrap()), start, end);
                             self.raise_exc(exc);
                         }
                     }

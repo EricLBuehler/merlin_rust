@@ -1,12 +1,13 @@
 use std::{collections::HashMap, sync::Arc};
+use colored::Colorize;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::object_repr, fnobject, listobject, dictobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}};
+use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {
     locals: Vec<Object<'a>>,
-    globals: *mut Object<'a>,
+    globals: Option<Object<'a>>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -19,6 +20,7 @@ pub struct VM<'a> {
     pub types: Arc<HashMap<String, Object<'a>>>,
     interpreters: Vec<Arc<Interpreter<'a>>>,
     namespaces: Arc<Namespaces<'a>>,
+    info: FileInfo<'a>,
 }
 
 impl<'a> VM<'a> {
@@ -58,8 +60,8 @@ struct Frame<'a> {
 }
 
 impl<'a> VM<'a> {
-    pub fn new() -> VM<'a> {
-        VM { types: Arc::new(HashMap::new()), interpreters: Vec::new(), namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: std::ptr::null_mut()  }) }
+    pub fn new(info: FileInfo<'a>) -> VM<'a> {
+        VM { types: Arc::new(HashMap::new()), interpreters: Vec::new(), namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: None }), info }
     }
 
     pub fn execute(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
@@ -93,8 +95,9 @@ impl<'a> Interpreter<'a> {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
             let dict = dictobject::dict_from(self.vm.clone(), HashMap::new());
             (*namespace_refr).locals.push(dict.clone());
-            if (*namespace_refr).globals == std::ptr::null_mut() {
-                (*namespace_refr).globals = Arc::into_raw(dict) as *mut Object;
+            
+            if (*namespace_refr).globals.is_none() {
+                (*namespace_refr).globals = Some(dict);
             }
         }
         self.frames.push(Frame { register1: noneobject::none_from(self.vm.clone()), register2: noneobject::none_from(self.vm.clone()), args: Vec::new() })
@@ -142,6 +145,30 @@ impl<'a> Interpreter<'a> {
         }
     }
     
+    fn raise_exc(&mut self, exc_obj: Object<'a>) {
+        let exc = exc_obj.internals.get_exc().expect("Expected exc internal value");
+        let header: String = match object_repr_safe(&exc.obj) { crate::objects::MethodValue::Some(v) => {v}, _ => { unimplemented!() }};
+        let location: String = format!("{}:{}:{}", self.vm.as_ref().info.name, exc.start.line+1, exc.start.startcol+1);
+        println!("{}", header.red().bold());
+        println!("{}", location.red());
+        let lines = Vec::from_iter(self.vm.as_ref().info.data.split(|num| *num as char == '\n'));
+
+        let snippet: String = format!("{}", String::from_utf8(lines.get(exc.start.line).expect("Line index out of range").to_vec()).expect("utf8 conversion failed").blue());
+        let mut arrows: String = String::new();
+        for idx in 0..snippet.len() {
+            if idx>=exc.start.startcol && idx<exc.end.endcol {
+                arrows += "^";
+            }
+            else {
+                arrows += " ";
+            }
+        }
+        let linestr = (exc.start.line+1).to_string().blue().bold();
+        println!("{} | {}", linestr, snippet);
+        println!("{} | {}", " ".repeat(linestr.len()), arrows.green());
+        std::process::exit(1);
+    }
+
     pub fn run_interpreter_vars(&mut self, bytecode: Arc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
         self.add_frame();
         unsafe {
@@ -210,7 +237,8 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::LoadName(idx, register, _start, _end) => {
                     let map = self.namespaces.locals.last().expect("No locals").clone();
-                    let out = map.internals.get_map().expect("Expected map internal value").get(&bytecode.names.get(idx).expect("Bytecode names index out of range").clone());
+                    let name = bytecode.names.get(idx).expect("Bytecode names index out of range").clone();
+                    let out = map.internals.get_map().expect("Expected map internal value").get(&name);
                     debug_assert!(out.is_some());
                     if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(out.unwrap().clone(), register);
@@ -244,20 +272,25 @@ impl<'a> Interpreter<'a> {
                     return res;
                 }
                 CompilerInstruction::StoreGlobal(idx, register, _start, _end) => {
-                    let globals = unsafe { (*self.namespaces.globals).clone() };
+                    let globals = self.namespaces.globals.as_ref().unwrap().clone();
 
-                    globals.set.expect("Method is not defined")(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
+                    globals.clone().set.expect("Method is not defined")(globals, bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
 
                     if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
                     }
                 }
-                CompilerInstruction::LoadGlobal(idx, register, _start, _end) => {
-                    let globals = unsafe { (*self.namespaces.globals).clone() };
+                CompilerInstruction::LoadGlobal(idx, register, start, end) => {
+                    let globals = self.namespaces.globals.as_ref().unwrap().clone();
 
-                    let out = globals.internals.get_map().expect("Expected map internal value").get(&bytecode.names.get(idx).expect("Bytecode names index out of range").clone());
-                    debug_assert!(out.is_some());
-                    if !matches!(register, CompilerRegister::NA) {
+                    let name = &bytecode.names.get(idx).expect("Bytecode names index out of range").clone();
+
+                    let out = globals.internals.get_map().expect("Expected map internal value").get(name);
+                    if out.is_none() {
+                        let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found", name.internals.get_str().unwrap()), start, end);
+                        self.raise_exc(exc);
+                    }
+                    else if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(out.unwrap().clone(), register);
                     }
                 }

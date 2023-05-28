@@ -1,6 +1,6 @@
 use std::{sync::{Arc}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
 
-use crate::{compiler::Bytecode, interpreter::VM};
+use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
 
 
 pub mod utils;
@@ -15,6 +15,7 @@ pub mod noneobject;
 pub mod dictobject;
 pub mod codeobject;
 pub mod fnobject;
+pub mod exceptionobject;
 
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum ObjectType<'a> {
@@ -128,6 +129,13 @@ pub struct FnData<'a> {
     name: String,
 }
 
+#[derive(Clone, PartialEq, Eq)]
+pub struct ExcData<'a> {
+    pub obj: Object<'a>,
+    pub start: Position,
+    pub end: Position,
+}
+
 #[derive(Clone, Default, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ObjectInternals<'a> {
@@ -140,6 +148,7 @@ pub enum ObjectInternals<'a> {
     Map(HashMap<Object<'a>, Object<'a>>),
     Code(Arc<Bytecode<'a>>),
     Fn(FnData<'a>),
+    Exc(ExcData<'a>),
     None,
 }
 
@@ -254,6 +263,20 @@ impl<'a> ObjectInternals<'a> {
         match self {
             ObjectInternals::Fn(v) => {
                 Some(v)
+            }
+            _ => {
+                None
+            }
+        }
+    }
+
+    pub fn is_exc(&self) -> bool {
+        matches!(self, ObjectInternals::Exc(_))
+    }
+    pub fn get_exc(&self) -> Option<ExcData<'a>> {
+        match self {
+            ObjectInternals::Exc(v) => {
+                Some(v.clone())
             }
             _ => {
                 None
@@ -378,4 +401,6 @@ pub fn init_types(vm: Arc<VM<'_>>) {
     dictobject::init(vm.clone());
     codeobject::init(vm.clone());
     fnobject::init(vm.clone());
+    exceptionobject::init_exc(vm.clone());
+    exceptionobject::init_nameexc(vm.clone());
 }

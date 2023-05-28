@@ -53,7 +53,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     let ast = parser::new(lexer, &file_info).generate_ast();
     if cfg!(debug_assertions) { println!("===== Done with parsing ====="); }
 
-    let vm = Arc::new(interpreter::VM::new());
+    let vm = Arc::new(interpreter::VM::new(file_info.clone()));
     objects::init_types(vm.clone());
 
     if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }

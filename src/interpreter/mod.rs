@@ -131,6 +131,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    #[allow(dead_code)]
     fn output_register(&mut self, register: CompilerRegister) {
         match register {
             CompilerRegister::R1 => {
@@ -199,8 +200,6 @@ impl<'a> Interpreter<'a> {
                     let res = (last.register1.clone().add.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
-
-                    if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::BinarySub(out, _start, _end) => {
                     let last = self.frames.last().expect("No frames");
@@ -208,8 +207,6 @@ impl<'a> Interpreter<'a> {
                     let res = (last.register1.clone().sub.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
-
-                    if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::BinaryMul(out, _start, _end) => {
                     let last = self.frames.last().expect("No frames");
@@ -217,8 +214,6 @@ impl<'a> Interpreter<'a> {
                     let res = (last.register1.clone().mul.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
-
-                    if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::BinaryDiv(out, _start, _end) => {
                     let last = self.frames.last().expect("No frames");
@@ -226,8 +221,6 @@ impl<'a> Interpreter<'a> {
                     let res = (last.register1.clone().div.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
                     debug_assert!(res.is_some());
                     self.assign_to_register(res.unwrap(), out);
-
-                    if cfg!(debug_assertions) { self.output_register(out) };
                 }
                 CompilerInstruction::StoreName(idx, register, _start, _end) => {
                     (self.namespaces.locals.last().expect("No locals").set.expect("Method is not defined"))(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));

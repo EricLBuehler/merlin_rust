@@ -82,7 +82,7 @@ fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
     if !repr.is_some() {
         return MethodValue::NotImplemented;
     }
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("NameException<\"{}\">", repr.unwrap())))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("NameException: \"{}\"", repr.unwrap())))
 }
 fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(selfv.internals.get_exc().expect("Expected exc internal value").obj)

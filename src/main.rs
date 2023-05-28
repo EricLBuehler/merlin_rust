@@ -72,8 +72,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if cfg!(debug_assertions) {
         println!("{:?}", &bytecode.instructions);
         for c in &bytecode.consts {
-            println!("{}", objects::utils::object_repr(&c));
-            println!("{:x}", Arc::as_ptr(c) as u64);
+            println!("{} = 0x{:x}", objects::utils::object_repr(&c), Arc::as_ptr(c) as u64);
         }
         println!("===== Done with compiler =====");
     }

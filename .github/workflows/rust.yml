@@ -45,4 +45,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Clippy formatting check
-      run: cargo check --verbose
+      run: cargo clippy --verbose --no-deps

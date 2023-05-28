@@ -235,14 +235,24 @@ impl<'a> Interpreter<'a> {
                         self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
                     }
                 }
-                CompilerInstruction::LoadName(idx, register, _start, _end) => {
-                    let map = self.namespaces.locals.last().expect("No locals").clone();
+                CompilerInstruction::LoadName(idx, register, start, end) => {
                     let name = bytecode.names.get(idx).expect("Bytecode names index out of range").clone();
-                    let out = map.internals.get_map().expect("Expected map internal value").get(&name);
-                    debug_assert!(out.is_some());
-                    if !matches!(register, CompilerRegister::NA) {
-                        self.assign_to_register(out.unwrap().clone(), register);
+                    for local in self.namespaces.locals.len()-1..0 {
+                        let map = self.namespaces.locals.get(local).unwrap().clone();
+                        let out = map.internals.get_map().expect("Expected map internal value").get(&name);
+                        
+                        match out {
+                            Some(v) => {
+                                if !matches!(register, CompilerRegister::NA) {
+                                    self.assign_to_register(v.clone(), register);
+                                }
+                            }
+                            None => { }
+                        }
                     }
+                    
+                    let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found in locals", name.internals.get_str().unwrap()), start, end);
+                    self.raise_exc(exc);
                 }
                 CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, _start, _end) => {
                     let code = bytecode.consts.get(codeidx).expect("Bytecode consts index out of range").clone();
@@ -293,7 +303,7 @@ impl<'a> Interpreter<'a> {
                             }
                         }
                         None => {
-                            let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found", name.internals.get_str().unwrap()), start, end);
+                            let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found in globals", name.internals.get_str().unwrap()), start, end);
                             self.raise_exc(exc);
                         }
                     }

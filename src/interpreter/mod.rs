@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 use colored::Colorize;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
+use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {
@@ -15,12 +15,16 @@ pub struct Arguments<'a> {
     args: Vec<Object<'a>>,
 }
 
+pub const MIN_INT_CACHE: i128 = -5;
+pub const MAX_INT_CACHE: i128 = 256;
+pub const INT_CACHE_SIZE: i128 = MAX_INT_CACHE-MIN_INT_CACHE;
 
 pub struct VM<'a> {
     pub types: Arc<HashMap<String, Object<'a>>>,
     interpreters: Vec<Arc<Interpreter<'a>>>,
     namespaces: Arc<Namespaces<'a>>,
     info: FileInfo<'a>,
+    pub int_cache: [Option<Object<'a>>; INT_CACHE_SIZE as usize]
 }
 
 impl<'a> VM<'a> {
@@ -61,7 +65,11 @@ struct Frame<'a> {
 
 impl<'a> VM<'a> {
     pub fn new(info: FileInfo<'a>) -> VM<'a> {
-        VM { types: Arc::new(HashMap::new()), interpreters: Vec::new(), namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: None }), info }
+        VM { types: Arc::new(HashMap::new()),
+            interpreters: Vec::new(),
+            namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: None }),
+            info,
+            int_cache: intobject::init_cache() }
     }
 
     pub fn execute(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {

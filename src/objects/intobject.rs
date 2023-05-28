@@ -1,10 +1,13 @@
 use std::{sync::Arc};
 
-use crate::{objects::is_instance, interpreter::VM};
+use crate::{objects::is_instance, interpreter::{VM, INT_CACHE_SIZE, MIN_INT_CACHE, MAX_INT_CACHE}};
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
 
 pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
+    if raw >= MIN_INT_CACHE && raw <= MAX_INT_CACHE {
+        return vm.int_cache[(raw + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone();
+    }
     let mut tp = create_object_from_type(vm.get_type("int"));
     let mut refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Int(raw);
@@ -13,6 +16,9 @@ pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
 pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = raw.parse::<i128>();
     debug_assert!(convert.is_ok());
+    if convert.as_ref().unwrap() >= &MIN_INT_CACHE && convert.as_ref().unwrap() <= &MAX_INT_CACHE {
+        return MethodValue::Some(vm.int_cache[(convert.unwrap() + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone());
+    }
     let mut tp = create_object_from_type(vm.get_type("int"));
     let mut refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Int(convert.unwrap());
@@ -96,6 +102,32 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(int_from(selfv.vm.clone(), *selfv.internals.get_int().expect("Expected int internal value")))
+}
+
+pub fn init_cache<'a>() -> [Option<Object<'a>>; INT_CACHE_SIZE as usize] {
+    unsafe {
+        let init = std::mem::MaybeUninit::uninit();
+        let mut arr: [Option<Object>; INT_CACHE_SIZE as usize] = init.assume_init();
+
+        for item in &mut arr[..] {
+            std::ptr::write(item, None);
+        }
+
+        arr
+    }
+}
+
+pub fn generate_cache<'a>(int: Object<'a>, arr: *mut [Option<Object<'a>>; INT_CACHE_SIZE as usize]) {
+    unsafe {
+        let mut i = MIN_INT_CACHE;
+        for item in &mut (*arr)[..] {
+            let mut tp = create_object_from_type(int.clone());
+            let mut refr = Arc::make_mut(&mut tp);
+            refr.internals = ObjectInternals::Int(i);
+            std::ptr::write(item, Some(tp));
+            i+=1;
+        }
+    }
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

@@ -1,4 +1,6 @@
 use clap::Parser;
+use interpreter::INT_CACHE_SIZE;
+use objects::{intobject, Object};
 use std::sync::Arc;
 use std::time::{SystemTime};
 
@@ -55,6 +57,12 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
 
     let vm = Arc::new(interpreter::VM::new(file_info.clone()));
     objects::init_types(vm.clone());
+    unsafe {
+        let refr = Arc::into_raw(vm.clone()) as *mut interpreter::VM;
+        let arr_ref = &(*refr).int_cache;
+        let ptr = arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize];
+        intobject::generate_cache(vm.clone().get_type("int"), ptr as *mut [Option<Object>; INT_CACHE_SIZE as usize]);
+    }
 
     if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
 
@@ -64,7 +72,8 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if cfg!(debug_assertions) {
         println!("{:?}", &bytecode.instructions);
         for c in &bytecode.consts {
-            println!("{}", objects::utils::object_repr(c));
+            println!("{}", objects::utils::object_repr(&c));
+            println!("{:x}", Arc::as_ptr(c) as u64);
         }
         println!("===== Done with compiler =====");
     }

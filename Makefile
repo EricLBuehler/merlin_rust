@@ -15,3 +15,6 @@ test:
 install:
 	make release	
 	cp merlin /usr/bin/merlin
+
+backtrace: $(file)
+	RUST_BACKTRACE=1 cargo run -- $(file)

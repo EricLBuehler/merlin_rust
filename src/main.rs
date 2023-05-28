@@ -71,7 +71,6 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
 
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
-
     if let Some(n_exec) = time {
         let mut sum = 0;
         for _ in 0..n_exec {

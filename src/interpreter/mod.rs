@@ -83,6 +83,11 @@ impl<'a> VM<'a> {
             return (*interp_refr).run_interpreter_vars(bytecode, vars);
         }
     }
+    
+    fn terminate(self: Arc<Self>) -> ! {
+        //Clean up child threads here
+        std::process::exit(1);
+    }
 }
 
 impl<'a> Interpreter<'a> {
@@ -167,7 +172,9 @@ impl<'a> Interpreter<'a> {
         let linestr = (exc.start.line+1).to_string().blue().bold();
         println!("{} | {}", linestr, snippet);
         println!("{} | {}", " ".repeat(linestr.len()), arrows.green());
-        std::process::exit(1);
+        
+        //Should this happen??
+        self.vm.clone().terminate();
     }
 
     pub fn run_interpreter_vars(&mut self, bytecode: Arc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {

@@ -26,6 +26,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(type_new),
 
         repr: Some(type_repr),
+        str: Some(type_repr),
         abs: None,
         neg: None,
         hash_fn: Some(|selfv: Object<'a>| { MethodValue::Some(intobject::int_from(selfv.vm.clone(), -3)) }),

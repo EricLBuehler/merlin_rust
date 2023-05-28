@@ -102,6 +102,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(dict_new),
 
         repr: Some(dict_repr),
+        str: Some(dict_repr),
         abs: None,
         neg: None,
         hash_fn: None,

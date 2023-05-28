@@ -31,6 +31,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(none_new),
 
         repr: Some(none_repr),
+        str: Some(none_repr),
         abs: None,
         neg: None,
         hash_fn: Some(none_hash),

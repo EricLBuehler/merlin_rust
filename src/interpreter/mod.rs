@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 use colored::Colorize;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
+use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe, object_str_safe}, fnobject, listobject, dictobject, exceptionobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {
@@ -147,7 +147,7 @@ impl<'a> Interpreter<'a> {
     
     fn raise_exc(&mut self, exc_obj: Object<'a>) {
         let exc = exc_obj.internals.get_exc().expect("Expected exc internal value");
-        let header: String = match object_repr_safe(&exc.obj) { crate::objects::MethodValue::Some(v) => {v}, _ => { unimplemented!() }};
+        let header: String = match object_repr_safe(&exc_obj) { crate::objects::MethodValue::Some(v) => {v}, _ => { unimplemented!() }};
         let location: String = format!("{}:{}:{}", self.vm.as_ref().info.name, exc.start.line+1, exc.start.startcol+1);
         println!("{}", header.red().bold());
         println!("{}", location.red());

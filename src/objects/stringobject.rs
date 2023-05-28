@@ -22,6 +22,9 @@ fn string_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(selfv.vm.clone(), "\"".to_owned()+selfv.internals.get_str().expect("Expected str internal value")+"\""))
 }
+fn string_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(string_from(selfv.vm.clone(), selfv.internals.get_str().expect("Expected str internal value").to_string()))
+}
 fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_str().expect("Expected str internal value") == other.internals.get_str().expect("Expected str internal value")))
@@ -51,6 +54,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(string_new),
 
         repr: Some(string_repr),
+        str: Some(string_str),
         abs: None,
         neg: None,
         hash_fn: Some(|selfv: Object<'a>| {

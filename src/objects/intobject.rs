@@ -109,6 +109,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(int_new),
 
         repr: Some(int_repr),
+        str: Some(int_repr),
         abs: Some(int_abs),
         neg: Some(int_neg),
         hash_fn: Some(int_hash),

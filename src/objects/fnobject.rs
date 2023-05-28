@@ -45,6 +45,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(fn_new),
 
         repr: Some(fn_repr),
+        str: Some(fn_repr),
         abs: None,
         neg: None,
         hash_fn: None,

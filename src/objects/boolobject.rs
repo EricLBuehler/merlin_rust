@@ -36,6 +36,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(bool_new),
 
         repr: Some(bool_repr),
+        str: Some(bool_repr),
         abs: None,
         neg: None,
         hash_fn: Some(bool_hash),

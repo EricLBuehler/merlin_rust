@@ -77,6 +77,7 @@ pub struct RawObject<'a> {
     
     //unary
     pub repr: Option<fn(Object<'a>) -> MethodType<'a>>, //self
+    pub str: Option<fn(Object<'a>) -> MethodType<'a>>, //self
     pub abs: Option<fn(Object<'a>) -> MethodType<'a>>, //self
     pub neg: Option<fn(Object<'a>) -> MethodType<'a>>, //self
     pub hash_fn: Option<fn(Object<'a>) -> MethodType<'a>>, //self

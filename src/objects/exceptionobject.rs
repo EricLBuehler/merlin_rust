@@ -29,6 +29,7 @@ pub fn init_exc<'a>(vm: Arc<VM<'a>>){
         new: Some(exc_new),
 
         repr: Some(exc_repr),
+        str: Some(exc_repr),
         abs: None,
         neg: None,
         hash_fn: Some(exc_hash),
@@ -77,11 +78,14 @@ fn nameexc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -
     unimplemented!();
 }
 fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_repr_safe(&selfv.internals.get_exc().expect("Expected exc internal value").obj);
+    let repr = utils::object_str_safe(&selfv.internals.get_exc().expect("Expected exc internal value").obj);
     if !repr.is_some() {
         return MethodValue::NotImplemented;
     }
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("NameException<{}>", repr.unwrap())))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("NameException<\"{}\">", repr.unwrap())))
+}
+fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(selfv.internals.get_exc().expect("Expected exc internal value").obj)
 }
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
@@ -102,6 +106,7 @@ pub fn init_nameexc<'a>(vm: Arc<VM<'a>>){
         new: Some(nameexc_new),
 
         repr: Some(nameexc_repr),
+        str: Some(nameexc_str),
         abs: None,
         neg: None,
         hash_fn: Some(nameexc_hash),

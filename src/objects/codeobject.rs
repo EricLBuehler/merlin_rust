@@ -33,6 +33,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(code_new),
 
         repr: Some(code_repr),
+        str: Some(code_repr),
         abs: None,
         neg: None,
         hash_fn: None,

@@ -29,6 +29,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         new: Some(object_new),
 
         repr: Some(object_repr),
+        str: Some(object_repr),
         abs: None,
         neg: None,
         hash_fn: Some(object_hash),

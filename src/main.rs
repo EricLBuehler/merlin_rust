@@ -97,7 +97,8 @@ struct Args {
     #[arg(required = true, name = "file")]
     file: String,
 
-    /// Run the code n times to get the average execution time
+    /// Run the code n times to get the average execution time.
+    /// No more tests are run if an error occurs.
     #[arg(long, short, name = "time", default_value_t = 0)]
     time: i32
 }

@@ -286,12 +286,16 @@ impl<'a> Interpreter<'a> {
                     let name = &bytecode.names.get(idx).expect("Bytecode names index out of range").clone();
 
                     let out = globals.internals.get_map().expect("Expected map internal value").get(name);
-                    if out.is_none() {
-                        let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found", name.internals.get_str().unwrap()), start, end);
-                        self.raise_exc(exc);
-                    }
-                    else if !matches!(register, CompilerRegister::NA) {
-                        self.assign_to_register(out.unwrap().clone(), register);
+                    match out {
+                        Some(v) => {
+                            if !matches!(register, CompilerRegister::NA) {
+                                self.assign_to_register(v.clone(), register);
+                            }
+                        }
+                        None => {
+                            let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' is not found", name.internals.get_str().unwrap()), start, end);
+                            self.raise_exc(exc);
+                        }
                     }
                 }
             }

@@ -16,7 +16,9 @@ b=1+a
 ```
 
 Merlin 1.1: 19 µs
+
 Python 3.10.6: 23000 ms 
+
 Merlin is: 1211x faster!
 
 ## Docs

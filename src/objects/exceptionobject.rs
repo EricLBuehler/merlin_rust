@@ -56,7 +56,7 @@ pub fn init_exc<'a>(vm: Arc<VM<'a>>){
 
 // =====================
 
-
+#[allow(dead_code)]
 pub fn nameexc_from_obj<'a>(vm: Arc<VM<'a>>, obj: Object<'a>, start: Position, end: Position) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("NameExc"));
     unsafe {

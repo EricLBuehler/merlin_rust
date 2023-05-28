@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 use colored::Colorize;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe, object_str_safe}, fnobject, listobject, dictobject, exceptionobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
+use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {

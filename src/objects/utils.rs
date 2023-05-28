@@ -26,6 +26,7 @@ pub fn object_repr_safe(object: &Object<'_>) -> MethodValue<String, String> {
     return MethodValue::Some(reprv.unwrap().internals.get_str().expect("Expected str internal value").to_owned());
 }
 
+#[allow(dead_code)]
 pub fn object_str(object: &Object<'_>) -> String {
     return (object.clone().str.expect("Method is not defined"))(object.clone()).unwrap().internals.get_str().expect("Expected str internal value").clone();
 }

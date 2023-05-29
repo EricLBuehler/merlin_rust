@@ -16,15 +16,15 @@ b=1+a
 ```
 Total execution time:
 
-Merlin 1.1: 13 µs
+Merlin 1.1 (release): 1.35 µs
 
-`./merlin program.me -t 10000`
+`./merlin program.me -t 100000`
 
 Python 3.10.6: 24.4 ns 
 
-`python3 -m timeit -c "a=1;b=1+a"`
+`python3 -m timeit -c "a=1"`
 
-Merlin is: 532x slower
+Merlin is: 55x slower
 
 ## Docs
 - [Keywords](docs/keywords.md)

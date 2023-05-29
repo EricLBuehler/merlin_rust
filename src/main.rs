@@ -80,7 +80,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Unexpected None").as_micros();
             sum += end-start;
         }
-        println!("Average execution time: {} µs.", sum / n_exec as u128);
+        println!("Average execution time: {} µs.", (sum as f64) / (n_exec as f64));
         println!("Average execution time: {} ms.", (sum as f64 / n_exec as f64) / 1000.0);
     }
     else {

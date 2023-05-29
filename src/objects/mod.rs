@@ -118,7 +118,7 @@ impl<'a> Hash for RawObject<'a> {
         let res = (self.hash_fn.expect("Hash function not found"))(Arc::new(self.clone()));
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
-        ////println!("{} {}", self.internals.get_str().unwrap(), *res.unwrap().internals.get_int().expect("Expected int internal value"));
+        //println!("{} {}", self.internals.get_str().unwrap(), *res.unwrap().internals.get_int().expect("Expected int internal value"));
         state.write_i128(*res.unwrap().internals.get_int().expect("Expected int internal value"));
     }
 }

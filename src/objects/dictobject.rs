@@ -50,12 +50,9 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 #[inline(always)]
 fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
-    ////println!("FCALL");
     //DEBUG check for hash here!
     let mut map = selfv.internals.get_map().expect("Expected map internal value").clone();
-    ////println!("START");
     map.insert(other, value);
-    ////println!("ENDING");
 
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;

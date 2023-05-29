@@ -5,10 +5,14 @@ use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_o
 
 
 pub fn bool_from(vm: Arc<VM<'_>>, raw: bool) -> Object<'_> {
-    let mut tp = create_object_from_type(vm.get_type("bool"));
-    let mut refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Bool(raw);
-    tp
+    match raw {
+        false => {
+            vm.cache.bool_cache.0.as_ref().unwrap().clone()
+        }
+        true => {
+            vm.cache.bool_cache.1.as_ref().unwrap().clone()
+        }
+    }
 }   
 
 fn bool_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
@@ -23,6 +27,22 @@ fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), *selfv.internals.get_bool().expect("Expected bool internal value") as i128))
+}
+
+pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
+    unsafe {
+        let mut tp = create_object_from_type(booltp.clone());
+        let mut refr = Arc::make_mut(&mut tp);
+        refr.internals = ObjectInternals::Bool(false);
+        let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
+        std::ptr::write(ptr, Some(tp));
+        
+        let mut tp = create_object_from_type(booltp.clone());
+        let mut refr = Arc::make_mut(&mut tp);
+        refr.internals = ObjectInternals::Bool(true);
+        let ptr = &(*tup).1 as *const Option<Object>  as *mut Option<Object>;
+        std::ptr::write(ptr, Some(tp));
+    }
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

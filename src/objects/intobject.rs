@@ -6,7 +6,7 @@ use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_o
 
 pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
     if raw >= MIN_INT_CACHE && raw <= MAX_INT_CACHE {
-        return vm.int_cache[(raw + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone();
+        return vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone();
     }
     let mut tp = create_object_from_type(vm.get_type("int"));
     let mut refr = Arc::make_mut(&mut tp);
@@ -17,7 +17,7 @@ pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = raw.parse::<i128>();
     debug_assert!(convert.is_ok());
     if convert.as_ref().unwrap() >= &MIN_INT_CACHE && convert.as_ref().unwrap() <= &MAX_INT_CACHE {
-        return MethodValue::Some(vm.int_cache[(convert.unwrap() + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone());
+        return MethodValue::Some(vm.cache.int_cache[(convert.unwrap() + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone());
     }
     let mut tp = create_object_from_type(vm.get_type("int"));
     let mut refr = Arc::make_mut(&mut tp);

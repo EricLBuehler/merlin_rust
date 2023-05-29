@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 use colored::Colorize;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
+use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {
@@ -19,12 +19,18 @@ pub const MIN_INT_CACHE: i128 = -5;
 pub const MAX_INT_CACHE: i128 = 256;
 pub const INT_CACHE_SIZE: i128 = MAX_INT_CACHE-MIN_INT_CACHE;
 
+pub struct SingletonCache<'a> {
+    pub int_cache: [Option<Object<'a>>; INT_CACHE_SIZE as usize],
+    pub bool_cache: (Option<Object<'a>>, Option<Object<'a>>),
+    pub none_singleton: Option<Object<'a>>,
+}
+
 pub struct VM<'a> {
     pub types: Arc<HashMap<String, Object<'a>>>,
     interpreters: Vec<Arc<Interpreter<'a>>>,
     namespaces: Arc<Namespaces<'a>>,
     info: FileInfo<'a>,
-    pub int_cache: [Option<Object<'a>>; INT_CACHE_SIZE as usize]
+    pub cache: SingletonCache<'a>,
 }
 
 impl<'a> VM<'a> {
@@ -65,11 +71,33 @@ struct Frame<'a> {
 
 impl<'a> VM<'a> {
     pub fn new(info: FileInfo<'a>) -> VM<'a> {
+        let singleton = SingletonCache {
+            int_cache: intobject::init_cache(),
+            bool_cache: (None, None),
+            none_singleton: None,
+        };
         VM { types: Arc::new(HashMap::new()),
             interpreters: Vec::new(),
             namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: None }),
             info,
-            int_cache: intobject::init_cache() }
+            cache: singleton }
+    }
+
+    pub fn init_cache(self: Arc<Self>) {
+        unsafe {
+            let refr = Arc::into_raw(self.clone()) as *mut VM;
+            let int_cache_arr_ref = &(*refr).cache.int_cache;
+            let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize] as *mut [Option<Object>; INT_CACHE_SIZE as usize];
+            intobject::generate_cache(self.clone().get_type("int"), ptr);
+    
+            let bool_cache_tup_ref = &(*refr).cache.bool_cache;
+            let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>) as *mut (Option<Object>, Option<Object>);
+            boolobject::generate_cache(self.clone().get_type("bool"), ptr);
+            
+            let none_obj_ref = &(*refr).cache.none_singleton;
+            let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
+            noneobject::generate_cache(self.clone().get_type("NoneType"), ptr)
+        }
     }
 
     pub fn execute(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {

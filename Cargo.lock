@@ -155,6 +155,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29fba9abe4742d586dfd0c06ae4f7e73a1c2d86b856933509b269d82cdf06e18"
+
+[[package]]
 name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -222,6 +228,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "colored",
+ "hashbrown",
  "lazy_static",
  "unicode-segmentation",
 ]

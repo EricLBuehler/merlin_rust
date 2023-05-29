@@ -1,6 +1,7 @@
-use std::{sync::{Arc}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
+use std::{sync::{Arc}, collections::{hash_map::DefaultHasher}, hash::{Hash, Hasher}};
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
+use hashbrown;
 
 
 pub mod utils;
@@ -146,7 +147,7 @@ pub enum ObjectInternals<'a> {
     Int(i128),
     Str(String),
     Arr(Vec<Object<'a>>),
-    Map(HashMap<Object<'a>, Object<'a>>),
+    Map(hashbrown::HashMap<Object<'a>, Object<'a>>),
     Code(Arc<Bytecode<'a>>),
     Fn(FnData<'a>),
     Exc(ExcData<'a>),
@@ -232,7 +233,7 @@ impl<'a> ObjectInternals<'a> {
     pub fn is_map(&self) -> bool {
         matches!(self, ObjectInternals::Map(_))
     }
-    pub fn get_map(&self) -> Option<&HashMap<Object<'a>, Object<'a>>> {
+    pub fn get_map(&self) -> Option<&hashbrown::HashMap<Object<'a>, Object<'a>>> {
         match self {
             ObjectInternals::Map(v) => {
                 Some(v)

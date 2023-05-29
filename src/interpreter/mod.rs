@@ -134,7 +134,7 @@ impl<'a> Interpreter<'a> {
     fn add_frame(&mut self) {
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
-            let dict = dictobject::dict_from(self.vm.clone(), HashMap::new());
+            let dict = dictobject::dict_from(self.vm.clone(), hashbrown::HashMap::new());
             (*namespace_refr).locals.push(dict.clone());
             
             if (*namespace_refr).globals.is_none() {
@@ -319,7 +319,7 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::StoreGlobal(idx, register, _start, _end) => {
                     let globals = self.namespaces.globals.as_ref().unwrap().clone();
-
+                    
                     globals.clone().set.expect("Method is not defined")(globals, bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
 
                     if !matches!(register, CompilerRegister::NA) {

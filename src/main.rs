@@ -73,15 +73,19 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
     if let Some(n_exec) = time {
-        let mut sum = 0;
+        let mut min = u128::MAX;
         for _ in 0..n_exec {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_micros();
+            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
             vm.clone().execute(bytecode.clone());
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_micros();
-            sum += end-start;
+            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
+            let time = end-start;
+            if time<min && time>0 {
+                min = end-start;
+            }
         }
-        println!("Average execution time: {} µs.", (sum as f64) / (n_exec as f64));
-        println!("Average execution time: {} ms.", (sum as f64 / n_exec as f64) / 1000.0);
+        println!("Best execution time: {} ns.", min);
+        println!("Best execution time: {} µs.", (min as f64) / 1000.0);
+        println!("Best execution time: {} ms.", (min as f64) / 1000000.0);
     }
     else {
         vm.execute(bytecode);
@@ -98,7 +102,7 @@ struct Args {
     #[arg(required = true, name = "file")]
     file: String,
 
-    /// Run the code n times to get the average execution time.
+    /// Run the code n times to get the best execution time (this is the most accurate because all others are worse due to external factor).
     /// No more tests are run if an error occurs.
     #[arg(long, short, name = "time", default_value_t = 0)]
     time: i32

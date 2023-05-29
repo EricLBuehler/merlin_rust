@@ -144,6 +144,7 @@ impl<'a> Interpreter<'a> {
         self.frames.push(Frame { register1: noneobject::none_from(self.vm.clone()), register2: noneobject::none_from(self.vm.clone()), args: Vec::new() })
     }
 
+    #[inline(always)]
     fn assign_to_register(&mut self, value: Object<'a>, register: CompilerRegister) {
         match register {
             CompilerRegister::R1 => {
@@ -158,6 +159,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    #[inline(always)]
     fn read_register(&mut self, register: CompilerRegister) -> Object<'a> {
         match register {
             CompilerRegister::R1 => {
@@ -228,6 +230,7 @@ impl<'a> Interpreter<'a> {
         self.run_interpreter_raw(bytecode)
     }
 
+    #[inline(always)]
     pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         for instruction in bytecode.instructions.clone() {
             match instruction {

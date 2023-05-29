@@ -47,6 +47,7 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
+#[inline(always)]
 fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     //DEBUG check for hash here!
     let mut map = selfv.internals.get_map().expect("Expected map internal value").clone();

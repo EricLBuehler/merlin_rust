@@ -335,6 +335,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     }
 }
 
+#[inline(always)]
 fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
     let mut tp = tp.clone();
     let alt = tp.clone();
@@ -344,12 +345,14 @@ fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
     tp
 }
 
+#[inline(always)]
 fn get_typeid(selfv: Object<'_>) -> u64 {
     let mut hasher = DefaultHasher::new();
     selfv.typename.hash(&mut hasher);
     hasher.finish()
 }
 
+#[inline(always)]
 fn is_instance<'a>(selfv: &Object<'a>, other: &Object<'a>) -> bool {
     get_typeid(selfv.clone()) == get_typeid(other.clone())
 }

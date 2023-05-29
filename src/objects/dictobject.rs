@@ -3,9 +3,9 @@ use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, in
 
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
-use hashbrown;
+use ahash::AHashMap;
 
-pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: hashbrown::HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
+pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: AHashMap<Object<'a>, Object<'a>>) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("dict"));
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
@@ -50,10 +50,12 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 #[inline(always)]
 fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
+    ////println!("FCALL");
     //DEBUG check for hash here!
     let mut map = selfv.internals.get_map().expect("Expected map internal value").clone();
-    
+    ////println!("START");
     map.insert(other, value);
+    ////println!("ENDING");
 
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;

@@ -1,4 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
+use ahash::AHashMap;
 use colored::Colorize;
 
 // Interpret bytecode
@@ -106,6 +107,7 @@ impl<'a> VM<'a> {
             let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
+            
             return (*interp_refr).run_interpreter(bytecode);
         }
     }
@@ -116,6 +118,7 @@ impl<'a> VM<'a> {
             let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
+            
             return (*interp_refr).run_interpreter_vars(bytecode, vars);
         }
     }
@@ -134,7 +137,7 @@ impl<'a> Interpreter<'a> {
     fn add_frame(&mut self) {
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
-            let dict = dictobject::dict_from(self.vm.clone(), hashbrown::HashMap::new());
+            let dict = dictobject::dict_from(self.vm.clone(), AHashMap::new());
             (*namespace_refr).locals.push(dict.clone());
             
             if (*namespace_refr).globals.is_none() {
@@ -230,7 +233,6 @@ impl<'a> Interpreter<'a> {
         self.run_interpreter_raw(bytecode)
     }
 
-    #[inline(always)]
     pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         for instruction in bytecode.instructions.clone() {
             match instruction {
@@ -321,7 +323,7 @@ impl<'a> Interpreter<'a> {
                     let globals = self.namespaces.globals.as_ref().unwrap().clone();
                     
                     globals.clone().set.expect("Method is not defined")(globals, bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
-
+                    
                     if !matches!(register, CompilerRegister::NA) {
                         self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
                     }

@@ -42,6 +42,12 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
     debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
+fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
+    let mut hasher = DefaultHasher::new();
+    selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
+    
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128))
+}
 
 pub fn init<'a>(vm: Arc<VM<'a>>){
     let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
@@ -57,12 +63,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         str: Some(string_str),
         abs: None,
         neg: None,
-        hash_fn: Some(|selfv: Object<'a>| {
-            let mut hasher = DefaultHasher::new();
-            selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
-            
-            MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128))
-        }),
+        hash_fn: Some(string_hash),
 
         eq: Some(string_eq),
         add: None,

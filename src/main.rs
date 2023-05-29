@@ -74,13 +74,23 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
 
     if let Some(n_exec) = time {
         let mut min = u128::MAX;
+        let mut baseline = u128::MAX;
+        for _ in 0..1000 {
+            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
+            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
+            let time = end-start;
+            if time<baseline && time>0{
+                baseline = time;
+            }
+        }
+
         for _ in 0..n_exec {
             let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
             vm.clone().execute(bytecode.clone());
             let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let time = end-start;
+            let time = end-start-baseline;
             if time<min && time>0 {
-                min = end-start;
+                min = time;
             }
         }
         println!("Best execution time: {} ns.", min);

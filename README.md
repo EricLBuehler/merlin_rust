@@ -12,18 +12,19 @@ Merlin is a dynamically and strongly typed programming language written in Rust.
 With this code:
 ```Python
 a=1
+b=a
 ```
 Total execution time:
 
-Merlin 1.1 (release): 800 ns
+Merlin 1.1 (release): 1600 ns
 
 `./merlin program.me -t 100000`
 
-Python 3.10.6: 24.4 ns 
+Python 3.10.6: 15.6 ns 
 
 `python3 -m timeit -c "a=1"`
 
-Merlin is: 32.78x slower
+Merlin is: 102x slower
 
 ## Docs
 - [Keywords](docs/keywords.md)

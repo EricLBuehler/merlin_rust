@@ -24,7 +24,7 @@ Python 3.10.6: 15.6 ns
 
 `python3 -m timeit -c "a=1"`
 
-Merlin is: 102x slower
+Merlin is: 45x slower
 
 ## Docs
 - [Keywords](docs/keywords.md)

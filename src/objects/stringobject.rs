@@ -44,6 +44,9 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
+    //Use DefaultHasher for long data:
+    //https://www.reddit.com/r/rust/comments/hsbai0/default_hasher_for_u8_unexpectedly_expensive/
+    //jschievink: ...DefaultHasher is an implementation of SipHash...   ...pretty fast on long data, for short data this hash tends to be very slow ...
     let mut hasher = DefaultHasher::new();
     selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
     

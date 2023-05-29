@@ -14,12 +14,12 @@ With this code:
 a=1
 b=1+a
 ```
+Total execution time:
+Merlin 1.1: 5 ms
 
-Merlin 1.1: 19 µs
+Python 3.10.6: 26 ms 
 
-Python 3.10.6: 23000 ms 
-
-Merlin is: 1211x faster!
+Merlin is: 5.2x faster!
 
 ## Docs
 - [Keywords](docs/keywords.md)

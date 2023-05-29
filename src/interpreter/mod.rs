@@ -277,14 +277,11 @@ impl<'a> Interpreter<'a> {
                         let map = self.namespaces.locals.get(local).unwrap().clone();
                         let out = map.internals.get_map().expect("Expected map internal value").get(&name);
                         
-                        match out {
-                            Some(v) => {
-                                if !matches!(register, CompilerRegister::NA) {
-                                    self.assign_to_register(v.clone(), register);
-                                }
+                        if let Some(v) = out {
+                            if !matches!(register, CompilerRegister::NA) {
+                                self.assign_to_register(v.clone(), register);
                             }
-                            None => { }
-                        }
+                        }     
                     }
                     
                     let exc = exceptionobject::nameexc_from_str(self.vm.clone(), &format!("Name '{}' not found  (searched in all locals and also globals)", name.internals.get_str().unwrap()), start, end);

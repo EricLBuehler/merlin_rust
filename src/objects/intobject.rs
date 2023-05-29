@@ -5,7 +5,7 @@ use crate::{objects::is_instance, interpreter::{VM, INT_CACHE_SIZE, MIN_INT_CACH
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
 
 pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
-    if raw >= MIN_INT_CACHE && raw <= MAX_INT_CACHE {
+    if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
         return vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone();
     }
     let mut tp = create_object_from_type(vm.get_type("int"));

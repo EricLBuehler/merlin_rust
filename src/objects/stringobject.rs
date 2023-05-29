@@ -1,7 +1,7 @@
+use std::collections::hash_map::DefaultHasher;
 use std::{sync::Arc};
 use unicode_segmentation::UnicodeSegmentation;
 use std::hash::{Hash, Hasher};
-use fasthash::{MetroHasher};
 
 use crate::interpreter::VM;
 use crate::objects::{is_instance, boolobject, intobject};
@@ -44,7 +44,7 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
-    let mut hasher = MetroHasher::default();
+    let mut hasher = DefaultHasher::new();
     selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
     
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128))

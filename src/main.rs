@@ -75,9 +75,9 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if let Some(n_exec) = time {
         let mut sum = 0;
         for _ in 0..n_exec {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Unexpected None").as_micros();
+            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_micros();
             vm.clone().execute(bytecode.clone());
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Unexpected None").as_micros();
+            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_micros();
             sum += end-start;
         }
         println!("Average execution time: {} µs.", (sum as f64) / (n_exec as f64));

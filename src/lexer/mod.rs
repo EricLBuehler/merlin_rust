@@ -115,6 +115,10 @@ impl<'a> Iterator for Lexer<'a> {
             Some(add_char_token(self, cur, TokenType::Comma))
         }
         else if cur == '\0' {
+            if self.len == 0 {
+                self.len = 1;
+                return Some(add_char_token(self, cur, TokenType::Eof));
+            }
             None
         }
         else {
@@ -141,7 +145,7 @@ impl std::fmt::Display for Token {
 pub fn new<'a>(data: &'a [u8], info: &'a crate::fileinfo::FileInfo, kwds: Vec<String>) -> Lexer<'a> {
     Lexer {
         idx: 0,
-        current: data[0],
+        current: if data.len()>0 {data[0]} else {b'\0'},
         len: data.len(),
         line: 0,
         col: 0,

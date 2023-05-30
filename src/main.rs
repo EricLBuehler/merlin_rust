@@ -17,6 +17,11 @@ mod compiler;
 
 mod interpreter;
 
+pub struct TimeitHolder {
+    baseline: u128,
+    time: u128,
+}
+
 
 fn run_file(file: &String, time: Option<i32>) {
     let res = std::fs::read_to_string(file);
@@ -85,10 +90,9 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         }
 
         for _ in 0..n_exec {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            vm.clone().execute(bytecode.clone());
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let time = end-start-baseline;
+            let mut holder = TimeitHolder {baseline, time: 0};
+            vm.clone().execute_timeit(bytecode.clone(), &mut holder);
+            let time = holder.time;
             if time<min && time>0 {
                 min = time;
             }

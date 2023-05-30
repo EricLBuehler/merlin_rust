@@ -1,9 +1,9 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc, time::SystemTime};
 use ahash::AHashMap;
 use colored::Colorize;
 
 // Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo};
+use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {
@@ -107,8 +107,25 @@ impl<'a> VM<'a> {
             let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
-            
+
             return (*interp_refr).run_interpreter(bytecode);
+        }
+    }
+
+    pub fn execute_timeit(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>, timeit: &mut TimeitHolder) -> Object<'a> {
+        let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
+        unsafe {
+            let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
+            (*refr).interpreters.push(Arc::new(interpreter));
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
+        
+            (*interp_refr).add_frame();
+            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
+            let res = (*interp_refr).run_interpreter_raw(bytecode);
+            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
+            let time = end-start-timeit.baseline;
+            (*timeit).time = time;
+            res
         }
     }
 

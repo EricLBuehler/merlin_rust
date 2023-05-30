@@ -1,8 +1,10 @@
-use std::{sync::Arc};
+use std::{sync::Arc, collections::hash_map::DefaultHasher};
 
 use crate::{objects::is_instance, interpreter::{VM, INT_CACHE_SIZE, MIN_INT_CACHE, MAX_INT_CACHE}};
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
+
+use std::hash::{Hash, Hasher};
 
 pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
@@ -101,7 +103,9 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(int_from(selfv.vm.clone(), *selfv.internals.get_int().expect("Expected int internal value")))
+    let mut hasher = DefaultHasher::new();
+    selfv.internals.get_int().expect("Expected int internal value").hash(&mut hasher);
+    return MethodValue::Some(int_from(selfv.vm.clone(), hasher.finish() as i128));
 }
 
 pub fn init_cache<'a>() -> [Option<Object<'a>>; INT_CACHE_SIZE as usize] {

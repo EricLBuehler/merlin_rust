@@ -1,6 +1,6 @@
 use clap::Parser;
 use std::sync::Arc;
-use std::time::{SystemTime};
+use std::time::{Instant};
 
 mod fileinfo;
 
@@ -81,11 +81,10 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         let mut min = u128::MAX;
         let mut baseline = u128::MAX;
         for _ in 0..1000 {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let time = end-start;
-            if time<baseline && time>0{
-                baseline = time;
+            let start = Instant::now();
+            let delta = Instant::now().duration_since(start).as_nanos();
+            if delta<baseline && delta>0{
+                baseline = delta;
             }
         }
 

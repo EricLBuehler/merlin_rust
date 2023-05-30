@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::SystemTime};
+use std::{collections::HashMap, sync::Arc, time::Instant};
 use ahash::AHashMap;
 use colored::Colorize;
 
@@ -120,10 +120,10 @@ impl<'a> VM<'a> {
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
             (*interp_refr).add_frame();
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
+            let start = Instant::now();
             let res = (*interp_refr).run_interpreter_raw(bytecode);
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let time = end-start-timeit.baseline;
+            let delta = Instant::now().duration_since(start).as_nanos();
+            let time = delta-timeit.baseline;
             (*timeit).time = time;
             res
         }

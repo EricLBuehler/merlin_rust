@@ -118,7 +118,7 @@ impl<'a> VM<'a> {
             let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
-        
+            
             (*interp_refr).add_frame();
             let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
             let res = (*interp_refr).run_interpreter_raw(bytecode);
@@ -168,10 +168,10 @@ impl<'a> Interpreter<'a> {
     fn assign_to_register(&mut self, value: Object<'a>, register: CompilerRegister) {
         match register {
             CompilerRegister::R1 => {
-                self.frames.last_mut().expect("No frames").register1 = value.clone();
+                self.frames.last_mut().expect("No frames").register1 = value;
             }
             CompilerRegister::R2 => {
-                self.frames.last_mut().expect("No frames").register2 = value.clone();
+                self.frames.last_mut().expect("No frames").register2 = value;
             }
             CompilerRegister::NA => {
                 unimplemented!("Cannot store to NA register");
@@ -289,9 +289,6 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::StoreName(idx, register, _start, _end) => {
                     (self.namespaces.locals.last().expect("No locals").set.expect("Method is not defined"))(self.namespaces.locals.last().expect("No locals").clone(), bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
-                    if !matches!(register, CompilerRegister::NA) {
-                        self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
-                    }
                 }
                 CompilerInstruction::LoadName(idx, register, start, end) => {
                     let name = bytecode.names.get(idx).expect("Bytecode names index out of range").clone();
@@ -339,11 +336,7 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::StoreGlobal(idx, register, _start, _end) => {
                     let globals = self.namespaces.globals.as_ref().unwrap().clone();
                     
-                    globals.clone().set.expect("Method is not defined")(globals, bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
-                    
-                    if !matches!(register, CompilerRegister::NA) {
-                        self.assign_to_register(noneobject::none_from(self.vm.clone()), register);
-                    }
+                    globals.set.expect("Method is not defined")(globals, bytecode.names.get(idx).expect("Bytecode names index out of range").clone(), self.read_register(register));
                 }
                 CompilerInstruction::LoadGlobal(idx, register, start, end) => {
                     let globals = self.namespaces.globals.as_ref().unwrap().clone();

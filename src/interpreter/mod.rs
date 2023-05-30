@@ -151,6 +151,7 @@ impl<'a> Interpreter<'a> {
         Interpreter { frames: Vec::new(), types, namespaces, vm }
     }
 
+    #[inline(always)]
     fn add_frame(&mut self) {
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
@@ -250,6 +251,7 @@ impl<'a> Interpreter<'a> {
         self.run_interpreter_raw(bytecode)
     }
 
+    #[inline(always)]
     pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         for instruction in &bytecode.instructions {
             match instruction {

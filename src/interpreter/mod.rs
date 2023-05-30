@@ -103,8 +103,9 @@ impl<'a> VM<'a> {
 
     pub fn execute(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
+        
+        let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
         unsafe {
-            let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
 
@@ -114,15 +115,19 @@ impl<'a> VM<'a> {
 
     pub fn execute_timeit(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>, timeit: &mut TimeitHolder) -> Object<'a> {
         let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
+        
+        let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
+        
         unsafe {
-            let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
             (*interp_refr).add_frame();
+            
             let start = Instant::now();
             let res = (*interp_refr).run_interpreter_raw(bytecode);
             let delta = Instant::now().duration_since(start).as_nanos();
+
             let time = delta-timeit.baseline;
             (*timeit).time = time;
             res

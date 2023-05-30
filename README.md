@@ -12,7 +12,6 @@ Merlin is a dynamically and strongly typed programming language written in Rust.
 With this code:
 ```Python
 a=1
-b=a
 ```
 Total execution time:
 

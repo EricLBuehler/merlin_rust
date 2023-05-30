@@ -8,6 +8,8 @@ use crate::objects::{is_instance, boolobject, intobject};
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, finalize_type};
 
+const MFBH_MAX_LEN: usize = 256;
+
 
 pub fn string_from(vm: Arc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
@@ -47,10 +49,24 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     //Use DefaultHasher for long data:
     //https://www.reddit.com/r/rust/comments/hsbai0/default_hasher_for_u8_unexpectedly_expensive/
     //jschievink: ...DefaultHasher is an implementation of SipHash...   ...pretty fast on long data, for short data this hash tends to be very slow ...
-    let mut hasher = DefaultHasher::new();
-    selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
     
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128))
+    let bytes = selfv.internals.get_str().expect("Expected str internal value").bytes();
+    let len = bytes.len();
+
+    if len > MFBH_MAX_LEN {
+        let mut hasher = DefaultHasher::new();
+        selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
+        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128));
+    }
+    
+    let mut res: i128 = 0;
+    let mut index: i128 = 1;
+    for byte in bytes {
+        res += byte as i128 * index;
+        index += 1;
+    }
+
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res as i128))
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

@@ -59,8 +59,8 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128));
     }
     
-    let mut res: i128 = 0;
-    let mut index: i128 = 1;
+    let mut res = 0;
+    let mut index = 1;
     for byte in bytes {
         res += byte as i128 * index;
         index += 1;

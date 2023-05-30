@@ -25,6 +25,9 @@ Python 3.10.6: 11.4 ns
 
 Merlin is: 17.54x slower
 
+**Important note**: I am currently using functions that do **not** work well for accurate timing on my Windows machine running WSL. 
+They have a 100 ns granularity, so I am working on a way to use more accurate functions.
+
 ## Docs
 - [Keywords](docs/keywords.md)
 - [Memory model reasoning and internals](docs/memory_model.md)

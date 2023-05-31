@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc, time::Instant, fs};
+use std::{collections::HashMap, sync::Arc, time::Instant};
 use ahash::AHashMap;
 use colored::Colorize;
 

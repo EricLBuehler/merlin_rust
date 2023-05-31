@@ -1,11 +1,10 @@
+// Interpret bytecode
+
 use std::{collections::HashMap, sync::Arc, time::Instant};
 use ahash::AHashMap;
 use colored::Colorize;
 
-mod stats;
-
-// Interpret bytecode
-use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder};
+use crate::{stats, objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder};
 
 #[derive(PartialEq, Eq)]
 pub struct Namespaces<'a> {

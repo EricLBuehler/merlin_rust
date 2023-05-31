@@ -16,6 +16,7 @@ mod objects;
 mod compiler;
 
 mod interpreter;
+mod stats;
 
 
 pub struct TimeitHolder {

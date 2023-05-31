@@ -1,6 +1,8 @@
-use std::{collections::HashMap, sync::Arc, time::Instant};
+use std::{collections::HashMap, sync::Arc, time::Instant, fs};
 use ahash::AHashMap;
 use colored::Colorize;
+
+mod stats;
 
 // Interpret bytecode
 use crate::{objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder};
@@ -112,7 +114,7 @@ impl<'a> VM<'a> {
             return (*interp_refr).run_interpreter(bytecode);
         }
     }
-
+    
     pub fn execute_timeit(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>, timeit: &mut TimeitHolder) -> Object<'a> {
         let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
         
@@ -122,24 +124,34 @@ impl<'a> VM<'a> {
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
-            (*interp_refr).add_frame();
-            let mut sum = 0;
+            //See bench.rs, this is a verys similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
 
+            let samples = &mut [0f64; 50];
+
+            //Get initial result
             let start = Instant::now();
             let mut res = (*interp_refr).run_interpreter_raw(bytecode.clone());
-            let delta = Instant::now().duration_since(start).as_nanos();
+            (*interp_refr).add_frame();
+            let delta = start.elapsed().as_nanos();
             let time = delta-timeit.baseline;
-            sum += time;
-            for _ in 0..10 {
-                (*interp_refr).add_frame();
-                let start = Instant::now();
-                res = (*interp_refr).run_interpreter_raw(bytecode.clone());
-                let delta = Instant::now().duration_since(start).as_nanos();
-                let time = delta-timeit.baseline;
-                sum += time;
-            }
+            samples[0] = time as f64;
             
-            (*timeit).time = sum/11;
+            for p in &mut *samples {
+                let start = Instant::now();
+                for _ in 0..5 {
+                    (*interp_refr).add_frame();
+                    res = (*interp_refr).run_interpreter_raw(bytecode.clone());
+                }
+                let delta = start.elapsed().as_nanos();
+                let time = delta/5-time;
+                *p = time as f64;
+            }
+
+            stats::winsorize(samples, 5.0);
+            
+            let sum: f64 = samples.iter().sum();
+
+            (*timeit).time = sum/samples.len() as f64;
             res
         }
     }

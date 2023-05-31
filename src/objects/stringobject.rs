@@ -51,9 +51,8 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     //jschievink: ...DefaultHasher is an implementation of SipHash...   ...pretty fast on long data, for short data this hash tends to be very slow ...
     
     let bytes = selfv.internals.get_str().expect("Expected str internal value").bytes();
-    let len = bytes.len();
 
-    if len > MFBH_MAX_LEN {
+    if bytes.len() > MFBH_MAX_LEN {
         let mut hasher = DefaultHasher::new();
         selfv.internals.get_str().expect("Expected str internal value").hash(&mut hasher);
         return MethodValue::Some(intobject::int_from(selfv.vm.clone(), hasher.finish() as i128));

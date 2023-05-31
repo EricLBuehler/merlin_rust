@@ -17,9 +17,10 @@ mod compiler;
 
 mod interpreter;
 
+
 pub struct TimeitHolder {
     baseline: u128,
-    time: u128,
+    time: f64,
 }
 
 
@@ -78,7 +79,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
     if let Some(n_exec) = time {
-        let mut min = u128::MAX;
+        let mut min = f64::MAX;
         let mut baseline = u128::MAX;
         for _ in 0..1000 {
             let start = Instant::now();
@@ -89,10 +90,10 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         }
 
         for _ in 0..n_exec {
-            let mut holder = TimeitHolder {baseline, time: 0};
+            let mut holder = TimeitHolder {baseline, time: 0.};
             vm.clone().execute_timeit(bytecode.clone(), &mut holder);
             let time = holder.time;
-            if time<min && time>0 {
+            if time<min as f64 && time>0. {
                 min = time;
             }
         }

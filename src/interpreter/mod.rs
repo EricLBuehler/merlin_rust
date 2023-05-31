@@ -129,8 +129,8 @@ impl<'a> VM<'a> {
 
             //Get initial result
             let start = Instant::now();
-            let mut res = (*interp_refr).run_interpreter_raw(bytecode.clone());
             (*interp_refr).add_frame();
+            let mut res = (*interp_refr).run_interpreter_raw(bytecode.clone());
             let delta = start.elapsed().as_nanos();
             let time = delta-timeit.baseline;
             samples[0] = time as f64;

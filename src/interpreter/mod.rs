@@ -29,8 +29,8 @@ pub struct SingletonCache<'a> {
 
 pub struct VM<'a> {
     pub types: Arc<HashMap<String, Object<'a>>>,
-    interpreters: Vec<Arc<Interpreter<'a>>>,
-    namespaces: Arc<Namespaces<'a>>,
+    pub interpreters: Vec<Arc<Interpreter<'a>>>,
+    pub namespaces: Arc<Namespaces<'a>>,
     info: FileInfo<'a>,
     pub cache: SingletonCache<'a>,
 }
@@ -44,6 +44,8 @@ impl<'a> VM<'a> {
             let refr = Arc::into_raw(self) as *mut VM<'a>;
             let map_refr = Arc::into_raw((*refr).types.clone()) as *mut HashMap<String, Object>;
             (*map_refr).insert(name.to_string(), value);
+            Arc::from_raw(refr);
+            Arc::from_raw(map_refr);
         }
     }
 }
@@ -98,7 +100,9 @@ impl<'a> VM<'a> {
             
             let none_obj_ref = &(*refr).cache.none_singleton;
             let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
-            noneobject::generate_cache(self.clone().get_type("NoneType"), ptr)
+            noneobject::generate_cache(self.clone().get_type("NoneType"), ptr);
+            
+            Arc::from_raw(refr);
         }
     }
 
@@ -110,17 +114,16 @@ impl<'a> VM<'a> {
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
 
+            Arc::from_raw(refr);
+            Arc::from_raw(interp_refr);
             return (*interp_refr).run_interpreter(bytecode);
         }
     }
     
     pub fn execute_timeit(self: Arc<Self>, bytecode: Arc<Bytecode<'a>>, timeit: &mut TimeitHolder) -> Object<'a> {
-        let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
-        
         let refr = Arc::into_raw(self.clone()) as *mut VM<'a>;
         
         unsafe {
-            (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
             //See bench.rs, this is a verys similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
@@ -128,29 +131,26 @@ impl<'a> VM<'a> {
             let samples = &mut [0f64; 50];
 
             //Get initial result
-            let start = Instant::now();
-            (*interp_refr).add_frame();
-            let mut res = (*interp_refr).run_interpreter_raw(bytecode.clone());
-            let delta = start.elapsed().as_nanos();
-            let time = delta-timeit.baseline;
-            samples[0] = time as f64;
+            let mut res = (*interp_refr).run_interpreter(bytecode.clone());
             
             for p in &mut *samples {
                 let start = Instant::now();
                 for _ in 0..5 {
-                    (*interp_refr).add_frame();
-                    res = (*interp_refr).run_interpreter_raw(bytecode.clone());
+                    res = (*interp_refr).run_interpreter(bytecode.clone());
                 }
                 let delta = start.elapsed().as_nanos();
                 let time = delta/5-timeit.baseline;
                 *p = time as f64;
             }
+            Arc::from_raw(refr);
+            Arc::from_raw(interp_refr);
 
             stats::winsorize(samples, 5.0);
             
             let sum: f64 = samples.iter().sum();
 
             timeit.time = sum/samples.len() as f64;
+            
             res
         }
     }
@@ -162,7 +162,10 @@ impl<'a> VM<'a> {
             (*refr).interpreters.push(Arc::new(interpreter));
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
-            return (*interp_refr).run_interpreter_vars(bytecode, vars);
+            let res = (*interp_refr).run_interpreter_vars(bytecode, vars);
+            Arc::from_raw(refr);
+            Arc::from_raw(interp_refr);
+            return res;
         }
     }
     
@@ -187,8 +190,19 @@ impl<'a> Interpreter<'a> {
             if (*namespace_refr).globals.is_none() {
                 (*namespace_refr).globals = Some(dict);
             }
+            Arc::from_raw(namespace_refr);
         }
         self.frames.push(Frame { register1: noneobject::none_from(self.vm.clone()), register2: noneobject::none_from(self.vm.clone()), args: Vec::new() })
+    }
+
+    #[inline(always)]
+    fn pop_frame(&mut self) {
+        unsafe {
+            let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
+            (*namespace_refr).locals.pop();
+            Arc::from_raw(namespace_refr);
+        }
+        self.frames.pop();
     }
 
     #[inline(always)]
@@ -268,6 +282,7 @@ impl<'a> Interpreter<'a> {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
             (*namespace_refr).locals.pop();
             (*namespace_refr).locals.push(vars);
+            Arc::from_raw(namespace_refr);
         }
         self.run_interpreter(bytecode)
     }
@@ -358,7 +373,7 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::Return(register, _start, _end) => {
                     let res = self.read_register(*register);
-                    self.frames.pop();
+                    self.pop_frame();
                     return res;
                 }
                 CompilerInstruction::StoreGlobal(idx, register, _start, _end) => {
@@ -387,7 +402,7 @@ impl<'a> Interpreter<'a> {
             }
         }
 
-        self.frames.pop();
+        self.pop_frame();
 
         noneobject::none_from(self.vm.clone())
     }

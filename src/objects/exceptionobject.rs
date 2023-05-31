@@ -62,6 +62,7 @@ pub fn nameexc_from_obj<'a>(vm: Arc<VM<'a>>, obj: Object<'a>, start: Position, e
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Exc(ExcData {obj, start, end});
+        Arc::from_raw(refr);
     }
     tp
 }
@@ -70,6 +71,7 @@ pub fn nameexc_from_str<'a>(vm: Arc<VM<'a>>, raw: &str, start: Position, end: Po
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Exc(ExcData {obj: stringobject::string_from(vm.clone(), raw.to_string()), start, end});
+        Arc::from_raw(refr);
     }
     tp
 }

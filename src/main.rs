@@ -90,6 +90,16 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             }
         }
 
+        
+        let interpreter = interpreter::Interpreter::new(vm.clone().types.clone(), vm.clone().namespaces.clone(), vm.clone().clone());
+        
+        let refr = Arc::into_raw(vm.clone()) as *mut interpreter::VM;
+        
+        unsafe {
+            (*refr).interpreters.push(Arc::new(interpreter));
+            Arc::from_raw(refr);
+        }
+
         for _ in 0..n_exec {
             let mut holder = TimeitHolder {baseline, time: 0.};
             vm.clone().execute_timeit(bytecode.clone(), &mut holder);

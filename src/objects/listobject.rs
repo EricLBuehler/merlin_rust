@@ -49,6 +49,7 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Arr(arr.to_vec());
+        Arc::from_raw(refr);
     }
     
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))

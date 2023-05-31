@@ -340,13 +340,10 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 }
 
 #[inline(always)]
-fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
-    let mut tp = tp.clone();
-    let alt = tp.clone();
-    
-    let mut refr = Arc::make_mut(&mut tp);
-    refr.tp = ObjectType::Other(alt);
-    tp
+fn create_object_from_type(tp: Object<'_>) -> Object<'_> {    
+    let mut obj = (*tp).clone();
+    obj.tp = ObjectType::Other(tp);
+    Arc::new(obj)
 }
 
 #[inline(always)]

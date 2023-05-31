@@ -10,6 +10,7 @@ pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: AHashMap<Object<'a>, Object<'a>>) -> 
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Map(raw);
+        Arc::from_raw(refr);
     }
     tp
 }
@@ -57,6 +58,7 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Map(map);
+        Arc::from_raw(refr);
     }
 
     MethodValue::Some(noneobject::none_from(selfv.vm.clone()))

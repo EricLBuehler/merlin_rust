@@ -142,7 +142,7 @@ impl<'a> VM<'a> {
                     res = (*interp_refr).run_interpreter_raw(bytecode.clone());
                 }
                 let delta = start.elapsed().as_nanos();
-                let time = delta/5-time;
+                let time = delta/5-timeit.baseline;
                 *p = time as f64;
             }
 

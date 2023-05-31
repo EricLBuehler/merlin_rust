@@ -84,7 +84,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         let mut baseline = u128::MAX;
         for _ in 0..1000 {
             let start = Instant::now();
-            let delta = Instant::now().duration_since(start).as_nanos();
+            let delta = start.elapsed().as_nanos();
             if delta<baseline && delta>0{
                 baseline = delta;
             }

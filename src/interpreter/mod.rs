@@ -151,7 +151,7 @@ impl<'a> VM<'a> {
             
             let sum: f64 = samples.iter().sum();
 
-            (*timeit).time = sum/samples.len() as f64;
+            timeit.time = sum/samples.len() as f64;
             res
         }
     }

@@ -93,13 +93,13 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             let mut holder = TimeitHolder {baseline, time: 0.};
             vm.clone().execute_timeit(bytecode.clone(), &mut holder);
             let time = holder.time;
-            if time<min as f64 && time>0. {
+            if time<min && time>0. {
                 min = time;
             }
         }
         println!("Best execution time: {} ns.", min);
-        println!("Best execution time: {} µs.", (min as f64) / 1000.0);
-        println!("Best execution time: {} ms.", (min as f64) / 1000000.0);
+        println!("Best execution time: {} µs.", min / 1000.0);
+        println!("Best execution time: {} ms.", min / 1000000.0);
     }
     else {
         vm.execute(bytecode);

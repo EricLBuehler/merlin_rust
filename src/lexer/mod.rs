@@ -145,7 +145,7 @@ impl std::fmt::Display for Token {
 pub fn new<'a>(data: &'a [u8], info: &'a crate::fileinfo::FileInfo, kwds: Vec<String>) -> Lexer<'a> {
     Lexer {
         idx: 0,
-        current: if data.len()>0 {data[0]} else {b'\0'},
+        current: if !data.is_empty() {data[0]} else {b'\0'},
         len: data.len(),
         line: 0,
         col: 0,

@@ -65,7 +65,7 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
         index += 1;
     }
 
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res as i128))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res))
 }
 
 pub fn init<'a>(vm: Arc<VM<'a>>){

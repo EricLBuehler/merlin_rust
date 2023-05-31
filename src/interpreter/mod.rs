@@ -123,13 +123,23 @@ impl<'a> VM<'a> {
             let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
             (*interp_refr).add_frame();
-            
-            let start = Instant::now();
-            let res = (*interp_refr).run_interpreter_raw(bytecode);
-            let delta = Instant::now().duration_since(start).as_nanos();
+            let mut sum = 0;
 
+            let start = Instant::now();
+            let mut res = (*interp_refr).run_interpreter_raw(bytecode.clone());
+            let delta = Instant::now().duration_since(start).as_nanos();
             let time = delta-timeit.baseline;
-            (*timeit).time = time;
+            sum += time;
+            for _ in 0..10 {
+                (*interp_refr).add_frame();
+                let start = Instant::now();
+                res = (*interp_refr).run_interpreter_raw(bytecode.clone());
+                let delta = Instant::now().duration_since(start).as_nanos();
+                let time = delta-timeit.baseline;
+                sum += time;
+            }
+            
+            (*timeit).time = sum/11;
             res
         }
     }

@@ -1,8 +1,6 @@
-use std::{sync::{Arc}, collections::{hash_map::DefaultHasher}, hash::{Hash, Hasher}};
+use std::{sync::{Arc}, collections::{hash_map::DefaultHasher, HashMap}, hash::{Hash, Hasher}};
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
-use ahash::AHashMap;
-
 
 pub mod utils;
 
@@ -113,13 +111,13 @@ impl<'a> PartialEq for RawObject<'a> {
 }
 
 impl<'a> Hash for RawObject<'a> {
-    #[inline(always)]
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.hash_fn.is_some());
         let res = (self.hash_fn.expect("Hash function not found"))(Arc::new(self.clone()));
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
-        
+
         state.write_i128(*res.unwrap().internals.get_int().expect("Expected int internal value"));
     }
 }
@@ -150,7 +148,7 @@ pub enum ObjectInternals<'a> {
     Int(i128),
     Str(String),
     Arr(Vec<Object<'a>>),
-    Map(AHashMap<Object<'a>, Object<'a>>),
+    Map(HashMap<Object<'a>, Object<'a>>),
     Code(Arc<Bytecode<'a>>),
     Fn(FnData<'a>),
     Exc(ExcData<'a>),
@@ -236,7 +234,7 @@ impl<'a> ObjectInternals<'a> {
     pub fn is_map(&self) -> bool {
         matches!(self, ObjectInternals::Map(_))
     }
-    pub fn get_map(&self) -> Option<&AHashMap<Object<'a>, Object<'a>>> {
+    pub fn get_map(&self) -> Option<&HashMap<Object<'a>, Object<'a>>> {
         match self {
             ObjectInternals::Map(v) => {
                 Some(v)
@@ -339,21 +337,21 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     }
 }
 
-#[inline(always)]
+#[inline]
 fn create_object_from_type(tp: Object<'_>) -> Object<'_> {    
     let mut obj = (*tp).clone();
     obj.tp = ObjectType::Other(tp);
     Arc::new(obj)
 }
 
-#[inline(always)]
+#[inline]
 fn get_typeid(selfv: Object<'_>) -> u64 {
     let mut hasher = DefaultHasher::new();
     selfv.typename.hash(&mut hasher);
     hasher.finish()
 }
 
-#[inline(always)]
+#[inline]
 fn is_instance<'a>(selfv: &Object<'a>, other: &Object<'a>) -> bool {
     get_typeid(selfv.clone()) == get_typeid(other.clone())
 }

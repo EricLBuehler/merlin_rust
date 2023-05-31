@@ -1,7 +1,6 @@
 // Interpret bytecode
 
 use std::{collections::HashMap, sync::Arc, time::Instant};
-use ahash::AHashMap;
 use colored::Colorize;
 
 use crate::{stats, objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder};
@@ -180,11 +179,11 @@ impl<'a> Interpreter<'a> {
         Interpreter { frames: Vec::new(), types, namespaces, vm }
     }
 
-    #[inline(always)]
+    #[inline]
     fn add_frame(&mut self) {
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
-            let dict = dictobject::dict_from(self.vm.clone(), AHashMap::new());
+            let dict = dictobject::dict_from(self.vm.clone(), HashMap::with_capacity(4));
             (*namespace_refr).locals.push(dict.clone());
             
             if (*namespace_refr).globals.is_none() {
@@ -195,7 +194,7 @@ impl<'a> Interpreter<'a> {
         self.frames.push(Frame { register1: noneobject::none_from(self.vm.clone()), register2: noneobject::none_from(self.vm.clone()), args: Vec::new() })
     }
 
-    #[inline(always)]
+    #[inline]
     fn pop_frame(&mut self) {
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
@@ -205,7 +204,7 @@ impl<'a> Interpreter<'a> {
         self.frames.pop();
     }
 
-    #[inline(always)]
+    #[inline]
     fn assign_to_register(&mut self, value: Object<'a>, register: CompilerRegister) {
         match register {
             CompilerRegister::R1 => {
@@ -220,7 +219,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
-    #[inline(always)]
+    #[inline]
     fn read_register(&mut self, register: CompilerRegister) -> Object<'a> {
         match register {
             CompilerRegister::R1 => {
@@ -292,7 +291,7 @@ impl<'a> Interpreter<'a> {
         self.run_interpreter_raw(bytecode)
     }
 
-    #[inline(always)]
+    #[inline]
     pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         for instruction in &bytecode.instructions {
             match instruction {

@@ -3,7 +3,7 @@ use crate::{objects::stringobject, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject, ObjectInternals};
 
-#[inline(always)]
+#[inline]
 pub fn none_from(vm: Arc<VM<'_>>) -> Object<'_> {
     vm.cache.none_singleton.as_ref().unwrap().clone()
 }

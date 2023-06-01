@@ -1,4 +1,4 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{sync::Arc};
 
 use crate::{objects::{stringobject, ObjectInternals, boolobject, is_instance, dictobject}, interpreter::VM};
 
@@ -26,7 +26,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&args, &selfv.vm.clone().get_type("list")));
 
     debug_assert!(args.internals.get_arr().expect("Expected arr internal value").len() == selfv.internals.get_fn().expect("Expected Fn internal value").args.len());
-    let mut map = HashMap::new();
+    let mut map = hashbrown::HashMap::new();
     for (name, value) in std::iter::zip(args.internals.get_arr().expect("Expected arr internal value"), &selfv.internals.get_fn().expect("Expected Fn internal value").args) {
         map.insert(name.clone(), value.clone());
     }

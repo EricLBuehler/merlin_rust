@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::{fmt::Debug};
 use crate::parser::Position;
 
 #[derive(Debug)]
@@ -28,8 +28,8 @@ pub enum NodeType {
 
 #[derive(Debug)]
 pub struct NodeValue<'a> {
-    pub raw: HashMap<String, String>,
-    pub nodes: HashMap<String, &'a Node>,
+    pub raw: hashbrown::HashMap<String, String>,
+    pub nodes: hashbrown::HashMap<String, &'a Node>,
     pub op: Option<BinaryOpType>,
     pub nodearr: Option<&'a Vec<Node>>,
     pub args: Option<Vec<String>>,
@@ -47,7 +47,7 @@ impl Debug for dyn NodeData {
 
 impl<'a> NodeValue<'a> {
     fn new() -> NodeValue<'a> {
-        NodeValue {raw: HashMap::new(), nodes: HashMap::new(), op: None, nodearr: None, args: None}
+        NodeValue {raw: hashbrown::HashMap::new(), nodes: hashbrown::HashMap::new(), op: None, nodearr: None, args: None}
     }
 }
 

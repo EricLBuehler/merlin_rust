@@ -1,6 +1,6 @@
 // Interpret bytecode
 
-use std::{collections::HashMap, sync::Arc, time::Instant};
+use std::{sync::Arc, time::Instant};
 use colored::Colorize;
 
 use crate::{stats, objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder, none_from};
@@ -27,7 +27,7 @@ pub struct SingletonCache<'a> {
 }
 
 pub struct VM<'a> {
-    pub types: Arc<HashMap<String, Object<'a>>>,
+    pub types: Arc<hashbrown::HashMap<String, Object<'a>>>,
     pub interpreters: Vec<Arc<Interpreter<'a>>>,
     pub namespaces: Arc<Namespaces<'a>>,
     info: FileInfo<'a>,
@@ -41,7 +41,7 @@ impl<'a> VM<'a> {
     pub fn add_type(self: Arc<Self>, name: &str, value: Object<'a>) {
         unsafe {
             let refr = Arc::into_raw(self) as *mut VM<'a>;
-            let map_refr = Arc::into_raw((*refr).types.clone()) as *mut HashMap<String, Object>;
+            let map_refr = Arc::into_raw((*refr).types.clone()) as *mut hashbrown::HashMap<String, Object>;
             (*map_refr).insert(name.to_string(), value);
             Arc::from_raw(refr);
             Arc::from_raw(map_refr);
@@ -60,7 +60,7 @@ impl<'a> PartialEq for VM<'a> {
 #[derive(PartialEq, Eq)]
 pub struct Interpreter<'a> {
     frames: Vec<Frame<'a>>,
-    types: Arc<HashMap<String, Object<'a>>>,
+    types: Arc<hashbrown::HashMap<String, Object<'a>>>,
     namespaces: Arc<Namespaces<'a>>,
     vm: Arc<VM<'a>>,
 }
@@ -79,7 +79,7 @@ impl<'a> VM<'a> {
             bool_cache: (None, None),
             none_singleton: None,
         };
-        VM { types: Arc::new(HashMap::new()),
+        VM { types: Arc::new(hashbrown::HashMap::new()),
             interpreters: Vec::new(),
             namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: None }),
             info,
@@ -225,7 +225,7 @@ macro_rules! add_frame {
         {
             unsafe {
                 let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-                let dict = dictobject::dict_from($interp.vm.clone(), HashMap::with_capacity(4));
+                let dict = dictobject::dict_from($interp.vm.clone(), hashbrown::HashMap::with_capacity(4));
                 (*namespace_refr).locals.push(dict.clone());
                 
                 if (*namespace_refr).globals.is_none() {
@@ -239,7 +239,7 @@ macro_rules! add_frame {
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn new(types: Arc<HashMap<String, Object<'a>>>, namespaces: Arc<Namespaces<'a>>, vm: Arc<VM<'a>>) -> Interpreter<'a> {
+    pub fn new(types: Arc<hashbrown::HashMap<String, Object<'a>>>, namespaces: Arc<Namespaces<'a>>, vm: Arc<VM<'a>>) -> Interpreter<'a> {
         Interpreter { frames: Vec::new(), types, namespaces, vm }
     }
     

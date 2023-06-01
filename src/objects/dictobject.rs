@@ -1,9 +1,9 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{sync::Arc};
 use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
-pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
+pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: hashbrown::HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("dict"));
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;

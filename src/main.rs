@@ -104,7 +104,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             let mut holder = TimeitHolder {baseline, time: 0.};
             vm.clone().execute_timeit(bytecode.clone(), &mut holder);
             let time = holder.time;
-            if time<min && time>0. {
+            if time<min && time>=0. {
                 min = time;
             }
         }

@@ -72,6 +72,70 @@ struct Frame<'a> {
     args: Vec<Arguments<'a>>,
 }
 
+
+macro_rules! read_register {
+    ($interp:expr, $register:expr) => {
+        match $register {
+            CompilerRegister::R1 => {
+                $interp.frames.last_mut().expect("No frames").register1.clone()
+            }
+            CompilerRegister::R2 => {
+                $interp.frames.last_mut().expect("No frames").register2.clone()
+            }
+            CompilerRegister::NA => {
+                unimplemented!("Cannot read from NA register");
+            }
+        }
+    };
+}
+
+macro_rules! assign_to_register {
+    ($interp:expr, $value:expr, $register:expr) => {
+        match $register {
+            CompilerRegister::R1 => {
+                $interp.frames.last_mut().expect("No frames").register1 = $value;
+            }
+            CompilerRegister::R2 => {
+                $interp.frames.last_mut().expect("No frames").register2 = $value;
+            }
+            CompilerRegister::NA => {
+                unimplemented!("Cannot store to NA register");
+            }
+        }
+    };
+}
+
+macro_rules! pop_frame {
+    ($interp:expr) => {
+        {
+            unsafe {
+                let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
+                (*namespace_refr).locals.pop();
+                Arc::from_raw(namespace_refr);
+            }
+            $interp.frames.pop();
+        }
+    };
+}
+
+macro_rules! add_frame {
+    ($interp:expr) => {
+        {
+            unsafe {
+                let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
+                let dict = dictobject::dict_from($interp.vm.clone(), hashbrown::HashMap::with_capacity(4));
+                (*namespace_refr).locals.push(dict.clone());
+                
+                if (*namespace_refr).globals.is_none() {
+                    (*namespace_refr).globals = Some(dict);
+                }
+                Arc::from_raw(namespace_refr);
+            }
+            $interp.frames.push(Frame { register1: none_from!($interp.vm), register2: none_from!($interp.vm), args: Vec::new() })
+        }
+    };
+}
+
 impl<'a> VM<'a> {
     pub fn new(info: FileInfo<'a>) -> VM<'a> {
         let singleton = SingletonCache {
@@ -138,7 +202,13 @@ impl<'a> VM<'a> {
                     res = (*interp_refr).run_interpreter(bytecode.clone());
                 }
                 let delta = start.elapsed().as_nanos();
-                let time = delta/5-timeit.baseline;
+                let time: u128;
+                if (delta as i128/5 as i128)-(timeit.baseline as i128) < 0{
+                    time = 0;
+                }
+                else {
+                    time = delta/5-timeit.baseline;                    
+                }
                 *p = time as f64;
             }
             Arc::from_raw(refr);
@@ -172,70 +242,6 @@ impl<'a> VM<'a> {
         //Clean up child threads here
         std::process::exit(1);
     }
-}
-
-
-macro_rules! read_register {
-    ($interp:expr, $register:expr) => {
-        match $register {
-            CompilerRegister::R1 => {
-                $interp.frames.last_mut().expect("No frames").register1.clone()
-            }
-            CompilerRegister::R2 => {
-                $interp.frames.last_mut().expect("No frames").register2.clone()
-            }
-            CompilerRegister::NA => {
-                unimplemented!("Cannot read from NA register");
-            }
-        }
-    };
-}
-
-macro_rules! assign_to_register {
-    ($interp:expr, $value:expr, $register:expr) => {
-        match $register {
-            CompilerRegister::R1 => {
-                $interp.frames.last_mut().expect("No frames").register1 = $value;
-            }
-            CompilerRegister::R2 => {
-                $interp.frames.last_mut().expect("No frames").register2 = $value;
-            }
-            CompilerRegister::NA => {
-                unimplemented!("Cannot store to NA register");
-            }
-        }
-    };
-}
-
-macro_rules! pop_frame {
-    ($interp:expr) => {
-        {
-            unsafe {
-                let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-                (*namespace_refr).locals.pop();
-                Arc::from_raw(namespace_refr);
-            }
-            $interp.frames.pop();
-        }
-    };
-}
-
-macro_rules! add_frame {
-    ($interp:expr) => {
-        {
-            unsafe {
-                let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-                let dict = dictobject::dict_from($interp.vm.clone(), hashbrown::HashMap::with_capacity(4));
-                (*namespace_refr).locals.push(dict.clone());
-                
-                if (*namespace_refr).globals.is_none() {
-                    (*namespace_refr).globals = Some(dict);
-                }
-                Arc::from_raw(namespace_refr);
-            }
-            $interp.frames.push(Frame { register1: none_from!($interp.vm), register2: none_from!($interp.vm), args: Vec::new() })
-        }
-    };
 }
 
 impl<'a> Interpreter<'a> {
@@ -297,8 +303,11 @@ impl<'a> Interpreter<'a> {
     }
 
     pub fn run_interpreter(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
-        add_frame!(self);
-        self.run_interpreter_raw(bytecode)
+        if !bytecode.instructions.is_empty() {
+            add_frame!(self);
+            return self.run_interpreter_raw(bytecode);
+        }
+        none_from!(self.vm)
     }
 
     #[inline]

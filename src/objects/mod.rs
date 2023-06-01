@@ -158,13 +158,16 @@ pub enum ObjectInternals<'a> {
 
 #[allow(dead_code)]
 impl<'a> ObjectInternals<'a> {
+    #[inline]
     pub fn is_no(&self) -> bool {
         matches!(self, ObjectInternals::No)
     }
 
+    #[inline]
     pub fn is_bool(&self) -> bool {
         matches!(self, ObjectInternals::Bool(_))
     }
+    #[inline]
     pub fn get_bool(&self) -> Option<&bool> {
         match self {
             ObjectInternals::Bool(v) => {
@@ -176,9 +179,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_int(&self) -> bool {
         matches!(self, ObjectInternals::Int(_))
     }
+    #[inline]
     pub fn get_int(&self) -> Option<&i128> {
         match self {
             ObjectInternals::Int(v) => {
@@ -190,9 +195,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_str(&self) -> bool {
         matches!(self, ObjectInternals::Str(_))
     }
+    #[inline]
     pub fn get_str(&self) -> Option<&String> {
         match self {
             ObjectInternals::Str(v) => {
@@ -204,9 +211,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_arr(&self) -> bool {
         matches!(self, ObjectInternals::Arr(_))
     }
+    #[inline]
     pub fn get_arr(&self) -> Option<&Vec<Object<'a>>> {
         match self {
             ObjectInternals::Arr(v) => {
@@ -218,9 +227,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_none(&self) -> bool {
         matches!(self, ObjectInternals::None)
     }
+    #[inline]
     pub fn get_none(&self) -> Option<()> {
         match self {
             ObjectInternals::None => {
@@ -232,9 +243,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_map(&self) -> bool {
         matches!(self, ObjectInternals::Map(_))
     }
+    #[inline]
     pub fn get_map(&self) -> Option<&HashMap<Object<'a>, Object<'a>>> {
         match self {
             ObjectInternals::Map(v) => {
@@ -246,9 +259,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_code(&self) -> bool {
         matches!(self, ObjectInternals::Code(_))
     }
+    #[inline]
     pub fn get_code(&self) -> Option<&Bytecode<'a>> {
         match self {
             ObjectInternals::Code(v) => {
@@ -260,9 +275,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_fn(&self) -> bool {
         matches!(self, ObjectInternals::Fn(_))
     }
+    #[inline]
     pub fn get_fn(&self) -> Option<&FnData<'a>> {
         match self {
             ObjectInternals::Fn(v) => {
@@ -274,9 +291,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_exc(&self) -> bool {
         matches!(self, ObjectInternals::Exc(_))
     }
+    #[inline]
     pub fn get_exc(&self) -> Option<ExcData<'a>> {
         match self {
             ObjectInternals::Exc(v) => {

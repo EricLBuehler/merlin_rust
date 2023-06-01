@@ -1,8 +1,6 @@
 use std::{sync::Arc};
-use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, interpreter::VM};
-
+use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
-
 
 pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("list"));
@@ -51,8 +49,8 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
         (*refr).internals = ObjectInternals::Arr(arr.to_vec());
         Arc::from_raw(refr);
     }
-    
-    MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
+
+    MethodValue::Some(none_from!(selfv.vm.clone()))
 }
 fn list_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_arr().expect("Expected arr internal value").len().try_into();

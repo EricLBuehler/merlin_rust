@@ -3,9 +3,12 @@ use crate::{objects::stringobject, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject, ObjectInternals};
 
-#[inline]
-pub fn none_from(vm: Arc<VM<'_>>) -> Object<'_> {
-    vm.cache.none_singleton.as_ref().unwrap().clone()
+
+#[macro_export]
+macro_rules! none_from {
+    ($vm:expr) => {
+        $vm.cache.none_singleton.as_ref().unwrap().clone()
+    };
 }
 
 fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {

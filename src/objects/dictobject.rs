@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::HashMap};
-use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, interpreter::VM};
+use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
@@ -47,6 +47,7 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
+
 #[inline]
 fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     //DEBUG check for hash here!
@@ -58,8 +59,8 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
         (*refr).internals = ObjectInternals::Map(map);
         Arc::from_raw(refr);
     }
-
-    MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
+    
+    MethodValue::Some(none_from!(selfv.vm))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_map().expect("Expected map internal value").len().try_into();

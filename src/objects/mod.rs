@@ -7,10 +7,11 @@ pub mod utils;
 pub mod objectobject;
 pub mod typeobject;
 pub mod intobject;
+#[macro_use]
+pub mod noneobject;
 pub mod boolobject;
 pub mod stringobject;
 pub mod listobject;
-pub mod noneobject;
 pub mod dictobject;
 pub mod codeobject;
 pub mod fnobject;

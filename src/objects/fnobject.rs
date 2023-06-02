@@ -1,12 +1,11 @@
-use std::rc::Rc;
 use crate::{objects::{stringobject, ObjectInternals, boolobject, is_instance, dictobject}, interpreter::VM};
-
+use crate::Arc;
 use super::{RawObject, Object,MethodType, MethodValue, finalize_type, create_object_from_type};
 
 
-pub fn fn_from<'a>(vm: Rc<VM<'a>>, code: Object<'a>, args: Vec<Object<'a>>, name: String) -> Object<'a> {
+pub fn fn_from<'a>(vm: Arc<VM<'a>>, code: Object<'a>, args: Vec<Object<'a>>, name: String) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("fn"));
-    let mut refr = Rc::make_mut(&mut tp);
+    let refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Fn(super::FnData { code, args, name });
     tp
 }
@@ -15,7 +14,7 @@ fn fn_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Met
     unimplemented!();
 }
 fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<fn '{}' @ 0x{:x}>",selfv.internals.get_fn().expect("Expected Fn internal value").name, Rc::as_ptr(&selfv) as i128)))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<fn '{}' @ 0x{:x}>",selfv.internals.get_fn().expect("Expected Fn internal value").name, Arc::as_ptr(&selfv) as i128)))
 }
 fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_fn().expect("Expected Fn internal value") == other.internals.get_fn().expect("Expected Fn internal value")))
@@ -31,11 +30,11 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     }
     let vars = dictobject::dict_from(selfv.vm.clone(), map);
     let code = selfv.internals.get_fn().expect("Expected Fn internal value").code.internals.get_code().expect("Expected Bytecode internal value");
-    MethodValue::Some(selfv.vm.clone().execute_vars( Rc::new(code.clone()), vars))
+    MethodValue::Some(VM::execute_vars(selfv.vm.clone(), Arc::new(code.clone()), vars))
 }
 
-pub fn init<'a>(vm: Rc<VM<'a>>){
-    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("fn"),
@@ -63,7 +62,7 @@ pub fn init<'a>(vm: Rc<VM<'a>>){
         call: Some(fn_call),
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

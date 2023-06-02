@@ -1,6 +1,5 @@
-use std::rc::Rc;
 use crate::{interpreter::VM, parser::Position};
-
+use crate::Arc;
 use super::{RawObject, finalize_type, Object, stringobject, MethodType, MethodValue, intobject, boolobject, is_instance, utils, ObjectInternals, create_object_from_type, ExcData};
 
 
@@ -18,8 +17,8 @@ fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 
-pub fn init_exc<'a>(vm: Rc<VM<'a>>){
-    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
+pub fn init_exc<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("Exception"),
@@ -48,7 +47,7 @@ pub fn init_exc<'a>(vm: Rc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }
@@ -57,21 +56,21 @@ pub fn init_exc<'a>(vm: Rc<VM<'a>>){
 // =====================
 
 #[allow(dead_code)]
-pub fn nameexc_from_obj<'a>(vm: Rc<VM<'a>>, obj: Object<'a>, start: Position, end: Position) -> Object<'a> {
+pub fn nameexc_from_obj<'a>(vm: Arc<VM<'a>>, obj: Object<'a>, start: Position, end: Position) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("NameExc"));
     unsafe {
-        let refr = Rc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Exc(ExcData {obj, start, end});
-        Rc::from_raw(refr);
+        Arc::from_raw(refr);
     }
     tp
 }
-pub fn nameexc_from_str<'a>(vm: Rc<VM<'a>>, raw: &str, start: Position, end: Position) -> Object<'a> {
+pub fn nameexc_from_str<'a>(vm: Arc<VM<'a>>, raw: &str, start: Position, end: Position) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("NameExc"));
     unsafe {
-        let refr = Rc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Exc(ExcData {obj: stringobject::string_from(vm.clone(), raw.to_string()), start, end});
-        Rc::from_raw(refr);
+        Arc::from_raw(refr);
     }
     tp
 }
@@ -97,8 +96,8 @@ fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 
-pub fn init_nameexc<'a>(vm: Rc<VM<'a>>){
-    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
+pub fn init_nameexc<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("NameExc"),
@@ -127,7 +126,7 @@ pub fn init_nameexc<'a>(vm: Rc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

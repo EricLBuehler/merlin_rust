@@ -1,9 +1,9 @@
 use std::collections::hash_map::DefaultHasher;
-use std::rc::Rc;
 use unicode_segmentation::UnicodeSegmentation;
 use std::hash::{Hash, Hasher};
 
 use crate::interpreter::VM;
+use crate::Arc;
 use crate::objects::{is_instance, boolobject, intobject};
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, finalize_type};
@@ -11,9 +11,9 @@ use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_o
 const MFBH_MAX_LEN: usize = 256;
 
 
-pub fn string_from(vm: Rc<VM<'_>>, raw: String) -> Object<'_> {
+pub fn string_from(vm: Arc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
-    let mut refr = Rc::make_mut(&mut tp);
+    let refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Str(raw);
     tp
 }
@@ -68,8 +68,8 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), res))
 }
 
-pub fn init<'a>(vm: Rc<VM<'a>>){
-    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("str"),
@@ -98,7 +98,7 @@ pub fn init<'a>(vm: Rc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

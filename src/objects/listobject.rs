@@ -1,10 +1,10 @@
-use std::rc::Rc;
 use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
+use crate::Arc;
 
-pub fn list_from<'a>(vm: Rc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
+pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("list"));
-    let mut refr = Rc::make_mut(&mut tp);
+    let refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Arr(raw);
     tp
 }
@@ -45,9 +45,9 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     arr[(*other.internals.get_int().expect("Expected int internal value")).unsigned_abs() as usize] = value;
     
     unsafe {
-        let refr = Rc::into_raw(selfv.clone()) as *mut RawObject<'a>;
+        let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Arr(arr.to_vec());
-        Rc::from_raw(refr);
+        Arc::from_raw(refr);
     }
 
     MethodValue::Some(none_from!(selfv.vm.clone()))
@@ -74,8 +74,8 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
-pub fn init<'a>(vm: Rc<VM<'a>>){
-    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("list"),
@@ -103,7 +103,7 @@ pub fn init<'a>(vm: Rc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

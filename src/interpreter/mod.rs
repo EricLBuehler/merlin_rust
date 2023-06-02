@@ -1,35 +1,41 @@
 // Interpret bytecode
 
-use std::{time::Instant, rc::Rc};
+use std::marker::PhantomData;
+use std::{time::Instant};
 use colored::Colorize;
-
+use crate::Arc;
 use crate::{stats, objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder, none_from};
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Namespaces<'a> {
     locals: Vec<Object<'a>>,
     globals: Option<Object<'a>>,
+    _marker: PhantomData<&'a ()>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Arguments<'a> {
     args: Vec<Object<'a>>,
+    _marker: PhantomData<&'a ()>,
 }
 
 pub const MIN_INT_CACHE: i128 = -5;
 pub const MAX_INT_CACHE: i128 = 256;
 pub const INT_CACHE_SIZE: i128 = MAX_INT_CACHE-MIN_INT_CACHE;
 
+#[derive(Clone)]
 pub struct SingletonCache<'a> {
     pub int_cache: [Option<Object<'a>>; INT_CACHE_SIZE as usize],
     pub bool_cache: (Option<Object<'a>>, Option<Object<'a>>),
     pub none_singleton: Option<Object<'a>>,
+    _marker: PhantomData<&'a ()>,
 }
 
+#[derive(Clone)]
 pub struct VM<'a> {
-    pub types: Rc<hashbrown::HashMap<String, Object<'a>>>,
-    pub interpreters: Vec<Rc<Interpreter<'a>>>,
-    pub namespaces: Rc<Namespaces<'a>>,
+    pub types: Arc<hashbrown::HashMap<String, Object<'a>>>,
+    pub interpreters: Vec<Arc<Interpreter<'a>>>,
+    pub namespaces: Arc<Namespaces<'a>>,
     info: FileInfo<'a>,
     pub cache: SingletonCache<'a>,
 }
@@ -38,13 +44,13 @@ impl<'a> VM<'a> {
     pub fn get_type(&self, name: &str) -> Object<'a> {
         return self.types.get(name).expect("Type not found").clone();
     }
-    pub fn add_type(self: Rc<Self>, name: &str, value: Object<'a>) {
+    pub fn add_type(this: Arc<Self>, name: &str, value: Object<'a>) {
         unsafe {
-            let refr = Rc::into_raw(self) as *mut VM<'a>;
-            let map_refr = Rc::into_raw((*refr).types.clone()) as *mut hashbrown::HashMap<String, Object>;
+            let refr = Arc::into_raw(this) as *mut VM<'a>;
+            let map_refr = Arc::into_raw((*refr).types.clone()) as *mut hashbrown::HashMap<String, Object>;
             (*map_refr).insert(name.to_string(), value);
-            Rc::from_raw(refr);
-            Rc::from_raw(map_refr);
+            Arc::from_raw(refr);
+            Arc::from_raw(map_refr);
         }
     }
 }
@@ -57,12 +63,12 @@ impl<'a> PartialEq for VM<'a> {
     }
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Interpreter<'a> {
     frames: Vec<Frame<'a>>,
-    types: Rc<hashbrown::HashMap<String, Object<'a>>>,
-    namespaces: Rc<Namespaces<'a>>,
-    vm: Rc<VM<'a>>,
+    types: Arc<hashbrown::HashMap<String, Object<'a>>>,
+    namespaces: Arc<Namespaces<'a>>,
+    vm: Arc<VM<'a>>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -109,9 +115,9 @@ macro_rules! pop_frame {
     ($interp:expr) => {
         {
             unsafe {
-                let namespace_refr = Rc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
+                let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
                 (*namespace_refr).locals.pop();
-                Rc::from_raw(namespace_refr);
+                Arc::from_raw(namespace_refr);
             }
             $interp.frames.pop();
         }
@@ -122,14 +128,14 @@ macro_rules! add_frame {
     ($interp:expr) => {
         {
             unsafe {
-                let namespace_refr = Rc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
+                let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
                 let dict = dictobject::dict_from($interp.vm.clone(), hashbrown::HashMap::with_capacity(4));
                 (*namespace_refr).locals.push(dict.clone());
                 
                 if (*namespace_refr).globals.is_none() {
                     (*namespace_refr).globals = Some(dict);
                 }
-                Rc::from_raw(namespace_refr);
+                Arc::from_raw(namespace_refr);
             }
             $interp.frames.push(Frame { register1: none_from!($interp.vm), register2: none_from!($interp.vm), args: Vec::new() })
         }
@@ -142,52 +148,53 @@ impl<'a> VM<'a> {
             int_cache: intobject::init_cache(),
             bool_cache: (None, None),
             none_singleton: None,
+            _marker: PhantomData,
         };
-        VM { types: Rc::new(hashbrown::HashMap::new()),
+        VM { types: Arc::new(hashbrown::HashMap::new()),
             interpreters: Vec::new(),
-            namespaces: Rc::new(Namespaces { locals: Vec::new(), globals: None }),
+            namespaces: Arc::new(Namespaces { locals: Vec::new(), globals: None, _marker: PhantomData }),
             info,
             cache: singleton }
     }
 
-    pub fn init_cache(self: Rc<Self>) {
+    pub fn init_cache(this: Arc<Self>) {
         unsafe {
-            let refr = Rc::into_raw(self.clone()) as *mut VM;
+            let refr = Arc::into_raw(this.clone()) as *mut VM;
             let int_cache_arr_ref = &(*refr).cache.int_cache;
             let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize] as *mut [Option<Object>; INT_CACHE_SIZE as usize];
-            intobject::generate_cache(self.get_type("int"), ptr);
+            intobject::generate_cache(this.get_type("int"), ptr);
     
             let bool_cache_tup_ref = &(*refr).cache.bool_cache;
             let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>) as *mut (Option<Object>, Option<Object>);
-            boolobject::generate_cache(self.get_type("bool"), ptr);
+            boolobject::generate_cache(this.get_type("bool"), ptr);
             
             let none_obj_ref = &(*refr).cache.none_singleton;
             let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
-            noneobject::generate_cache(self.get_type("NoneType"), ptr);
+            noneobject::generate_cache(this.get_type("NoneType"), ptr);
             
-            Rc::from_raw(refr);
+            Arc::from_raw(refr);
         }
     }
 
-    pub fn execute(self: Rc<Self>, bytecode: Rc<Bytecode<'a>>) -> Object<'a> {
-        let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
+    pub fn execute(this: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
+        let interpreter = Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
         
-        let refr = Rc::into_raw(self.clone()) as *mut VM<'a>;
+        let refr = Arc::into_raw(this.clone()) as *mut VM<'a>;
         unsafe {
-            (*refr).interpreters.push(Rc::new(interpreter));
-            let interp_refr = Rc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
+            (*refr).interpreters.push(Arc::new(interpreter));
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
 
-            Rc::from_raw(refr);
-            Rc::from_raw(interp_refr);
+            Arc::from_raw(refr);
+            Arc::from_raw(interp_refr);
             return (*interp_refr).run_interpreter(bytecode);
         }
     }
     
-    pub fn execute_timeit(self: Rc<Self>, bytecode: Rc<Bytecode<'a>>, timeit: &mut TimeitHolder) -> Object<'a> {
-        let refr = Rc::into_raw(self.clone()) as *mut VM<'a>;
+    pub fn execute_timeit(this: Arc<Self>, bytecode: Arc<Bytecode<'a>>, timeit: &mut TimeitHolder) -> Object<'a> {
+        let refr = Arc::into_raw(this.clone()) as *mut VM<'a>;
         
         unsafe {
-            let interp_refr = Rc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
             //See bench.rs, this is a verys similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
 
@@ -211,8 +218,8 @@ impl<'a> VM<'a> {
                 }
                 *p = time as f64;
             }
-            Rc::from_raw(refr);
-            Rc::from_raw(interp_refr);
+            Arc::from_raw(refr);
+            Arc::from_raw(interp_refr);
 
             stats::winsorize(samples, 5.0);
             
@@ -224,28 +231,28 @@ impl<'a> VM<'a> {
         }
     }
 
-    pub fn execute_vars(self: Rc<Self>, bytecode: Rc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
-        let interpreter = Interpreter::new(self.types.clone(), self.namespaces.clone(), self.clone());
+    pub fn execute_vars(this: Arc<Self>, bytecode: Arc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
+        let interpreter = Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
         unsafe {
-            let refr = Rc::into_raw(self.clone()) as *mut VM<'a>;
-            (*refr).interpreters.push(Rc::new(interpreter));
-            let interp_refr = Rc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
+            let refr = Arc::into_raw(this.clone()) as *mut VM<'a>;
+            (*refr).interpreters.push(Arc::new(interpreter));
+            let interp_refr = Arc::into_raw((*refr).interpreters.last().expect("No interpreters").clone()) as *mut Interpreter<'a>;
             
             let res = (*interp_refr).run_interpreter_vars(bytecode, vars);
-            Rc::from_raw(refr);
-            Rc::from_raw(interp_refr);
+            Arc::from_raw(refr);
+            Arc::from_raw(interp_refr);
             return res;
         }
     }
     
-    fn terminate(self: Rc<Self>) -> ! {
+    fn terminate(_: Arc<Self>) -> ! {
         //Clean up child threads here
         std::process::exit(1);
     }
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn new(types: Rc<hashbrown::HashMap<String, Object<'a>>>, namespaces: Rc<Namespaces<'a>>, vm: Rc<VM<'a>>) -> Interpreter<'a> {
+    pub fn new(types: Arc<hashbrown::HashMap<String, Object<'a>>>, namespaces: Arc<Namespaces<'a>>, vm: Arc<VM<'a>>) -> Interpreter<'a> {
         Interpreter { frames: Vec::new(), types, namespaces, vm }
     }
     
@@ -288,21 +295,21 @@ impl<'a> Interpreter<'a> {
         println!("{} | {}", " ".repeat(linestr.len()), arrows.green());
         
         //Should this happen??
-        self.vm.clone().terminate();
+        VM::terminate(self.vm.clone());
     }
 
-    pub fn run_interpreter_vars(&mut self, bytecode: Rc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
+    pub fn run_interpreter_vars(&mut self, bytecode: Arc<Bytecode<'a>>, vars: Object<'a>) -> Object<'a> {
         add_frame!(self);
         unsafe {
-            let namespace_refr = Rc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
+            let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
             (*namespace_refr).locals.pop();
             (*namespace_refr).locals.push(vars);
-            Rc::from_raw(namespace_refr);
+            Arc::from_raw(namespace_refr);
         }
         self.run_interpreter(bytecode)
     }
 
-    pub fn run_interpreter(&mut self, bytecode: Rc<Bytecode<'a>>) -> Object<'a> {
+    pub fn run_interpreter(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         if !bytecode.instructions.is_empty() {
             add_frame!(self);
             return self.run_interpreter_raw(bytecode);
@@ -313,7 +320,7 @@ impl<'a> Interpreter<'a> {
     }
 
     #[inline]
-    pub fn run_interpreter_raw(&mut self, bytecode: Rc<Bytecode<'a>>) -> Object<'a> {
+    pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
         for instruction in &bytecode.instructions {
             match instruction {
                 CompilerInstruction::LoadConstR1(idx, _start, _end) => {
@@ -377,7 +384,7 @@ impl<'a> Interpreter<'a> {
                     assign_to_register!(self, func, CompilerRegister::R1);
                 }
                 CompilerInstruction::InitArgs(_start, _end) => {
-                    self.frames.last_mut().expect("No frames").args.push(Arguments { args: Vec::new() });
+                    self.frames.last_mut().expect("No frames").args.push(Arguments { args: Vec::new(), _marker: PhantomData });
                 }
                 CompilerInstruction::AddArgument(register, _start, _end) => {
                     let reg = read_register!(self, *register);

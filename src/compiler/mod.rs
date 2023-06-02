@@ -1,7 +1,7 @@
 //Generate bytecode from AST
 
-use std::{marker::PhantomData, rc::Rc};
-
+use std::{marker::PhantomData};
+use crate::Arc;
 use crate::{objects::{Object, intobject, stringobject, listobject, codeobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}, errors::{raise_error, ErrorType}, fileinfo::FileInfo, interpreter::VM};
 
 pub struct Compiler<'a> {
@@ -9,7 +9,7 @@ pub struct Compiler<'a> {
     consts: Vec<Object<'a>>,
     names: Vec<Object<'a>>,
     info: &'a FileInfo<'a>,
-    vm: Rc<VM<'a>>,
+    vm: Arc<VM<'a>>,
     scope: CompilerScope
 }
 
@@ -56,15 +56,15 @@ pub struct Bytecode<'a> {
 type Node = parser::nodes::Node;
 
 impl<'a> Compiler<'a> {
-    pub fn new(info: &'a FileInfo<'a>, vm: Rc<VM<'a>>, scope: CompilerScope) -> Compiler<'a> {
+    pub fn new(info: &'a FileInfo<'a>, vm: Arc<VM<'a>>, scope: CompilerScope) -> Compiler<'a> {
         Compiler{instructions: Vec::new(), consts: Vec::new(), names: Vec::new(), info, vm, scope}
     }
 
-    pub fn generate_bytecode(&mut self, ast: &Vec<Node>) -> Rc<Bytecode<'a>> {
+    pub fn generate_bytecode(&mut self, ast: &Vec<Node>) -> Arc<Bytecode<'a>> {
         for head_node in ast {
             self.compile_statement(head_node);
         }
-        Rc::new( Bytecode {instructions: self.instructions.clone(), consts: self.consts.clone(), names: self.names.clone(), _marker: PhantomData} )
+        Arc::new( Bytecode {instructions: self.instructions.clone(), consts: self.consts.clone(), names: self.names.clone(), _marker: PhantomData} )
     }
 
     fn compile_statement(&mut self, expr: &Node) {

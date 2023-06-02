@@ -1,6 +1,5 @@
-use std::rc::Rc;
-
-use crate::interpreter::VM;
+use crate::Arc;
+use crate::{interpreter::VM};
 
 use super::{Object, MethodValue, MethodType, boolobject, stringobject, RawObject, create_object_from_type, finalize_type, intobject};
 
@@ -12,14 +11,14 @@ fn object_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(selfv.vm.clone(), "object".to_string()))
 }
 fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), Rc::ptr_eq(&selfv, &other)))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), Arc::ptr_eq(&selfv, &other)))
 }
 fn object_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 
-pub fn init<'a>(vm: Rc<VM<'a>>){
-    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>){
+    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
         tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("object"),
@@ -48,7 +47,7 @@ pub fn init<'a>(vm: Rc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

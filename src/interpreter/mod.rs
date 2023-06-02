@@ -314,8 +314,6 @@ impl<'a> Interpreter<'a> {
             add_frame!(self);
             return self.run_interpreter_raw(bytecode);
         }
-        add_frame!(self);
-        pop_frame!(self);
         none_from!(self.vm)
     }
 

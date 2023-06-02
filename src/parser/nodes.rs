@@ -23,14 +23,15 @@ pub enum NodeType {
     Identifier,
     Function,
     Call,
-    Return
+    Return,
+    Unary,
 }
 
 #[derive(Debug)]
 pub struct NodeValue<'a> {
     pub raw: hashbrown::HashMap<String, String>,
     pub nodes: hashbrown::HashMap<String, &'a Node>,
-    pub op: Option<BinaryOpType>,
+    pub op: Option<OpType>,
     pub nodearr: Option<&'a Vec<Node>>,
     pub args: Option<Vec<String>>,
 }
@@ -70,17 +71,18 @@ impl NodeData for DecimalNode {
 // ========================
 
 #[derive(Debug, Copy, Clone)]
-pub enum BinaryOpType {
+pub enum OpType {
     Add,
     Sub,
     Mul,
     Div,
+    Neg,
 }
 
 pub struct BinaryNode {
     pub left: Node,
     pub right: Node,
-    pub op: BinaryOpType,
+    pub op: OpType,
 }
 
 impl NodeData for BinaryNode {
@@ -172,6 +174,23 @@ impl NodeData for ReturnNode {
     fn get_data(&self) -> NodeValue {
         let mut value = NodeValue::new();
         value.nodes.insert(String::from("expr"), &self.expr);
+        
+        value
+    }
+}
+
+// ========================
+
+pub struct UnaryNode {
+    pub expr: Node,
+    pub op: OpType,
+}
+
+impl NodeData for UnaryNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.nodes.insert(String::from("expr"), &self.expr);
+        value.op = Some(self.op);
         
         value
     }

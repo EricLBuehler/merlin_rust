@@ -166,6 +166,7 @@ impl<'a> Parser<'a> {
         match self.current.tp {
             TokenType::Decimal => Some(self.generate_decimal()),
             TokenType::Identifier => Some(self.generate_identifier()),
+            TokenType::Hyphen => Some(self.generate_negate()),
             _ => None,
         }
     }
@@ -259,15 +260,28 @@ impl<'a> Parser<'a> {
                                     Box::new(nodes::IdentifierNode {name}))
     }
 
+    fn generate_negate(&mut self) -> Node {            
+        self.advance();
+
+        let expr = self.expr(Precedence::Lowest);
+
+        self.reverse();
+        
+        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
+                                nodes::NodeType::Unary, 
+                                Box::new(nodes::UnaryNode {expr, op: nodes::OpType::Neg}))
+    }
+
     // ============ Expr ==============
 
     fn generate_binary(&mut self, left: Node, precedence: Precedence) -> Node {
         let tp = match self.current.tp {
-            TokenType::Plus => nodes::BinaryOpType::Add,
-            TokenType::Hyphen => nodes::BinaryOpType::Sub,
-            TokenType::Asterisk => nodes::BinaryOpType::Mul,
-            TokenType::Slash => nodes::BinaryOpType::Div,
-            _ => {panic!()}};
+            TokenType::Plus => nodes::OpType::Add,
+            TokenType::Hyphen => nodes::OpType::Sub,
+            TokenType::Asterisk => nodes::OpType::Mul,
+            TokenType::Slash => nodes::OpType::Div,
+            _ => {unreachable!()}};
             
         self.advance();
         

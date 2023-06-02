@@ -4,7 +4,7 @@ use std::{marker::PhantomData};
 use crate::Arc;
 use crate::objects::utils::object_repr_safe;
 use colored::Colorize;
-use crate::{objects::{Object, intobject, stringobject, listobject, codeobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}, errors::{raise_error, ErrorType}, fileinfo::FileInfo, interpreter::VM};
+use crate::{objects::{Object, intobject, stringobject, listobject, codeobject}, parser::{self, nodes::{NodeType, OpType}, Position}, errors::{raise_error, ErrorType}, fileinfo::FileInfo, interpreter::VM};
 
 pub struct Compiler<'a> {
     instructions: Vec<CompilerInstruction>,
@@ -23,21 +23,22 @@ pub enum CompilerScope {
 //first Position is start, second is end
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompilerInstruction {
-    LoadConstR1(usize, Position, Position), //load const from consts[index] into R1
-    LoadConstR2(usize, Position, Position), //load const from consts[index] into R2
-    BinaryAdd(CompilerRegister, Position, Position), //Sum R1 (right), and R2 (left). Result in specified register
-    BinarySub(CompilerRegister, Position, Position), //Subtract R2 (left) from R1 (right). Result in specified register
-    BinaryMul(CompilerRegister, Position, Position), //Multiply R1 (right), and R2 (left). Result in specified register
-    BinaryDiv(CompilerRegister, Position, Position), //Divide R1 (right) by R2 (left). Result in specified register
-    StoreName(usize, CompilerRegister, Position, Position), //store R1 to names[index], loads None to specified register
-    LoadName(usize, CompilerRegister, Position, Position), //load names[index] from locals to specified register
-    MakeFunction(usize, usize, usize, Position, Position), //build function with name as names[index1], args as consts[index2], code as consts[index3] to R1
-    InitArgs(Position, Position), //Initialize argument collector
-    AddArgument(CompilerRegister, Position, Position), //Add argument from specified register to latest argument collector
-    Call(CompilerRegister, CompilerRegister, Position, Position), //Call callable in specified register 1, result in specified register 2
-    Return(CompilerRegister, Position, Position), //Return from specified register
-    StoreGlobal(usize, CompilerRegister, Position, Position), //store R1 to names[index], loads None to specified register
-    LoadGlobal(usize, CompilerRegister, Position, Position), //load names[index] from locals to specified register
+    LoadConstR1{index: usize, start: Position, end: Position}, //load const from consts[index] into R1
+    LoadConstR2{index: usize, start: Position, end: Position}, //load const from consts[index] into R2
+    BinaryAdd{register: CompilerRegister, start: Position, end: Position}, //Sum R1 (right), and R2 (left). Result in specified register
+    BinarySub{register: CompilerRegister, start: Position, end: Position}, //Subtract R2 (left) from R1 (right). Result in specified register
+    BinaryMul{register: CompilerRegister, start: Position, end: Position}, //Multiply R1 (right), and R2 (left). Result in specified register
+    BinaryDiv{register: CompilerRegister, start: Position, end: Position}, //Divide R1 (right) by R2 (left). Result in specified register
+    StoreName{idx: usize, register: CompilerRegister, start: Position, end: Position}, //store R1 to names[index], loads None to specified register
+    LoadName{idx: usize, register: CompilerRegister, start: Position, end: Position}, //load names[index] from locals to specified register
+    MakeFunction{nameidx: usize, argsidx: usize, codeidx: usize, start: Position, end: Position}, //build function with name as names[index1], args as consts[index2], code as consts[index3] to R1
+    InitArgs{start: Position, end: Position}, //Initialize argument collector
+    AddArgument{register: CompilerRegister, start: Position, end: Position}, //Add argument from specified register to latest argument collector
+    Call{callableregister: CompilerRegister, register: CompilerRegister, start: Position, end: Position}, //Call callable in specified register 1, result in specified register 2
+    Return{register: CompilerRegister, start: Position, end: Position}, //Return from specified register
+    StoreGlobal{idx: usize, register: CompilerRegister, start: Position, end: Position}, //store R1 to names[index], loads None to specified register
+    LoadGlobal{idx: usize, register: CompilerRegister, start: Position, end: Position}, //load names[index] from locals to specified register
+    UnaryNeg{register: CompilerRegister, start: Position, end: Position}, //Unary negation of R1. Result in specified register
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -99,13 +100,16 @@ impl<'a> Compiler<'a> {
                 self.consts.push(codeobject::code_from(self.vm.clone(), bytecode));
                 let codeidx = self.consts.len() - 1;
 
-                self.instructions.push(CompilerInstruction::MakeFunction(nameidx, argsidx, codeidx, expr.start, expr.end));
-                self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, CompilerRegister::R1, expr.start, expr.end));
+                self.instructions.push(CompilerInstruction::MakeFunction{nameidx, argsidx, codeidx, start: expr.start, end: expr.end});
+                self.instructions.push(CompilerInstruction::StoreName{idx: self.names.len()-1, register: CompilerRegister::R1, start: expr.start, end: expr.end});
             }
             NodeType::Call => {
                 self.compile_expr(expr, CompilerRegister::R1);
             }
             NodeType::Return => {
+                self.compile_expr(expr, CompilerRegister::R1);
+            }
+            NodeType::Unary => {
                 self.compile_expr(expr, CompilerRegister::R1);
             }
         }
@@ -146,10 +150,10 @@ impl<'a> Compiler<'a> {
                 self.consts.push(int.unwrap());
                 match register {
                     CompilerRegister::R1 => {
-                        self.instructions.push(CompilerInstruction::LoadConstR1(self.consts.len()-1, expr.start, expr.end));
+                        self.instructions.push(CompilerInstruction::LoadConstR1{index: self.consts.len()-1, start: expr.start, end: expr.end});
                     }
                     CompilerRegister::R2 => {
-                        self.instructions.push(CompilerInstruction::LoadConstR2(self.consts.len()-1, expr.start, expr.end));
+                        self.instructions.push(CompilerInstruction::LoadConstR2{index: self.consts.len()-1, start: expr.start, end: expr.end});
                     }
                     CompilerRegister::NA => {
                         
@@ -164,17 +168,20 @@ impl<'a> Compiler<'a> {
                     CompilerRegister::NA => {}
                     _ => {
                         match expr.data.get_data().op.expect("Node.op is not present") {
-                            BinaryOpType::Add => {
-                                self.instructions.push(CompilerInstruction::BinaryAdd(register, expr.start, expr.end));
+                            OpType::Add => {
+                                self.instructions.push(CompilerInstruction::BinaryAdd{register, start: expr.start, end: expr.end});
                             }
-                            BinaryOpType::Sub => {
-                                self.instructions.push(CompilerInstruction::BinarySub(register, expr.start, expr.end));
+                            OpType::Sub => {
+                                self.instructions.push(CompilerInstruction::BinarySub{register, start: expr.start, end: expr.end});
                             }
-                            BinaryOpType::Mul => {
-                                self.instructions.push(CompilerInstruction::BinaryMul(register, expr.start, expr.end));
+                            OpType::Mul => {
+                                self.instructions.push(CompilerInstruction::BinaryMul{register, start: expr.start, end: expr.end});
                             }
-                            BinaryOpType::Div => {
-                                self.instructions.push(CompilerInstruction::BinaryDiv(register, expr.start, expr.end));
+                            OpType::Div => {
+                                self.instructions.push(CompilerInstruction::BinaryDiv{register, start: expr.start, end: expr.end});
+                            }
+                            _ => {
+                                unimplemented!();
                             }
                         }
                     }
@@ -185,10 +192,10 @@ impl<'a> Compiler<'a> {
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 match self.scope {
                     CompilerScope::Local => {
-                        self.instructions.push(CompilerInstruction::StoreName(self.names.len()-1, register, expr.start, expr.end));
+                        self.instructions.push(CompilerInstruction::StoreName{idx: self.names.len()-1, register, start: expr.start, end: expr.end});
                     }
                     CompilerScope::Global => {
-                        self.instructions.push(CompilerInstruction::StoreGlobal(self.names.len()-1, register, expr.start, expr.end));
+                        self.instructions.push(CompilerInstruction::StoreGlobal{idx: self.names.len()-1, register, start: expr.start, end: expr.end});
                     }
                 }
             }
@@ -196,10 +203,10 @@ impl<'a> Compiler<'a> {
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 match self.scope {
                     CompilerScope::Local => {
-                        self.instructions.push(CompilerInstruction::LoadName(self.names.len()-1, register, expr.start, expr.end));
+                        self.instructions.push(CompilerInstruction::LoadName{idx: self.names.len()-1, register, start: expr.start, end: expr.end});
                     }
                     CompilerScope::Global => {
-                        self.instructions.push(CompilerInstruction::LoadGlobal(self.names.len()-1, register, expr.start, expr.end));
+                        self.instructions.push(CompilerInstruction::LoadGlobal{idx: self.names.len()-1, register, start: expr.start, end: expr.end});
                     }
                 }
             }
@@ -207,19 +214,36 @@ impl<'a> Compiler<'a> {
                 raise_error("Function definition is not an expression", ErrorType::FunctionNotExpression, &expr.start, self.info);
             }
             NodeType::Call => {
-                self.instructions.push(CompilerInstruction::InitArgs(expr.start, expr.end));
+                self.instructions.push(CompilerInstruction::InitArgs{start: expr.start, end: expr.end});
                 for arg in expr.data.get_data().nodearr.expect("Node.nodearr is not present") {
                     self.compile_expr(arg, register);
-                    self.instructions.push(CompilerInstruction::AddArgument(register, expr.start, expr.end));
+                    self.instructions.push(CompilerInstruction::AddArgument{register, start: expr.start, end: expr.end});
                 }
                 self.names.push(stringobject::string_from(self.vm.clone(), expr.data.get_data().raw.get("name").expect("Node.raw.name not found").clone()));
                 let nameidx = self.names.len() - 1;
-                self.instructions.push(CompilerInstruction::LoadName(nameidx, register, expr.start, expr.end));
-                self.instructions.push(CompilerInstruction::Call(register, register, expr.start, expr.end));
+                self.instructions.push(CompilerInstruction::LoadName{idx: nameidx, register, start: expr.start, end: expr.end});
+                self.instructions.push(CompilerInstruction::Call{callableregister: register, register, start: expr.start, end: expr.end});
             }
             NodeType::Return => {
                 self.compile_expr(expr.data.get_data().nodes.get("expr").expect("Node.nodes.expr not found"), register);
-                self.instructions.push(CompilerInstruction::Return(register, expr.start, expr.end));
+                self.instructions.push(CompilerInstruction::Return{register, start: expr.start, end: expr.end});
+            }
+            NodeType::Unary => {
+                self.compile_expr(expr.data.get_data().nodes.get("expr").expect("Node.nodes.expr not found"), CompilerRegister::R1);
+
+                match register {
+                    CompilerRegister::NA => {}
+                    _ => {
+                        match expr.data.get_data().op.expect("Node.op is not present") {
+                            OpType::Neg => {
+                                self.instructions.push(CompilerInstruction::UnaryNeg{register, start: expr.start, end: expr.end});
+                            }
+                            _ => {
+                                unimplemented!();
+                            }
+                        }
+                    }
+                }
             }
         }
     }

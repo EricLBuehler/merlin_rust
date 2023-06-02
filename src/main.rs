@@ -11,6 +11,7 @@ mod parser;
 
 mod errors;
 
+#[macro_use]
 mod objects;
 
 mod compiler;

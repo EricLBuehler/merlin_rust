@@ -16,7 +16,10 @@ pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
 }
 pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = raw.parse::<i128>();
-    debug_assert!(convert.is_ok());
+    if matches!(convert.clone(), Result::Err(_)) {
+        let exc = overflowexc_from_str(vm.clone(), &("int literal is invalid (".to_owned()+&convert.err().unwrap().to_string()+")"), Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
     if convert.as_ref().unwrap() >= &MIN_INT_CACHE && convert.as_ref().unwrap() <= &MAX_INT_CACHE {
         return MethodValue::Some(vm.cache.int_cache[(convert.unwrap() + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone());
     }
@@ -48,7 +51,10 @@ fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
 fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
     let res = selfv.internals.get_int().expect("Expected int internal value").checked_neg();
-    debug_assert!(res.is_some());
+    if matches!(res, Option::None) {
+        let exc = overflowexc_from_str(selfv.vm.clone(), "int negation overflow (value is i128 minimum)", Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
@@ -70,7 +76,10 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     let otherv = *other.internals.get_int().expect("Expected int internal value");
 
     let res = selfv.internals.get_int().expect("Expected int internal value").checked_sub(otherv);
-    debug_assert!(res.is_some());
+    if matches!(res, Option::None) {
+        let exc = overflowexc_from_str(selfv.vm.clone(), "int subtraction overflow", Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
@@ -79,7 +88,10 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     let otherv = *other.internals.get_int().expect("Expected int internal value");
 
     let res = selfv.internals.get_int().expect("Expected int internal value").checked_mul(otherv);
-    debug_assert!(res.is_some());
+    if matches!(res, Option::None) {
+        let exc = overflowexc_from_str(selfv.vm.clone(), "int multiplication overflow", Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
@@ -89,7 +101,10 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(otherv != 0);
 
     let res = selfv.internals.get_int().expect("Expected int internal value").checked_div(otherv);
-    debug_assert!(res.is_some());
+    if matches!(res, Option::None) {
+        let exc = overflowexc_from_str(selfv.vm.clone(), "int division overflow", Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
@@ -100,7 +115,10 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(otherv < std::u32::MAX as i128);
 
     let res = selfv.internals.get_int().expect("Expected int internal value").checked_pow(otherv as u32);
-    debug_assert!(res.is_some());
+    if matches!(res, Option::None) {
+        let exc = overflowexc_from_str(selfv.vm.clone(), "int power overflow", Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }

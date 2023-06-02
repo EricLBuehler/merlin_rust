@@ -2,6 +2,8 @@
 
 use std::{marker::PhantomData};
 use crate::Arc;
+use crate::objects::utils::object_repr_safe;
+use colored::Colorize;
 use crate::{objects::{Object, intobject, stringobject, listobject, codeobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}, errors::{raise_error, ErrorType}, fileinfo::FileInfo, interpreter::VM};
 
 pub struct Compiler<'a> {
@@ -108,13 +110,38 @@ impl<'a> Compiler<'a> {
             }
         }
     }
+    
+    fn raise_exc_pos(&mut self, exc_obj: Object<'a>, start: Position, end: Position) -> ! {
+        let header: String = match object_repr_safe(&exc_obj) { crate::objects::MethodValue::Some(v) => {v}, _ => { unimplemented!() }};
+        let location: String = format!("{}:{}:{}", self.info.name, start.line+1, start.startcol+1);
+        println!("{}", header.red().bold());
+        println!("{}", location.red());
+        let lines = Vec::from_iter(self.info.data.split(|num| *num as char == '\n'));
+
+        let snippet: String = format!("{}", String::from_utf8(lines.get(start.line).expect("Line index out of range").to_vec()).expect("utf8 conversion failed").blue());
+        let mut arrows: String = String::new();
+        for idx in 0..snippet.len() {
+            if idx>=start.startcol && idx<end.endcol {
+                arrows += "^";
+            }
+            else {
+                arrows += " ";
+            }
+        }
+        let linestr = (start.line+1).to_string().blue().bold();
+        println!("{} | {}", linestr, snippet);
+        println!("{} | {}", " ".repeat(linestr.len()), arrows.green());
+        
+        //Should this happen??
+        VM::terminate(self.vm.clone());
+    }
 
     fn compile_expr(&mut self, expr: &Node, register: CompilerRegister) {
         match expr.tp {
             NodeType::Decimal => {
                 let int = intobject::int_from_str(self.vm.clone(), expr.data.get_data().raw.get("value").expect("Node.raw.value not found").to_string());
                 
-                debug_assert!(int.is_some());
+                maybe_handle_exception!(self, int, expr.start, expr.end);
                 
                 self.consts.push(int.unwrap());
                 match register {

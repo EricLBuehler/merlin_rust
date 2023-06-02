@@ -1,6 +1,6 @@
 # Merlin
 
-![Minimum rustc 1.69](https://img.shields.io/badge/rustc-1.69-brightgreen)
+![Minimum rustc 1.72 nightly](https://img.shields.io/badge/rustc-1.72%20nightly-brightgreen)
 [![MIT License](https://img.shields.io/badge/License-MIT-informational)](LICENSE)
 
 <h2><strong>Make your code <i>fly</i></strong></h2>
@@ -24,6 +24,13 @@ Python 3.10.6: 12.7 ns
 `python3 -m timeit -c "a=1"`
 
 Merlin is: 34.64x slower
+
+## Installation
+To get started with Merlin:
+- Download rust
+- Execute rustup default nightly (reversion = default stable)
+- Run make release
+- Execute code using the generated binary!
 
 ## Docs
 - [Keywords](docs/keywords.md)

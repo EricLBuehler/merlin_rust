@@ -2,7 +2,7 @@
 
 use colored::Colorize;
 
-#[derive(Clone)]
+#[derive(Clone, FromPrimitive)]
 pub enum ErrorType {
     UnexpectedToken,
     UnknownKeyword,
@@ -18,10 +18,10 @@ impl std::fmt::Display for ErrorType {
 
 pub fn repr_err(tp: ErrorType) -> &'static str {
     match tp {
-        ErrorType::UnexpectedToken => "unexpected token",
-        ErrorType::UnknownKeyword => "unknown keyword",
-        ErrorType::UnexpectedEOF => "unexpected EOF",
-        ErrorType::FunctionNotExpression => "function is not an expression",
+        ErrorType::UnexpectedToken => "Unexpected token: This token is not in an appropriate spot.",
+        ErrorType::UnknownKeyword => "Unknown keyword: Keyword was specified that does not exist.",
+        ErrorType::UnexpectedEOF => "Unexpected EOF: While parsing, encountered end-of-file (EOF) that is not valid.",
+        ErrorType::FunctionNotExpression => "Function is not an expression: Functions may not be used as expressions",
     }
 }
 

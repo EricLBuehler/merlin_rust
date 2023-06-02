@@ -1,6 +1,9 @@
 use clap::Parser;
 use std::{time::{Instant}};
-
+use colored::Colorize;
+extern crate num;
+#[macro_use]
+extern crate num_derive;
 
 mod fileinfo;
 
@@ -141,7 +144,11 @@ struct Args {
     /// Run the code n times to get the best execution time (this is the most accurate because all others are worse due to external factor).
     /// No more tests are run if an error occurs.
     #[arg(long, short, name = "time", default_value_t = 0)]
-    time: i32
+    time: i32,
+
+    /// Explain an error produced by the parser.
+    #[arg(long, short, name = "explain", default_value_t = -1)]
+    explain: i32,
 }
 
 fn main() {
@@ -155,6 +162,21 @@ fn main() {
             Some(v)
         }
     };
+    
+    if args.explain >= 0 {
+        let err = num::FromPrimitive::from_i32(args.explain);
+        match err {
+            Some(tp) => {
+                println!("{}:", format!("error[E{:0>3}]", args.explain as u8 + 1).red().bold());
+                println!("{}", errors::repr_err(tp).green());
+                return;
+            }
+            None => {
+                println!("{}", "Error number does not correspond to a valid error.".red());
+                return;
+            }
+        }
+    }
 
     run_file(&args.file, time);
 }

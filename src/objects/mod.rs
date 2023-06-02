@@ -1,4 +1,4 @@
-use std::{sync::{Arc}, collections::{hash_map::DefaultHasher}, hash::{Hash, Hasher}};
+use std::{collections::{hash_map::DefaultHasher}, hash::{Hash, Hasher}, rc::Rc};
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
 
@@ -22,7 +22,7 @@ pub mod exceptionobject;
 pub enum ObjectType<'a> {
     #[default]
     No,
-    Type(Arc<VM<'a>>),
+    Type(Rc<VM<'a>>),
     Other(Object<'a>)
 }
 
@@ -46,7 +46,7 @@ impl<'a> ObjectType<'a> {
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ObjectBase<'a> {
-    Object(Arc<VM<'a>>),
+    Object(Rc<VM<'a>>),
     Other(Object<'a>)
 }
 
@@ -71,7 +71,7 @@ pub struct RawObject<'a> {
     pub internals: ObjectInternals<'a>,
     pub typename: String,
     pub bases: Vec<ObjectBase<'a>>,
-    pub vm: Arc<VM<'a>>,
+    pub vm: Rc<VM<'a>>,
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
@@ -115,7 +115,7 @@ impl<'a> Hash for RawObject<'a> {
     #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.hash_fn.is_some());
-        let res = (self.hash_fn.expect("Hash function not found"))(Arc::new(self.clone()));
+        let res = (self.hash_fn.expect("Hash function not found"))(Rc::new(self.clone()));
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
 
@@ -123,7 +123,7 @@ impl<'a> Hash for RawObject<'a> {
     }
 }
 
-pub type Object<'a> = Arc<RawObject<'a>>;
+pub type Object<'a> = Rc<RawObject<'a>>;
 pub type MethodType<'a> = MethodValue<Object<'a>, Object<'a>>;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -150,7 +150,7 @@ pub enum ObjectInternals<'a> {
     Str(String),
     Arr(Vec<Object<'a>>),
     Map(hashbrown::HashMap<Object<'a>, Object<'a>>),
-    Code(Arc<Bytecode<'a>>),
+    Code(Rc<Bytecode<'a>>),
     Fn(FnData<'a>),
     Exc(ExcData<'a>),
     None,
@@ -361,7 +361,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 fn create_object_from_type(tp: Object<'_>) -> Object<'_> {    
     let mut obj = (*tp).clone();
     obj.tp = ObjectType::Other(tp);
-    Arc::new(obj)
+    Rc::new(obj)
 }
 
 #[inline]
@@ -397,7 +397,7 @@ fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
 
 fn finalize_type(tp: Object<'_>) {
     let mut cpy = tp.clone();
-    let refr = Arc::make_mut(&mut cpy);
+    let refr = Rc::make_mut(&mut cpy);
 
     for base in refr.bases.clone() {
         match base {
@@ -413,7 +413,7 @@ fn finalize_type(tp: Object<'_>) {
     inherit_slots(refr, tp);
 }
 
-pub fn init_types(vm: Arc<VM<'_>>) {
+pub fn init_types(vm: Rc<VM<'_>>) {
     objectobject::init(vm.clone());
     typeobject::init(vm.clone());
     intobject::init(vm.clone());

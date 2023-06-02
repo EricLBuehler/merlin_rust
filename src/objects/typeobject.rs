@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::rc::Rc;
 
 use crate::interpreter::VM;
 
@@ -15,8 +15,8 @@ fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), get_typeid(selfv) == get_typeid(other)))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Rc<VM<'a>>){
+    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
         tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("type"),

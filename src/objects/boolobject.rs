@@ -1,10 +1,11 @@
-use std::{sync::Arc};
+use std::rc::Rc;
+
 use crate::{objects::{stringobject, is_instance, boolobject}, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, finalize_type, intobject};
 
 
-pub fn bool_from(vm: Arc<VM<'_>>, raw: bool) -> Object<'_> {
+pub fn bool_from(vm: Rc<VM<'_>>, raw: bool) -> Object<'_> {
     match raw {
         false => {
             vm.cache.bool_cache.0.as_ref().unwrap().clone()
@@ -32,21 +33,21 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
 pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
     unsafe {
         let mut tp = create_object_from_type(booltp.clone());
-        let mut refr = Arc::make_mut(&mut tp);
+        let mut refr = Rc::make_mut(&mut tp);
         refr.internals = ObjectInternals::Bool(false);
         let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
         
         let mut tp = create_object_from_type(booltp.clone());
-        let mut refr = Arc::make_mut(&mut tp);
+        let mut refr = Rc::make_mut(&mut tp);
         refr.internals = ObjectInternals::Bool(true);
         let ptr = &(*tup).1 as *const Option<Object>  as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
     }
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Rc<VM<'a>>){
+    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("bool"),

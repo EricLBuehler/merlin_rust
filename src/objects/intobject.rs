@@ -1,28 +1,28 @@
-use std::{sync::Arc, collections::hash_map::DefaultHasher};
-
+use std::{collections::hash_map::DefaultHasher};
+use std::rc::Rc;
 use crate::{objects::is_instance, interpreter::{VM, INT_CACHE_SIZE, MIN_INT_CACHE, MAX_INT_CACHE}};
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
 
 use std::hash::{Hash, Hasher};
 
-pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
+pub fn int_from(vm: Rc<VM<'_>>, raw: i128) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
         return vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone();
     }
     let mut tp = create_object_from_type(vm.get_type("int"));
-    let mut refr = Arc::make_mut(&mut tp);
+    let mut refr = Rc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Int(raw);
     tp
 }
-pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
+pub fn int_from_str(vm: Rc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = raw.parse::<i128>();
     debug_assert!(convert.is_ok());
     if convert.as_ref().unwrap() >= &MIN_INT_CACHE && convert.as_ref().unwrap() <= &MAX_INT_CACHE {
         return MethodValue::Some(vm.cache.int_cache[(convert.unwrap() + MIN_INT_CACHE.abs()) as usize].as_ref().unwrap().clone());
     }
     let mut tp = create_object_from_type(vm.get_type("int"));
-    let mut refr = Arc::make_mut(&mut tp);
+    let mut refr = Rc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Int(convert.unwrap());
     MethodValue::Some(tp)
 }
@@ -126,7 +126,7 @@ pub fn generate_cache<'a>(int: Object<'a>, arr: *mut [Option<Object<'a>>; INT_CA
         let mut i = MIN_INT_CACHE;
         for item in &mut (*arr)[..] {
             let mut tp = create_object_from_type(int.clone());
-            let mut refr = Arc::make_mut(&mut tp);
+            let mut refr = Rc::make_mut(&mut tp);
             refr.internals = ObjectInternals::Int(i);
             std::ptr::write(item, Some(tp));
             i+=1;
@@ -134,8 +134,8 @@ pub fn generate_cache<'a>(int: Object<'a>, arr: *mut [Option<Object<'a>>; INT_CA
     }
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Rc<VM<'a>>){
+    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("int"),

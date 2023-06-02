@@ -1,14 +1,14 @@
-use std::{sync::Arc};
+use std::rc::Rc;
 use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
 
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
 
-pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: hashbrown::HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
+pub fn dict_from<'a>(vm: Rc<VM<'a>>, raw: hashbrown::HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("dict"));
     unsafe {
-        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        let refr = Rc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Map(raw);
-        Arc::from_raw(refr);
+        Rc::from_raw(refr);
     }
     tp
 }
@@ -55,9 +55,9 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     map.insert(other, value);
 
     unsafe {
-        let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
+        let refr = Rc::into_raw(selfv.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Map(map);
-        Arc::from_raw(refr);
+        Rc::from_raw(refr);
     }
     
     MethodValue::Some(none_from!(selfv.vm))
@@ -84,7 +84,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
         
-        let res: MethodValue<Arc<RawObject<'a>>, Arc<RawObject<'a>>> = (value1.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
+        let res: MethodValue<Rc<RawObject<'a>>, Rc<RawObject<'a>>> = (value1.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &selfv.vm.get_type("bool")));
         if *res.unwrap().internals.get_bool().expect("Expected bool internal value") {
@@ -94,8 +94,8 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Rc<VM<'a>>){
+    let tp: Rc<RawObject<'a>> = Rc::new( RawObject{
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("dict"),

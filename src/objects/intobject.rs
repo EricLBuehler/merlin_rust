@@ -16,7 +16,7 @@ pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
 }
 pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = raw.parse::<i128>();
-    if matches!(convert.clone(), Result::Err(_)) {
+    if matches!(convert, Result::Err(_)) {
         let exc = overflowexc_from_str(vm.clone(), &("int literal is invalid (".to_owned()+&convert.err().unwrap().to_string()+")"), Position::default(), Position::default());
         return MethodValue::Error(exc);
     }

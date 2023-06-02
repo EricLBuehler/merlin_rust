@@ -210,13 +210,12 @@ impl<'a> VM<'a> {
                     res = (*interp_refr).run_interpreter(bytecode.clone());
                 }
                 let delta = start.elapsed().as_nanos();
-                let time: u128;
-                if (delta as i128/5 as i128)-(timeit.baseline as i128) < 0{
-                    time = 0;
+                let time = if (delta as i128/5_i128)-(timeit.baseline as i128) < 0{
+                    0
                 }
                 else {
-                    time = delta/5-timeit.baseline;                    
-                }
+                    delta/5-timeit.baseline        
+                };
                 *p = time as f64;
             }
             Arc::from_raw(refr);
@@ -242,7 +241,7 @@ impl<'a> VM<'a> {
             let res = (*interp_refr).run_interpreter_vars(bytecode, vars);
             Arc::from_raw(refr);
             Arc::from_raw(interp_refr);
-            return res;
+            res
         }
     }
     

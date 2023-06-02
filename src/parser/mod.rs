@@ -44,6 +44,12 @@ pub fn new<'a>(lexer: Lexer, info: &'a FileInfo) -> Parser<'a> {
                     };
 }
 
+macro_rules! allowed_to_vec {
+    ($allowed: expr) => {
+        $allowed.into_iter().map(|itm| "'".to_owned()+itm+"'").collect::<Vec<String>>().join(", ")
+    };
+}
+
 impl<'a> Parser<'a> {
     fn advance(&mut self) -> Token {
         self.idx += 1;
@@ -117,15 +123,15 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn ensure_not_eof(&mut self) {
+    fn ensure_not_eof(&mut self, allowed: Vec<&str>) {
         if self.current_is_type(TokenType::Eof) {
-            self.raise_error("Unexpected EOF.", ErrorType::UnexpectedEOF)
+            self.raise_error(&format!("Unexpected EOF (expected one of {}).", allowed_to_vec!(allowed)), ErrorType::UnexpectedEOF)
         }
     }
 
     fn expect(&mut self, typ: TokenType) {
         if !self.current_is_type(typ.clone()) {
-            self.raise_error(format!("Invalid '{}', got '{}'.", typ, self.current.tp).as_str(), ErrorType::UnexpectedEOF)
+            self.raise_error(format!("Invalid '{}', got '{}'.", typ, self.current.tp).as_str(), ErrorType::UnexpectedToken)
         }
     }
 
@@ -185,9 +191,11 @@ impl<'a> Parser<'a> {
 
     fn expr(&mut self, precedence: Precedence) -> Node {
         let mut left;
+
+        let atomics = vec!["decimal", "identifier", "-"];
         
         match self.atom() {
-            None => self.raise_error("Invalid or unexpected token.", ErrorType::UnexpectedToken),
+            None => self.raise_error(&format!("Invalid or unexpected token (expected one of {}).", allowed_to_vec!(atomics)), ErrorType::UnexpectedToken),
             Some(val) => { left = val },
         }
         
@@ -207,7 +215,7 @@ impl<'a> Parser<'a> {
         }
         if self.is_atomic() {
             self.reverse();
-            self.raise_error("Invalid or unexpected token.", ErrorType::UnexpectedToken);
+            self.raise_error(&format!("Invalid or unexpected token (expected one of {}).", allowed_to_vec!(atomics)), ErrorType::UnexpectedToken);
         }
         
         left
@@ -295,7 +303,7 @@ impl<'a> Parser<'a> {
 
     fn parse_fn(&mut self) -> Node {
         self.advance();
-        self.ensure_not_eof();
+        self.ensure_not_eof(vec!["identifier"]);
         let name = self.current.data.clone();
         let mut args = Vec::new();
         

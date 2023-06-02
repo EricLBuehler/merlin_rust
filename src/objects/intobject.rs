@@ -1,5 +1,5 @@
 use std::{collections::hash_map::DefaultHasher};
-use crate::{objects::is_instance, interpreter::{VM, INT_CACHE_SIZE, MIN_INT_CACHE, MAX_INT_CACHE}};
+use crate::{objects::{is_instance, exceptionobject::overflowexc_from_str}, interpreter::{VM, INT_CACHE_SIZE, MIN_INT_CACHE, MAX_INT_CACHE}, parser::Position};
 use crate::Arc;
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, stringobject, boolobject, finalize_type};
 
@@ -57,7 +57,10 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     let otherv = *other.internals.get_int().expect("Expected int internal value");
 
     let res = selfv.internals.get_int().expect("Expected int internal value").checked_add(otherv);
-    debug_assert!(res.is_some());
+    if matches!(res, Option::None) {
+        let exc = overflowexc_from_str(selfv.vm.clone(), "int addition overflow", Position::default(), Position::default());
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }

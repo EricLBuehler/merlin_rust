@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use std::{time::Instant};
 use colored::Colorize;
 use crate::Arc;
+use crate::parser::Position;
 use crate::{stats, objects::{Object, noneobject, utils::{object_repr, object_repr_safe}, fnobject, listobject, dictobject, exceptionobject, intobject, boolobject}, compiler::{CompilerInstruction, Bytecode, CompilerRegister}, fileinfo::FileInfo, TimeitHolder, none_from};
 
 #[derive(Clone, PartialEq, Eq)]
@@ -271,26 +272,30 @@ impl<'a> Interpreter<'a> {
             }
         }
     }
-    
-    fn raise_exc(&mut self, exc_obj: Object<'a>) {
+
+    fn raise_exc(&mut self, exc_obj: Object<'a>) -> ! {
         let exc = exc_obj.internals.get_exc().expect("Expected exc internal value");
+        self.raise_exc_pos(exc_obj, exc.start, exc.end);
+    }
+    
+    fn raise_exc_pos(&mut self, exc_obj: Object<'a>, start: Position, end: Position) -> ! {
         let header: String = match object_repr_safe(&exc_obj) { crate::objects::MethodValue::Some(v) => {v}, _ => { unimplemented!() }};
-        let location: String = format!("{}:{}:{}", self.vm.as_ref().info.name, exc.start.line+1, exc.start.startcol+1);
+        let location: String = format!("{}:{}:{}", self.vm.as_ref().info.name, start.line+1, start.startcol+1);
         println!("{}", header.red().bold());
         println!("{}", location.red());
         let lines = Vec::from_iter(self.vm.as_ref().info.data.split(|num| *num as char == '\n'));
 
-        let snippet: String = format!("{}", String::from_utf8(lines.get(exc.start.line).expect("Line index out of range").to_vec()).expect("utf8 conversion failed").blue());
+        let snippet: String = format!("{}", String::from_utf8(lines.get(start.line).expect("Line index out of range").to_vec()).expect("utf8 conversion failed").blue());
         let mut arrows: String = String::new();
         for idx in 0..snippet.len() {
-            if idx>=exc.start.startcol && idx<exc.end.endcol {
+            if idx>=start.startcol && idx<end.endcol {
                 arrows += "^";
             }
             else {
                 arrows += " ";
             }
         }
-        let linestr = (exc.start.line+1).to_string().blue().bold();
+        let linestr = (start.line+1).to_string().blue().bold();
         println!("{} | {}", linestr, snippet);
         println!("{} | {}", " ".repeat(linestr.len()), arrows.green());
         
@@ -327,11 +332,14 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::LoadConstR2(idx, _start, _end) => {
                     self.frames.last_mut().expect("No frames").register2 = bytecode.consts.get(*idx).expect("Bytecode consts index out of range").clone();
                 }
-                CompilerInstruction::BinaryAdd(out, _start, _end) => {
+                CompilerInstruction::BinaryAdd(out, start, end) => {
                     let last = self.frames.last().expect("No frames");
                     debug_assert!(last.register1.add.is_some());
                     let res = (last.register1.add.expect("Method is not defined"))(last.register1.clone(), last.register2.clone());
-                    debug_assert!(res.is_some());
+                    if res.is_error() {
+                        let exc = res.unwrap_err();
+                        self.raise_exc_pos(exc, *start, *end);
+                    }
                     assign_to_register!(self, res.unwrap(), *out);
                 }
                 CompilerInstruction::BinarySub(out, _start, _end) => {

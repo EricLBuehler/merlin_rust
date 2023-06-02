@@ -427,4 +427,5 @@ pub fn init_types(vm: Arc<VM<'_>>) {
     fnobject::init(vm.clone());
     exceptionobject::init_exc(vm.clone());
     exceptionobject::init_nameexc(vm.clone());
+    exceptionobject::init_overflowexc(vm.clone());
 }

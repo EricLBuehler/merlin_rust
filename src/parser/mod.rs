@@ -19,7 +19,7 @@ pub struct Parser<'a> {
     info: &'a FileInfo<'a>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Position {
     pub startcol: usize,
     pub endcol: usize,

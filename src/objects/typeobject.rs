@@ -1,6 +1,5 @@
-use std::{sync::Arc};
-
-use crate::interpreter::VM;
+use crate::Arc;
+use crate::{interpreter::VM};
 
 use super::{Object, MethodValue, MethodType, boolobject, stringobject, RawObject, get_typeid, create_object_from_type, finalize_type, intobject};
 
@@ -45,7 +44,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

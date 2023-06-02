@@ -1,12 +1,11 @@
-use std::{sync::Arc};
 use crate::{objects::{stringobject, ObjectInternals, boolobject}, compiler::Bytecode, interpreter::VM};
-
+use crate::Arc;
 use super::{RawObject, Object,MethodType, MethodValue, finalize_type, is_instance, create_object_from_type};
 
 
 pub fn code_from<'a>(vm: Arc<VM<'a>>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("code"));
-    let mut refr = Arc::make_mut(&mut tp);
+    let mut tp: Arc<RawObject> = create_object_from_type(vm.get_type("code"));
+    let refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Code(bytecode);
     tp
 }
@@ -51,7 +50,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

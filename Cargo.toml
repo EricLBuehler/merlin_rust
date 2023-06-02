@@ -1,14 +1,13 @@
 [package]
 name = "merlin"
-version = "0.1.0"
+version = "1.2.0"
 edition = "2021"
 
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
 colored = "2.0.0"
-lazy_static = "1.4.0"
+hashbrown = "0.13.2"
 unicode-segmentation = "1.10.1"
-hashbrown = "0.3"
 
 [profile.dev]
 opt-level = 0

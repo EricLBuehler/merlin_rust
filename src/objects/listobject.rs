@@ -1,12 +1,10 @@
-use std::{sync::Arc};
-use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, interpreter::VM};
-
+use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
-
+use crate::Arc;
 
 pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("list"));
-    let mut refr = Arc::make_mut(&mut tp);
+    let refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Arr(raw);
     tp
 }
@@ -49,9 +47,10 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Arr(arr.to_vec());
+        Arc::from_raw(refr);
     }
-    
-    MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
+
+    MethodValue::Some(none_from!(selfv.vm.clone()))
 }
 fn list_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_arr().expect("Expected arr internal value").len().try_into();
@@ -104,7 +103,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

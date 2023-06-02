@@ -1,5 +1,5 @@
-use std::{sync::Arc};
 use crate::{objects::{stringobject, is_instance, boolobject}, interpreter::VM};
+use crate::Arc;
 
 use super::{RawObject, Object,MethodType, MethodValue, ObjectInternals, create_object_from_type, finalize_type, intobject};
 
@@ -32,13 +32,13 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
 pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
     unsafe {
         let mut tp = create_object_from_type(booltp.clone());
-        let mut refr = Arc::make_mut(&mut tp);
+        let refr = Arc::make_mut(&mut tp);
         refr.internals = ObjectInternals::Bool(false);
         let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
         
         let mut tp = create_object_from_type(booltp.clone());
-        let mut refr = Arc::make_mut(&mut tp);
+        let refr = Arc::make_mut(&mut tp);
         refr.internals = ObjectInternals::Bool(true);
         let ptr = &(*tup).1 as *const Option<Object>  as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
@@ -75,7 +75,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

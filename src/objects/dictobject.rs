@@ -1,15 +1,13 @@
-use std::{sync::Arc};
-use crate::{objects::{stringobject, noneobject, ObjectInternals, boolobject}, interpreter::VM};
-
+use crate::{objects::{stringobject, ObjectInternals, boolobject}, interpreter::VM};
+use crate::Arc;
 use super::{RawObject, Object,MethodType, MethodValue, utils, finalize_type, is_instance, intobject, create_object_from_type};
-
-use hashbrown;
 
 pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: hashbrown::HashMap<Object<'a>, Object<'a>>) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("dict"));
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Map(raw);
+        Arc::from_raw(refr);
     }
     tp
 }
@@ -48,19 +46,20 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(out.is_some());
     MethodValue::Some(out.unwrap().clone())
 }
-#[inline(always)]
+
+#[inline]
 fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     //DEBUG check for hash here!
     let mut map = selfv.internals.get_map().expect("Expected map internal value").clone();
-    
     map.insert(other, value);
 
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Map(map);
+        Arc::from_raw(refr);
     }
-
-    MethodValue::Some(noneobject::none_from(selfv.vm.clone()))
+    
+    MethodValue::Some(none_from!(selfv.vm))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv.internals.get_map().expect("Expected map internal value").len().try_into();
@@ -124,7 +123,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

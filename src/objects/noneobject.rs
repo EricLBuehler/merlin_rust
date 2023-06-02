@@ -1,10 +1,13 @@
-use std::{sync::Arc};
 use crate::{objects::stringobject, interpreter::VM};
-
+use crate::Arc;
 use super::{RawObject, Object,MethodType, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject, ObjectInternals};
 
-pub fn none_from(vm: Arc<VM<'_>>) -> Object<'_> {
-    vm.cache.none_singleton.as_ref().unwrap().clone()
+
+#[macro_export]
+macro_rules! none_from {
+    ($vm:expr) => {
+        $vm.cache.none_singleton.as_ref().unwrap().clone()
+    };
 }
 
 fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
@@ -23,7 +26,7 @@ fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 pub fn generate_cache<'a>(nonetp: Object<'a>, ptr: *mut Option<Object<'a>>) {
     unsafe {
         let mut tp = create_object_from_type(nonetp.clone());
-        let mut refr = Arc::make_mut(&mut tp);
+        let refr = Arc::make_mut(&mut tp);
         refr.internals = ObjectInternals::None;
         std::ptr::write(ptr, Some(tp));
     }
@@ -59,7 +62,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

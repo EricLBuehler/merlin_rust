@@ -1,6 +1,5 @@
-use std::{sync::Arc};
 use crate::{interpreter::VM, parser::Position};
-
+use crate::Arc;
 use super::{RawObject, finalize_type, Object, stringobject, MethodType, MethodValue, intobject, boolobject, is_instance, utils, ObjectInternals, create_object_from_type, ExcData};
 
 
@@ -48,7 +47,7 @@ pub fn init_exc<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }
@@ -62,6 +61,7 @@ pub fn nameexc_from_obj<'a>(vm: Arc<VM<'a>>, obj: Object<'a>, start: Position, e
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Exc(ExcData {obj, start, end});
+        Arc::from_raw(refr);
     }
     tp
 }
@@ -70,6 +70,7 @@ pub fn nameexc_from_str<'a>(vm: Arc<VM<'a>>, raw: &str, start: Position, end: Po
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
         (*refr).internals = ObjectInternals::Exc(ExcData {obj: stringobject::string_from(vm.clone(), raw.to_string()), start, end});
+        Arc::from_raw(refr);
     }
     tp
 }
@@ -125,7 +126,7 @@ pub fn init_nameexc<'a>(vm: Arc<VM<'a>>){
         call: None,
     });
 
-    vm.clone().add_type(&tp.clone().typename, tp.clone());
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
 
     finalize_type(tp);
 }

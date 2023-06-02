@@ -1,7 +1,7 @@
 //Generate bytecode from AST
 
-use std::{sync::Arc, marker::PhantomData};
-
+use std::{marker::PhantomData};
+use crate::Arc;
 use crate::{objects::{Object, intobject, stringobject, listobject, codeobject}, parser::{self, nodes::{NodeType, BinaryOpType}, Position}, errors::{raise_error, ErrorType}, fileinfo::FileInfo, interpreter::VM};
 
 pub struct Compiler<'a> {

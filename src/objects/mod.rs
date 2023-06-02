@@ -1,22 +1,22 @@
-use std::{sync::{Arc}, collections::{hash_map::DefaultHasher}, hash::{Hash, Hasher}};
-
+use std::{collections::{hash_map::DefaultHasher}, hash::{Hash, Hasher}};
+use crate::Arc;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
-use hashbrown;
-
 
 pub mod utils;
 
 pub mod objectobject;
 pub mod typeobject;
 pub mod intobject;
+#[macro_use]
+pub mod noneobject;
 pub mod boolobject;
 pub mod stringobject;
 pub mod listobject;
-pub mod noneobject;
 pub mod dictobject;
 pub mod codeobject;
 pub mod fnobject;
 pub mod exceptionobject;
+
 
 #[derive(Clone, PartialEq, Eq, Default)]
 pub enum ObjectType<'a> {
@@ -112,11 +112,13 @@ impl<'a> PartialEq for RawObject<'a> {
 }
 
 impl<'a> Hash for RawObject<'a> {
+    #[inline]
     fn hash<H: Hasher>(&self, state: &mut H) {
         debug_assert!(self.hash_fn.is_some());
         let res = (self.hash_fn.expect("Hash function not found"))(Arc::new(self.clone()));
         debug_assert!(res.is_some());
         debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
+
         state.write_i128(*res.unwrap().internals.get_int().expect("Expected int internal value"));
     }
 }
@@ -156,13 +158,16 @@ pub enum ObjectInternals<'a> {
 
 #[allow(dead_code)]
 impl<'a> ObjectInternals<'a> {
+    #[inline]
     pub fn is_no(&self) -> bool {
         matches!(self, ObjectInternals::No)
     }
 
+    #[inline]
     pub fn is_bool(&self) -> bool {
         matches!(self, ObjectInternals::Bool(_))
     }
+    #[inline]
     pub fn get_bool(&self) -> Option<&bool> {
         match self {
             ObjectInternals::Bool(v) => {
@@ -174,9 +179,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_int(&self) -> bool {
         matches!(self, ObjectInternals::Int(_))
     }
+    #[inline]
     pub fn get_int(&self) -> Option<&i128> {
         match self {
             ObjectInternals::Int(v) => {
@@ -188,9 +195,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_str(&self) -> bool {
         matches!(self, ObjectInternals::Str(_))
     }
+    #[inline]
     pub fn get_str(&self) -> Option<&String> {
         match self {
             ObjectInternals::Str(v) => {
@@ -202,9 +211,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_arr(&self) -> bool {
         matches!(self, ObjectInternals::Arr(_))
     }
+    #[inline]
     pub fn get_arr(&self) -> Option<&Vec<Object<'a>>> {
         match self {
             ObjectInternals::Arr(v) => {
@@ -216,9 +227,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_none(&self) -> bool {
         matches!(self, ObjectInternals::None)
     }
+    #[inline]
     pub fn get_none(&self) -> Option<()> {
         match self {
             ObjectInternals::None => {
@@ -230,9 +243,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_map(&self) -> bool {
         matches!(self, ObjectInternals::Map(_))
     }
+    #[inline]
     pub fn get_map(&self) -> Option<&hashbrown::HashMap<Object<'a>, Object<'a>>> {
         match self {
             ObjectInternals::Map(v) => {
@@ -244,9 +259,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_code(&self) -> bool {
         matches!(self, ObjectInternals::Code(_))
     }
+    #[inline]
     pub fn get_code(&self) -> Option<&Bytecode<'a>> {
         match self {
             ObjectInternals::Code(v) => {
@@ -258,9 +275,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_fn(&self) -> bool {
         matches!(self, ObjectInternals::Fn(_))
     }
+    #[inline]
     pub fn get_fn(&self) -> Option<&FnData<'a>> {
         match self {
             ObjectInternals::Fn(v) => {
@@ -272,9 +291,11 @@ impl<'a> ObjectInternals<'a> {
         }
     }
 
+    #[inline]
     pub fn is_exc(&self) -> bool {
         matches!(self, ObjectInternals::Exc(_))
     }
+    #[inline]
     pub fn get_exc(&self) -> Option<ExcData<'a>> {
         match self {
             ObjectInternals::Exc(v) => {
@@ -336,24 +357,21 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     }
 }
 
-#[inline(always)]
-fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
-    let mut tp = tp.clone();
-    let alt = tp.clone();
-    
-    let mut refr = Arc::make_mut(&mut tp);
-    refr.tp = ObjectType::Other(alt);
-    tp
+#[inline]
+fn create_object_from_type(tp: Object<'_>) -> Object<'_> {    
+    let mut obj = (*tp).clone();
+    obj.tp = ObjectType::Other(tp);
+    Arc::new(obj)
 }
 
-#[inline(always)]
+#[inline]
 fn get_typeid(selfv: Object<'_>) -> u64 {
     let mut hasher = DefaultHasher::new();
     selfv.typename.hash(&mut hasher);
     hasher.finish()
 }
 
-#[inline(always)]
+#[inline]
 fn is_instance<'a>(selfv: &Object<'a>, other: &Object<'a>) -> bool {
     get_typeid(selfv.clone()) == get_typeid(other.clone())
 }
@@ -387,7 +405,8 @@ fn finalize_type(tp: Object<'_>) {
                 inherit_slots(refr, basetp);
             }
             ObjectBase::Object(_) => {
-                inherit_slots(refr, tp.vm.get_type("object"));
+                let x = tp.vm.get_type("object");
+                inherit_slots(refr, x);
             }
         }
     }

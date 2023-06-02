@@ -1,6 +1,6 @@
 use clap::Parser;
-use std::sync::Arc;
-use std::time::{SystemTime};
+use std::{time::{Instant}};
+
 
 mod fileinfo;
 
@@ -16,6 +16,23 @@ mod objects;
 mod compiler;
 
 mod interpreter;
+mod stats;
+
+
+#[cfg(not(target_has_atomic = "ptr"))]
+mod mutexrc;
+#[cfg(not(target_has_atomic = "ptr"))]
+type Arc = mutexrc::Arc;
+
+#[cfg(target_has_atomic = "ptr")]
+use std::sync::Arc;
+
+
+
+pub struct TimeitHolder {
+    baseline: u128,
+    time: f64,
+}
 
 
 fn run_file(file: &String, time: Option<i32>) {
@@ -55,7 +72,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
 
     let vm = Arc::new(interpreter::VM::new(file_info.clone()));
     objects::init_types(vm.clone());
-    vm.clone().init_cache();
+    interpreter::VM::init_cache(vm.clone());
 
     if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
 
@@ -73,32 +90,40 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
     if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
 
     if let Some(n_exec) = time {
-        let mut min = u128::MAX;
+        let mut min = f64::MAX;
         let mut baseline = u128::MAX;
         for _ in 0..1000 {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let time = end-start;
-            if time<baseline && time>0{
-                baseline = time;
+            let start = Instant::now();
+            let delta = start.elapsed().as_nanos();
+            if delta<baseline && delta>0{
+                baseline = delta;
             }
         }
 
+        
+        let interpreter = interpreter::Interpreter::new(vm.clone().types.clone(), vm.clone().namespaces.clone(), vm.clone().clone());
+        
+        let refr = Arc::into_raw(vm.clone()) as *mut interpreter::VM;
+        
+        unsafe {
+            (*refr).interpreters.push(Arc::new(interpreter));
+            Arc::from_raw(refr);
+        }
+
         for _ in 0..n_exec {
-            let start = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            vm.clone().execute(bytecode.clone());
-            let end = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).expect("Clock may have changed").as_nanos();
-            let time = end-start-baseline;
-            if time<min && time>0 {
+            let mut holder = TimeitHolder {baseline, time: 0.};
+            interpreter::VM::execute_timeit(vm.clone(), bytecode.clone(), &mut holder);
+            let time = holder.time;
+            if time<min && time>=0. {
                 min = time;
             }
         }
         println!("Best execution time: {} ns.", min);
-        println!("Best execution time: {} µs.", (min as f64) / 1000.0);
-        println!("Best execution time: {} ms.", (min as f64) / 1000000.0);
+        println!("Best execution time: {} µs.", min / 1000.0);
+        println!("Best execution time: {} ms.", min / 1000000.0);
     }
     else {
-        vm.execute(bytecode);
+        interpreter::VM::execute(vm, bytecode);
     }
     if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
 }
@@ -106,7 +131,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
 
 //Version: major.minor
 #[derive(Parser, Debug)]
-#[command(author, version = "1.1", about, long_about = None)]
+#[command(author, version = "1.2", about, long_about = None)]
 struct Args {
     /// File to execute
     #[arg(required = true, name = "file")]
@@ -136,7 +161,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use crate::run_file;
-
+    
     #[test]
     fn test_literals() {
         run_file(&String::from("tests/literals.me"), None);

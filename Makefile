@@ -18,3 +18,7 @@ install:
 
 backtrace: $(file)
 	RUST_BACKTRACE=1 cargo run -- $(file)
+
+clean:
+	cargo clean
+	rm merlin

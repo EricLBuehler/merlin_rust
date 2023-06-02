@@ -131,7 +131,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
 
 //Version: major.minor
 #[derive(Parser, Debug)]
-#[command(author, version = "1.1", about, long_about = None)]
+#[command(author, version = "1.2", about, long_about = None)]
 struct Args {
     /// File to execute
     #[arg(required = true, name = "file")]

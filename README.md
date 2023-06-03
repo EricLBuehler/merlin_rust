@@ -27,9 +27,9 @@ Merlin is: 34.64x slower
 
 ## Installation
 To get started with Merlin:
-- Download rust
-- Execute rustup default nightly (reversion = default stable)
-- Run make release
+- Download rust (preferrably with rustup command line tool)
+- Execute `rustup default nightly` (reversion = default stable)
+- Run `make release`
 - Execute code using the generated binary!
 
 ## Docs

@@ -1,5 +1,4 @@
 //Generate bytecode from AST
-use itertools::izip;
 use crate::objects::exceptionobject;
 use crate::objects::utils::object_repr_safe;
 use crate::Arc;
@@ -16,6 +15,7 @@ use crate::{
 };
 use colored::Colorize;
 use hashbrown::HashMap;
+use itertools::izip;
 use std::marker::PhantomData;
 
 pub struct Compiler<'a> {
@@ -225,7 +225,7 @@ impl<'a> Compiler<'a> {
                         .nodearr
                         .expect("Node.nodearr is not present"),
                 );
-                
+
                 self.consts
                     .push(codeobject::code_from(self.vm.clone(), bytecode));
                 let codeidx = self.consts.len() - 1;
@@ -624,12 +624,13 @@ impl<'a> Compiler<'a> {
                 let name = *expr.data.get_data().nodes.get("name").expect("Node");
                 self.compile_expr_operation(name, *ctx.leftctx.unwrap());
 
-                for arg in izip!(expr
-                    .data
-                    .get_data()
-                    .nodearr
-                    .expect("Node.nodearr is not present"), ctx.args.as_ref().unwrap())
-                {
+                for arg in izip!(
+                    expr.data
+                        .get_data()
+                        .nodearr
+                        .expect("Node.nodearr is not present"),
+                    ctx.args.as_ref().unwrap()
+                ) {
                     self.compile_expr_operation(arg.0, arg.1.clone());
                 }
                 self.instructions.push(CompilerInstruction::Call {

@@ -384,8 +384,7 @@ impl<'a> Interpreter<'a> {
 
     #[inline]
     pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
-        let mut i = 0;
-        for instruction in &bytecode.instructions {
+        for (i, instruction) in bytecode.instructions.iter().enumerate() {
             match instruction {
                 //Constant loading
                 CompilerInstruction::LoadConst { index, register } => {

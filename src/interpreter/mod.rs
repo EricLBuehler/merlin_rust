@@ -1,6 +1,6 @@
 // Interpret bytecode
 
-use crate::objects::utils::object_repr;
+
 use crate::parser::Position;
 use crate::Arc;
 use crate::{

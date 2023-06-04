@@ -216,7 +216,7 @@ impl<'a> Compiler<'a> {
                     nameidx,
                     argsidx,
                     codeidx,
-                    out: CompilerRegister::R(self.register_index as i32),
+                    out: CompilerRegister::R(self.register_index),
                 });
                 increment_reg_num!(self);
                 registers += 1;
@@ -225,7 +225,7 @@ impl<'a> Compiler<'a> {
 
                 self.names.insert(name, self.names.len() as i32);
                 self.instructions.push(CompilerInstruction::CopyRegister {
-                    from: CompilerRegister::R((self.register_index - 1) as i32),
+                    from: CompilerRegister::R(self.register_index - 1),
                     to: CompilerRegister::V((self.names.len() - 1) as i32),
                 });
                 self.positions.push((expr.start, expr.end));
@@ -345,7 +345,8 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodes.expr not found"),
                 );
 
-                let res = RegisterContext {
+                
+                RegisterContext {
                     value: CompilerRegister::R(old),
                     left: Some(expr.value),
                     leftctx: Some(Box::new(expr)),
@@ -353,8 +354,7 @@ impl<'a> Compiler<'a> {
                     rightctx: None,
                     args: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::Identifier => {
                 let var = self.names.get_key_value(
@@ -364,7 +364,8 @@ impl<'a> Compiler<'a> {
                         .get("name")
                         .expect("Node.raw.name not found"),
                 );
-                let res = RegisterContext {
+                
+                RegisterContext {
                     value: CompilerRegister::V(match var {
                         Some(v) => *v.1,
                         None => -1,
@@ -375,8 +376,7 @@ impl<'a> Compiler<'a> {
                     rightctx: None,
                     args: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::Call => {
                 let name = *expr
@@ -421,7 +421,8 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodes.expr not found"),
                 );
 
-                let res = RegisterContext {
+                
+                RegisterContext {
                     value: var.value,
                     left: None,
                     leftctx: Some(Box::new(var)),
@@ -429,8 +430,7 @@ impl<'a> Compiler<'a> {
                     rightctx: None,
                     args: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::Unary => {
                 let old = self.register_index;

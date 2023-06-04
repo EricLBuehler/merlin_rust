@@ -6,6 +6,7 @@
 <h2><strong>Make your code <i>fly</i></strong></h2>
 
 Merlin is a dynamically and strongly typed programming language written in Rust. It uses Rust's atomic data types to remove the need for a GIL.
+In addition, it has a register-based interpreter (which mimics CPUs) and so has performance advantages over the Python stack-based interpreter.
 
 ### Current comparsion to Python:
 

@@ -528,7 +528,6 @@ impl<'a> Interpreter<'a> {
                     return res;
                 }
             }
-            i += 1;
         }
 
         pop_frame!(self);

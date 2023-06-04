@@ -79,8 +79,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         println!("\n===== Running compiler =====");
     }
 
-    let mut compiler =
-        compiler::Compiler::new(&file_info, vm.clone(), compiler::CompilerScope::Global);
+    let mut compiler = compiler::Compiler::new(&file_info, vm.clone());
     let bytecode = compiler.generate_bytecode(&ast);
 
     if cfg!(debug_assertions) {

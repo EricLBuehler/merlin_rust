@@ -8,6 +8,7 @@ use crate::{
     objects::{boolobject, stringobject, ObjectInternals},
 };
 
+#[allow(dead_code)]
 pub fn dict_from<'a>(
     vm: Arc<VM<'a>>,
     raw: hashbrown::HashMap<Object<'a>, Object<'a>>,

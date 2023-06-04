@@ -1,6 +1,5 @@
 // Interpret bytecode
 
-
 use crate::parser::Position;
 use crate::Arc;
 use crate::{
@@ -8,8 +7,7 @@ use crate::{
     fileinfo::FileInfo,
     none_from,
     objects::{
-        boolobject, dictobject, fnobject, intobject, listobject, noneobject,
-        utils::object_repr_safe, Object,
+        boolobject, fnobject, intobject, listobject, noneobject, utils::object_repr_safe, Object,
     },
     stats, TimeitHolder,
 };
@@ -19,8 +17,7 @@ use std::time::Instant;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Namespaces<'a> {
-    locals: Vec<Object<'a>>,
-    globals: Option<Object<'a>>,
+    variables: Vec<Vec<Object<'a>>>,
     _marker: PhantomData<&'a ()>,
 }
 
@@ -82,14 +79,13 @@ pub struct Interpreter<'a> {
 #[derive(Clone, PartialEq, Eq)]
 struct Frame<'a> {
     registers: Vec<Object<'a>>,
-    variables: Vec<Object<'a>>,
 }
 
 macro_rules! pop_frame {
     ($interp:expr) => {{
         unsafe {
             let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-            (*namespace_refr).locals.pop();
+            (*namespace_refr).variables.pop();
             Arc::from_raw(namespace_refr);
         }
         $interp.frames.pop();
@@ -100,27 +96,18 @@ macro_rules! add_frame {
     ($interp:expr, $n_registers:expr, $n_vars:expr) => {{
         unsafe {
             let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-            let dict =
-                dictobject::dict_from($interp.vm.clone(), hashbrown::HashMap::with_capacity(4));
-            (*namespace_refr).locals.push(dict.clone());
-
-            if (*namespace_refr).globals.is_none() {
-                (*namespace_refr).globals = Some(dict);
+            let mut variables = Vec::new();
+            for _ in 0..$n_vars {
+                variables.push(none_from!($interp.vm.clone()));
             }
+            (*namespace_refr).variables.push(variables);
             Arc::from_raw(namespace_refr);
         }
         let mut registers = Vec::new();
         for _ in 0..$n_registers {
             registers.push(none_from!($interp.vm.clone()));
         }
-        let mut variables = Vec::new();
-        for _ in 0..$n_vars {
-            variables.push(none_from!($interp.vm.clone()));
-        }
-        $interp.frames.push(Frame {
-            registers,
-            variables,
-        })
+        $interp.frames.push(Frame { registers })
     }};
 }
 
@@ -136,8 +123,7 @@ impl<'a> VM<'a> {
             types: Arc::new(hashbrown::HashMap::new()),
             interpreters: Vec::new(),
             namespaces: Arc::new(Namespaces {
-                locals: Vec::new(),
-                globals: None,
+                variables: Vec::new(),
                 _marker: PhantomData,
             }),
             info,
@@ -239,7 +225,7 @@ impl<'a> VM<'a> {
     pub fn execute_vars(
         this: Arc<Self>,
         bytecode: Arc<Bytecode<'a>>,
-        vars: Object<'a>,
+        vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         let interpreter =
             Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
@@ -268,19 +254,22 @@ impl<'a> VM<'a> {
 }
 
 macro_rules! load_register {
-    ($last:expr, $register:expr) => {
+    ($this:expr, $last:expr, $namespaces:expr, $register:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v as usize].clone(),
-            CompilerRegister::V(v) => $last.variables[v as usize].clone(),
+            CompilerRegister::V(v) => $namespaces.variables.last().unwrap()[v as usize].clone(),
         }
     };
 }
 
 macro_rules! store_register {
-    ($last:expr, $register:expr, $value:expr) => {
+    ($last:expr, $namespaces:expr, $register:expr, $value:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v as usize] = $value,
-            CompilerRegister::V(v) => $last.variables[v as usize] = $value,
+            CompilerRegister::V(v) => unsafe {
+                let namespace_refr = Arc::into_raw($namespaces.clone()) as *mut Namespaces<'a>;
+                (*namespace_refr).variables.last_mut().unwrap()[v as usize] = $value
+            },
         }
     };
 }
@@ -299,6 +288,7 @@ impl<'a> Interpreter<'a> {
         }
     }
 
+    #[allow(dead_code)]
     fn raise_exc(&mut self, exc_obj: Object<'a>) -> ! {
         let exc = exc_obj
             .internals
@@ -354,7 +344,7 @@ impl<'a> Interpreter<'a> {
     pub fn run_interpreter_vars(
         &mut self,
         bytecode: Arc<Bytecode<'a>>,
-        vars: Object<'a>,
+        vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         add_frame!(
             self,
@@ -363,11 +353,22 @@ impl<'a> Interpreter<'a> {
         );
         unsafe {
             let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
-            (*namespace_refr).locals.pop();
-            (*namespace_refr).locals.push(vars);
+
+            for (i, var) in (*namespace_refr)
+                .variables
+                .last_mut()
+                .unwrap()
+                .iter_mut()
+                .enumerate()
+            {
+                if vars.get(&(i as i128)).is_some() {
+                    *var = vars.get(&(i as i128)).unwrap().clone();
+                }
+            }
+
             Arc::from_raw(namespace_refr);
         }
-        self.run_interpreter(bytecode)
+        self.run_interpreter_raw(bytecode)
     }
 
     pub fn run_interpreter(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
@@ -390,6 +391,7 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::LoadConst { index, register } => {
                     store_register!(
                         self.frames.last_mut().expect("No frames"),
+                        self.namespaces,
                         *register,
                         bytecode
                             .consts
@@ -402,65 +404,90 @@ impl<'a> Interpreter<'a> {
                 //Binary operations
                 CompilerInstruction::BinaryAdd { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    debug_assert!(load_register!(last, *a).add.is_some());
-                    let res = (load_register!(last, *a).add.expect("Method is not defined"))(
-                        load_register!(last, *a).clone(),
-                        load_register!(last, *b).clone(),
+                    debug_assert!(load_register!(self, last, self.namespaces, *a)
+                        .add
+                        .is_some());
+                    let res = (load_register!(self, last, self.namespaces, *a)
+                        .add
+                        .expect("Method is not defined"))(
+                        load_register!(self, last, self.namespaces, *a).clone(),
+                        load_register!(self, last, self.namespaces, *b).clone(),
                     );
                     let pos = bytecode.positions.get(i).expect("Instruction out of range");
                     maybe_handle_exception!(self, res, pos.0, pos.1);
-                    store_register!(last, *result, res.unwrap());
+                    store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinarySub { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    debug_assert!(load_register!(last, *a).sub.is_some());
-                    let res = (load_register!(last, *a).sub.expect("Method is not defined"))(
-                        load_register!(last, *a).clone(),
-                        load_register!(last, *b).clone(),
+                    debug_assert!(load_register!(self, last, self.namespaces, *a)
+                        .sub
+                        .is_some());
+                    let res = (load_register!(self, last, self.namespaces, *a)
+                        .sub
+                        .expect("Method is not defined"))(
+                        load_register!(self, last, self.namespaces, *a).clone(),
+                        load_register!(self, last, self.namespaces, *b).clone(),
                     );
                     let pos = bytecode.positions.get(i).expect("Instruction out of range");
                     maybe_handle_exception!(self, res, pos.0, pos.1);
-                    store_register!(last, *result, res.unwrap());
+                    store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryMul { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    debug_assert!(load_register!(last, *a).mul.is_some());
-                    let res = (load_register!(last, *a).mul.expect("Method is not defined"))(
-                        load_register!(last, *a).clone(),
-                        load_register!(last, *b).clone(),
+                    debug_assert!(load_register!(self, last, self.namespaces, *a)
+                        .mul
+                        .is_some());
+                    let res = (load_register!(self, last, self.namespaces, *a)
+                        .mul
+                        .expect("Method is not defined"))(
+                        load_register!(self, last, self.namespaces, *a).clone(),
+                        load_register!(self, last, self.namespaces, *b).clone(),
                     );
                     let pos = bytecode.positions.get(i).expect("Instruction out of range");
                     maybe_handle_exception!(self, res, pos.0, pos.1);
-                    store_register!(last, *result, res.unwrap());
+                    store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryDiv { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    debug_assert!(load_register!(last, *a).div.is_some());
-                    let res = (load_register!(last, *a).div.expect("Method is not defined"))(
-                        load_register!(last, *a).clone(),
-                        load_register!(last, *b).clone(),
+                    debug_assert!(load_register!(self, last, self.namespaces, *a)
+                        .div
+                        .is_some());
+                    let res = (load_register!(self, last, self.namespaces, *a)
+                        .div
+                        .expect("Method is not defined"))(
+                        load_register!(self, last, self.namespaces, *a).clone(),
+                        load_register!(self, last, self.namespaces, *b).clone(),
                     );
                     let pos = bytecode.positions.get(i).expect("Instruction out of range");
                     maybe_handle_exception!(self, res, pos.0, pos.1);
-                    store_register!(last, *result, res.unwrap());
+                    store_register!(last, self.namespaces, *result, res.unwrap());
                 }
 
                 //Unary operations
                 CompilerInstruction::UnaryNeg { a, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    debug_assert!(load_register!(last, *a).neg.is_some());
-                    let res = (load_register!(last, *a).neg.expect("Method is not defined"))(
-                        load_register!(last, *a).clone(),
+                    debug_assert!(load_register!(self, last, self.namespaces, *a)
+                        .neg
+                        .is_some());
+                    let res = (load_register!(self, last, self.namespaces, *a)
+                        .neg
+                        .expect("Method is not defined"))(
+                        load_register!(self, last, self.namespaces, *a).clone(),
                     );
                     let pos = bytecode.positions.get(i).expect("Instruction out of range");
                     maybe_handle_exception!(self, res, pos.0, pos.1);
-                    store_register!(last, *result, res.unwrap());
+                    store_register!(last, self.namespaces, *result, res.unwrap());
                 }
 
                 //Register manipulation
                 CompilerInstruction::CopyRegister { from, to } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    store_register!(last, *to, load_register!(last, *from));
+                    store_register!(
+                        last,
+                        self.namespaces,
+                        *to,
+                        load_register!(self, last, self.namespaces, *from)
+                    );
                 }
 
                 //Functions, arguments
@@ -468,6 +495,7 @@ impl<'a> Interpreter<'a> {
                     nameidx,
                     argsidx,
                     codeidx,
+                    idxsidx,
                     out,
                 } => {
                     let last = self.frames.last_mut().expect("No frames");
@@ -486,10 +514,20 @@ impl<'a> Interpreter<'a> {
                         .get(*nameidx)
                         .expect("Bytecode names index out of range")
                         .clone();
+                    let indices = bytecode
+                        .consts
+                        .get(*idxsidx)
+                        .expect("Bytecode names index out of range")
+                        .clone();
                     let func = fnobject::fn_from(
                         self.vm.clone(),
                         code,
                         args.internals
+                            .get_arr()
+                            .expect("Expected arr internal value")
+                            .clone(),
+                        indices
+                            .internals
                             .get_arr()
                             .expect("Expected arr internal value")
                             .clone(),
@@ -498,7 +536,7 @@ impl<'a> Interpreter<'a> {
                             .expect("Expected str internal value")
                             .clone(),
                     );
-                    store_register!(last, *out, func);
+                    store_register!(last, self.namespaces, *out, func);
                 }
                 CompilerInstruction::Call {
                     callableregister,
@@ -506,10 +544,10 @@ impl<'a> Interpreter<'a> {
                     arg_registers,
                 } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    let callable = load_register!(last, *callableregister);
+                    let callable = load_register!(self, last, self.namespaces, *callableregister);
                     let mut args = Vec::new();
                     for register in arg_registers {
-                        args.push(load_register!(last, *register));
+                        args.push(load_register!(self, last, self.namespaces, register.value));
                     }
                     debug_assert!(callable.call.is_some());
                     let value = (callable.call.expect("Method is not defined"))(
@@ -517,13 +555,13 @@ impl<'a> Interpreter<'a> {
                         listobject::list_from(self.vm.clone(), args),
                     );
                     debug_assert!(value.is_some());
-                    store_register!(last, *result, value.unwrap());
+                    store_register!(last, self.namespaces, *result, value.unwrap());
                 }
 
                 //Control flow
                 CompilerInstruction::Return { register } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    let res = load_register!(last, *register);
+                    let res = load_register!(self, last, self.namespaces, *register);
                     pop_frame!(self);
                     return res;
                 }

@@ -1,5 +1,6 @@
 //Generate bytecode from AST
-
+use itertools::izip;
+use crate::objects::exceptionobject;
 use crate::objects::utils::object_repr_safe;
 use crate::Arc;
 use crate::{
@@ -23,15 +24,12 @@ pub struct Compiler<'a> {
     names: HashMap<String, i32>,
     info: &'a FileInfo<'a>,
     vm: Arc<VM<'a>>,
-    scope: CompilerScope,
     positions: Vec<(Position, Position)>,
     register_index: i32,
     register_max: i32,
-}
 
-pub enum CompilerScope {
-    Local,
-    Global,
+    undef_index: i32,
+    undef_names: HashMap<i32, String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -68,12 +66,13 @@ pub enum CompilerInstruction {
         nameidx: usize,
         argsidx: usize,
         codeidx: usize,
+        idxsidx: usize,
         out: CompilerRegister,
     }, //All are consts
     Call {
         callableregister: CompilerRegister,
         result: CompilerRegister,
-        arg_registers: Vec<CompilerRegister>,
+        arg_registers: Vec<RegisterContext>,
     },
     Return {
         register: CompilerRegister,
@@ -103,7 +102,7 @@ impl From<CompilerRegister> for i32 {
 pub struct Bytecode<'a> {
     pub instructions: Vec<CompilerInstruction>,
     pub consts: Vec<Object<'a>>,
-    pub names: HashMap<String, i32>,
+    pub undefnames: HashMap<i32, String>,
     pub positions: Vec<(Position, Position)>,
     pub n_registers: i32,
     pub n_variables: i32,
@@ -121,29 +120,30 @@ macro_rules! increment_reg_num {
     };
 }
 
-#[derive(Clone)]
-struct RegisterContext {
-    value: CompilerRegister,
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RegisterContext {
+    pub value: CompilerRegister,
     left: Option<CompilerRegister>,
     leftctx: Option<Box<RegisterContext>>,
     right: Option<CompilerRegister>,
     rightctx: Option<Box<RegisterContext>>,
-    args: Option<Vec<CompilerRegister>>,
+    args: Option<Vec<RegisterContext>>,
     registers: i32, //How many registers this instruction needs
 }
 
 impl<'a> Compiler<'a> {
-    pub fn new(info: &'a FileInfo<'a>, vm: Arc<VM<'a>>, scope: CompilerScope) -> Compiler<'a> {
+    pub fn new(info: &'a FileInfo<'a>, vm: Arc<VM<'a>>) -> Compiler<'a> {
         Compiler {
             instructions: Vec::new(),
             consts: Vec::new(),
             names: HashMap::new(),
             info,
             vm,
-            scope,
             positions: Vec::new(),
             register_index: 0,
             register_max: 0,
+            undef_index: 0,
+            undef_names: HashMap::new(),
         }
     }
 
@@ -154,7 +154,7 @@ impl<'a> Compiler<'a> {
         Arc::new(Bytecode {
             instructions: self.instructions.clone(),
             consts: self.consts.clone(),
-            names: self.names.clone(),
+            undefnames: self.undef_names.clone(),
             positions: self.positions.clone(),
             n_registers: self.register_max,
             n_variables: self.names.len() as i32,
@@ -193,21 +193,39 @@ impl<'a> Compiler<'a> {
                     .push(stringobject::string_from(self.vm.clone(), name.clone()));
                 let nameidx = self.consts.len() - 1;
 
+                let mut names = HashMap::new();
                 let mut args = Vec::new();
-                for arg in expr.data.get_data().args.expect("Node.args is not present") {
-                    args.push(stringobject::string_from(self.vm.clone(), arg));
+                let mut indices = Vec::new();
+                for (i, arg) in expr
+                    .data
+                    .get_data()
+                    .args
+                    .expect("Node.args is not present")
+                    .iter()
+                    .enumerate()
+                {
+                    args.push(stringobject::string_from(self.vm.clone(), arg.clone()));
+                    indices.push(intobject::int_from(self.vm.clone(), i as i128));
+
+                    names.insert(arg.to_string(), self.names.len() as i32);
                 }
                 self.consts
                     .push(listobject::list_from(self.vm.clone(), args));
                 let argsidx = self.consts.len() - 1;
 
-                let mut compiler = Compiler::new(self.info, self.vm.clone(), CompilerScope::Local);
+                self.consts
+                    .push(listobject::list_from(self.vm.clone(), indices));
+                let idxsidx = self.consts.len() - 1;
+
+                let mut compiler = Compiler::new(self.info, self.vm.clone());
+                compiler.names = names;
                 let bytecode = compiler.generate_bytecode(
                     expr.data
                         .get_data()
                         .nodearr
                         .expect("Node.nodearr is not present"),
                 );
+                
                 self.consts
                     .push(codeobject::code_from(self.vm.clone(), bytecode));
                 let codeidx = self.consts.len() - 1;
@@ -216,6 +234,7 @@ impl<'a> Compiler<'a> {
                     nameidx,
                     argsidx,
                     codeidx,
+                    idxsidx,
                     out: CompilerRegister::R(self.register_index),
                 });
                 increment_reg_num!(self);
@@ -345,7 +364,6 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodes.expr not found"),
                 );
 
-                
                 RegisterContext {
                     value: CompilerRegister::R(old),
                     left: Some(expr.value),
@@ -364,11 +382,40 @@ impl<'a> Compiler<'a> {
                         .get("name")
                         .expect("Node.raw.name not found"),
                 );
-                
+
+                if var.is_none() {
+                    let name = expr
+                        .data
+                        .get_data()
+                        .raw
+                        .get("name")
+                        .expect("Node.raw.name not found")
+                        .clone();
+                    let exc = exceptionobject::nameexc_from_str(
+                        self.vm.clone(),
+                        &format!("Name '{}' not defined", name),
+                        expr.start,
+                        expr.end,
+                    );
+                    self.raise_exc_pos(exc, expr.start, expr.end);
+                }
+
                 RegisterContext {
                     value: CompilerRegister::V(match var {
                         Some(v) => *v.1,
-                        None => -1,
+                        None => {
+                            self.undef_index -= 1;
+                            self.undef_names.insert(
+                                self.undef_index,
+                                expr.data
+                                    .get_data()
+                                    .raw
+                                    .get("name")
+                                    .expect("Node.raw.name not found")
+                                    .clone(),
+                            );
+                            self.undef_index
+                        }
                     }),
                     left: None,
                     leftctx: None,
@@ -396,8 +443,8 @@ impl<'a> Compiler<'a> {
                     .expect("Node.nodearr is not present")
                 {
                     let arg = self.compile_expr_values(arg);
-                    args.push(arg.value);
                     args_registers += arg.registers;
+                    args.push(arg);
                 }
 
                 let res = RegisterContext {
@@ -421,7 +468,6 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodes.expr not found"),
                 );
 
-                
                 RegisterContext {
                     value: var.value,
                     left: None,
@@ -578,14 +624,13 @@ impl<'a> Compiler<'a> {
                 let name = *expr.data.get_data().nodes.get("name").expect("Node");
                 self.compile_expr_operation(name, *ctx.leftctx.unwrap());
 
-                for arg in expr
+                for arg in izip!(expr
                     .data
                     .get_data()
                     .nodearr
-                    .expect("Node.nodearr is not present")
+                    .expect("Node.nodearr is not present"), ctx.args.as_ref().unwrap())
                 {
-                    let argctx = self.compile_expr_values(arg);
-                    self.compile_expr_operation(expr, argctx);
+                    self.compile_expr_operation(arg.0, arg.1.clone());
                 }
                 self.instructions.push(CompilerInstruction::Call {
                     callableregister: ctx.left.unwrap(),

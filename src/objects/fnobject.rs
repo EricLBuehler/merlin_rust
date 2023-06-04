@@ -1,19 +1,27 @@
 use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject};
+
 use crate::Arc;
 use crate::{
     interpreter::VM,
-    objects::{boolobject, dictobject, is_instance, stringobject, ObjectInternals},
+    objects::{boolobject, is_instance, stringobject, ObjectInternals},
 };
+use itertools::izip;
 
 pub fn fn_from<'a>(
     vm: Arc<VM<'a>>,
     code: Object<'a>,
     args: Vec<Object<'a>>,
+    indices: Vec<Object<'a>>,
     name: String,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("fn"));
     let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Fn(super::FnData { code, args, name });
+    refr.internals = ObjectInternals::Fn(super::FnData {
+        code,
+        args,
+        name,
+        indices,
+    });
     tp
 }
 
@@ -64,7 +72,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
                 .len()
     );
     let mut map = hashbrown::HashMap::new();
-    for (name, value) in std::iter::zip(
+    for (value, index) in izip!(
         args.internals
             .get_arr()
             .expect("Expected arr internal value"),
@@ -72,11 +80,17 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
             .internals
             .get_fn()
             .expect("Expected Fn internal value")
-            .args,
+            .indices,
     ) {
-        map.insert(name.clone(), value.clone());
+        map.insert(
+            index
+                .internals
+                .get_int()
+                .expect("Expected int internal value"),
+            value.clone(),
+        );
     }
-    let vars = dictobject::dict_from(selfv.vm.clone(), map);
+
     let code = selfv
         .internals
         .get_fn()
@@ -88,7 +102,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(VM::execute_vars(
         selfv.vm.clone(),
         Arc::new(code.clone()),
-        vars,
+        map,
     ))
 }
 

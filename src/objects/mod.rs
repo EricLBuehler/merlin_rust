@@ -134,6 +134,7 @@ pub struct FnData<'a> {
     code: Object<'a>,
     args: Vec<Object<'a>>,
     name: String,
+    indices: Vec<Object<'a>>,
 }
 
 #[derive(Clone, PartialEq, Eq)]

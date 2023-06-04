@@ -401,11 +401,7 @@ impl<'a> Parser<'a> {
         self.advance();
 
         nodes::Node::new(
-            Position::create_from_parts(
-                self.current.startcol,
-                self.current.endcol,
-                self.current.line,
-            ),
+            left.start.clone(),
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,

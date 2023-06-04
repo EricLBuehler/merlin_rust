@@ -1,7 +1,12 @@
-use crate::{objects::{stringobject, ObjectInternals, boolobject}, compiler::Bytecode, interpreter::VM};
+use super::{
+    create_object_from_type, finalize_type, is_instance, MethodType, MethodValue, Object, RawObject,
+};
 use crate::Arc;
-use super::{RawObject, Object,MethodType, MethodValue, finalize_type, is_instance, create_object_from_type};
-
+use crate::{
+    compiler::Bytecode,
+    interpreter::VM,
+    objects::{boolobject, stringobject, ObjectInternals},
+};
 
 pub fn code_from<'a>(vm: Arc<VM<'a>>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Arc<RawObject> = create_object_from_type(vm.get_type("code"));
@@ -14,15 +19,28 @@ fn code_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
     unimplemented!();
 }
 fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), format!("<code object @ 0x{:x}>", Arc::as_ptr(&selfv) as i128)))
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("<code object @ 0x{:x}>", Arc::as_ptr(&selfv) as i128),
+    ))
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     debug_assert!(is_instance(&selfv, &other));
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), selfv.internals.get_code().expect("Expected Bytecode internal value") == other.internals.get_code().expect("Expected Bytecode internal value")))
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        selfv
+            .internals
+            .get_code()
+            .expect("Expected Bytecode internal value")
+            == other
+                .internals
+                .get_code()
+                .expect("Expected Bytecode internal value"),
+    ))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("code"),
@@ -42,7 +60,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         mul: None,
         div: None,
         pow: None,
-    
+
         get: None,
         set: None,
         len: None,

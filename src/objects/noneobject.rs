@@ -1,7 +1,9 @@
-use crate::{objects::stringobject, interpreter::VM};
+use super::{
+    boolobject, create_object_from_type, finalize_type, intobject, is_instance, MethodType,
+    MethodValue, Object, ObjectInternals, RawObject,
+};
 use crate::Arc;
-use super::{RawObject, Object,MethodType, MethodValue, create_object_from_type, finalize_type, is_instance, boolobject, intobject, ObjectInternals};
-
+use crate::{interpreter::VM, objects::stringobject};
 
 #[macro_export]
 macro_rules! none_from {
@@ -14,13 +16,19 @@ fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
     unimplemented!();
 }
 fn none_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), String::from("None")))
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        String::from("None"),
+    ))
 }
 fn none_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), is_instance(&selfv, &other)))
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_instance(&selfv, &other),
+    ))
 }
 
 pub fn generate_cache<'a>(nonetp: Object<'a>, ptr: *mut Option<Object<'a>>) {
@@ -32,8 +40,8 @@ pub fn generate_cache<'a>(nonetp: Object<'a>, ptr: *mut Option<Object<'a>>) {
     }
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("NoneType"),
@@ -54,7 +62,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         mul: None,
         div: None,
         pow: None,
-        
+
         get: None,
         set: None,
         len: None,

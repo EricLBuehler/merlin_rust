@@ -1,7 +1,12 @@
-use super::{Object, MethodValue};
+use super::{MethodValue, Object};
 
 pub fn object_repr(object: &Object<'_>) -> String {
-    return (object.clone().repr.expect("Method is not defined"))(object.clone()).unwrap().internals.get_str().expect("Expected str internal value").clone();
+    return (object.clone().repr.expect("Method is not defined"))(object.clone())
+        .unwrap()
+        .internals
+        .get_str()
+        .expect("Expected str internal value")
+        .clone();
 }
 
 pub fn object_repr_safe(object: &Object<'_>) -> MethodValue<String, String> {
@@ -9,7 +14,7 @@ pub fn object_repr_safe(object: &Object<'_>) -> MethodValue<String, String> {
     if repr.is_none() {
         return MethodValue::Error(String::from("__repr__ is not implemented."));
     }
-    
+
     let reprv = (repr.unwrap())(object.clone());
 
     debug_assert!(!reprv.is_error());
@@ -22,13 +27,24 @@ pub fn object_repr_safe(object: &Object<'_>) -> MethodValue<String, String> {
         return MethodValue::Error(String::from("__repr__ returned non-string."));
     }
 
-
-    return MethodValue::Some(reprv.unwrap().internals.get_str().expect("Expected str internal value").to_owned());
+    return MethodValue::Some(
+        reprv
+            .unwrap()
+            .internals
+            .get_str()
+            .expect("Expected str internal value")
+            .to_owned(),
+    );
 }
 
 #[allow(dead_code)]
 pub fn object_str(object: &Object<'_>) -> String {
-    return (object.clone().str.expect("Method is not defined"))(object.clone()).unwrap().internals.get_str().expect("Expected str internal value").clone();
+    return (object.clone().str.expect("Method is not defined"))(object.clone())
+        .unwrap()
+        .internals
+        .get_str()
+        .expect("Expected str internal value")
+        .clone();
 }
 
 pub fn object_str_safe(object: &Object<'_>) -> MethodValue<String, String> {
@@ -36,7 +52,7 @@ pub fn object_str_safe(object: &Object<'_>) -> MethodValue<String, String> {
     if str.is_none() {
         return MethodValue::Error(String::from("__repr__ is not implemented."));
     }
-    
+
     let strv = (str.unwrap())(object.clone());
 
     debug_assert!(!strv.is_error());
@@ -49,6 +65,11 @@ pub fn object_str_safe(object: &Object<'_>) -> MethodValue<String, String> {
         return MethodValue::Error(String::from("__repr__ returned non-string."));
     }
 
-
-    return MethodValue::Some(strv.unwrap().internals.get_str().expect("Expected str internal value").to_owned());
+    return MethodValue::Some(
+        strv.unwrap()
+            .internals
+            .get_str()
+            .expect("Expected str internal value")
+            .to_owned(),
+    );
 }

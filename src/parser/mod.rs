@@ -28,7 +28,11 @@ pub struct Position {
 
 impl Position {
     fn create_from_parts(startcol: usize, endcol: usize, line: usize) -> Position {
-        Position { startcol, endcol, line}
+        Position {
+            startcol,
+            endcol,
+            line,
+        }
     }
 }
 
@@ -37,23 +41,28 @@ impl Position {
 
 pub fn new<'a>(lexer: Lexer, info: &'a FileInfo) -> Parser<'a> {
     let tokens: Vec<_> = lexer.collect();
-    return Parser   {   tokens: tokens.to_owned(), 
-                        current: tokens.first().expect("No tokens").to_owned(),
-                        idx: 1,
-                        info,
-                    };
+    return Parser {
+        tokens: tokens.to_owned(),
+        current: tokens.first().expect("No tokens").to_owned(),
+        idx: 1,
+        info,
+    };
 }
 
 macro_rules! allowed_to_vec {
     ($allowed: expr) => {
-        $allowed.into_iter().map(|itm| "'".to_owned()+itm+"'").collect::<Vec<String>>().join(", ")
+        $allowed
+            .into_iter()
+            .map(|itm| "'".to_owned() + itm + "'")
+            .collect::<Vec<String>>()
+            .join(", ")
     };
 }
 
 impl<'a> Parser<'a> {
     fn advance(&mut self) -> Token {
         self.idx += 1;
-        if self.tokens.get(self.idx-1).is_none() {
+        if self.tokens.get(self.idx - 1).is_none() {
             self.current = Token {
                 data: String::from("\0"),
                 tp: TokenType::Eof,
@@ -63,14 +72,18 @@ impl<'a> Parser<'a> {
             };
             return self.current.to_owned();
         }
-        self.current = self.tokens.get(self.idx-1).expect("Tokens index out of range").to_owned();
-        
+        self.current = self
+            .tokens
+            .get(self.idx - 1)
+            .expect("Tokens index out of range")
+            .to_owned();
+
         self.current.to_owned()
     }
 
     fn reverse(&mut self) -> Token {
         self.idx -= 1;
-        if self.tokens.get(self.idx-1).is_none() {
+        if self.tokens.get(self.idx - 1).is_none() {
             self.current = Token {
                 data: String::from("\0"),
                 tp: TokenType::Eof,
@@ -80,8 +93,12 @@ impl<'a> Parser<'a> {
             };
             return self.current.to_owned();
         }
-        self.current = self.tokens.get(self.idx-1).expect("Tokens index out of range").to_owned();
-        
+        self.current = self
+            .tokens
+            .get(self.idx - 1)
+            .expect("Tokens index out of range")
+            .to_owned();
+
         self.current.to_owned()
     }
 
@@ -92,7 +109,7 @@ impl<'a> Parser<'a> {
     }
 
     fn current_is_type(&self, tp: TokenType) -> bool {
-        self.current.tp  == tp
+        self.current.tp == tp
     }
 
     fn next_is_type(&mut self, tp: TokenType) -> bool {
@@ -105,33 +122,45 @@ impl<'a> Parser<'a> {
         false
     }
 
-    fn raise_error(&mut self, error: &str, errtp: ErrorType) -> !{
-        raise_error(error, errtp, &Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), self.info);
+    fn raise_error(&mut self, error: &str, errtp: ErrorType) -> ! {
+        raise_error(
+            error,
+            errtp,
+            &Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            self.info,
+        );
     }
 
     fn get_precedence(&self) -> Precedence {
         match self.current.tp {
-            TokenType::Plus | TokenType::Hyphen => {
-                Precedence::Sum
-            },
-            TokenType::Asterisk | TokenType::Slash => {
-                Precedence::Product
-            },
-            _ => {
-                Precedence::Lowest
-            },
+            TokenType::Plus | TokenType::Hyphen => Precedence::Sum,
+            TokenType::Asterisk | TokenType::Slash => Precedence::Product,
+            _ => Precedence::Lowest,
         }
     }
 
     fn ensure_not_eof(&mut self, allowed: Vec<&str>) {
         if self.current_is_type(TokenType::Eof) {
-            self.raise_error(&format!("Unexpected EOF (expected one of {}).", allowed_to_vec!(allowed)), ErrorType::UnexpectedEOF)
+            self.raise_error(
+                &format!(
+                    "Unexpected EOF (expected one of {}).",
+                    allowed_to_vec!(allowed)
+                ),
+                ErrorType::UnexpectedEOF,
+            )
         }
     }
 
     fn expect(&mut self, typ: TokenType) {
         if !self.current_is_type(typ.clone()) {
-            self.raise_error(format!("Invalid '{}', got '{}'.", typ, self.current.tp).as_str(), ErrorType::UnexpectedToken)
+            self.raise_error(
+                format!("Invalid '{}', got '{}'.", typ, self.current.tp).as_str(),
+                ErrorType::UnexpectedToken,
+            )
         }
     }
 
@@ -144,7 +173,7 @@ impl<'a> Parser<'a> {
 
     fn block(&mut self) -> Vec<Node> {
         let mut nodes = Vec::new();
-        
+
         while !self.current_is_type(TokenType::Eof) && !self.current_is_type(TokenType::RCurly) {
             nodes.push(self.parse_statement());
             self.skip_newlines();
@@ -155,12 +184,8 @@ impl<'a> Parser<'a> {
 
     fn parse_statement(&mut self) -> Node {
         match self.current.tp {
-            TokenType::Keyword => {
-                self.keyword()
-            }
-            _ => {
-                self.expr(Precedence::Lowest)
-            }
+            TokenType::Keyword => self.keyword(),
+            _ => self.expr(Precedence::Lowest),
         }
     }
 
@@ -180,11 +205,9 @@ impl<'a> Parser<'a> {
     fn keyword(&mut self) -> Node {
         if self.current.data == "fn" {
             self.parse_fn()
-        }
-        else if self.current.data == "return" {
+        } else if self.current.data == "return" {
             self.parse_return()
-        }
-        else {
+        } else {
             self.raise_error("Unknown keyword.", ErrorType::UnknownKeyword);
         }
     }
@@ -193,19 +216,24 @@ impl<'a> Parser<'a> {
         let mut left;
 
         let atomics = vec!["decimal", "identifier", "-"];
-        
+
         match self.atom() {
-            None => self.raise_error(&format!("Invalid or unexpected token (expected one of {}).", allowed_to_vec!(atomics)), ErrorType::UnexpectedToken),
-            Some(val) => { left = val },
+            None => self.raise_error(
+                &format!(
+                    "Invalid or unexpected token (expected one of {}).",
+                    allowed_to_vec!(atomics)
+                ),
+                ErrorType::UnexpectedToken,
+            ),
+            Some(val) => left = val,
         }
-        
+
         self.advance();
-        while !self.current_is_type(TokenType::Eof) && (precedence as u32) < (self.get_precedence() as u32){
+        while !self.current_is_type(TokenType::Eof)
+            && (precedence as u32) < (self.get_precedence() as u32)
+        {
             match self.current.tp {
-                TokenType::Plus |
-                TokenType::Hyphen |
-                TokenType::Asterisk |
-                TokenType::Slash => {
+                TokenType::Plus | TokenType::Hyphen | TokenType::Asterisk | TokenType::Slash => {
                     left = self.generate_binary(left, self.get_precedence());
                 }
                 _ => {
@@ -215,19 +243,37 @@ impl<'a> Parser<'a> {
         }
         if self.is_atomic() {
             self.reverse();
-            self.raise_error(&format!("Invalid or unexpected token (expected one of {}).", allowed_to_vec!(atomics)), ErrorType::UnexpectedToken);
+            self.raise_error(
+                &format!(
+                    "Invalid or unexpected token (expected one of {}).",
+                    allowed_to_vec!(atomics)
+                ),
+                ErrorType::UnexpectedToken,
+            );
         }
-        
+
         left
     }
 
     // ============ Atomic ==============
 
     fn generate_decimal(&mut self) -> Node {
-        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::Decimal, 
-                                Box::new(nodes::DecimalNode {value: self.current.data.to_owned()}))
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Decimal,
+            Box::new(nodes::DecimalNode {
+                value: self.current.data.to_owned(),
+            }),
+        )
     }
 
     fn generate_identifier(&mut self) -> Node {
@@ -237,17 +283,27 @@ impl<'a> Parser<'a> {
             self.advance();
             let expr = self.expr(Precedence::Lowest);
             self.reverse();
-            return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    nodes::NodeType::StoreNode, 
-                                    Box::new(nodes::StoreNode {name, expr}));
-        }
-        else if self.next_is_type(TokenType::LParen) {
+            return nodes::Node::new(
+                Position::create_from_parts(
+                    self.current.startcol,
+                    self.current.endcol,
+                    self.current.line,
+                ),
+                Position::create_from_parts(
+                    self.current.startcol,
+                    self.current.endcol,
+                    self.current.line,
+                ),
+                nodes::NodeType::StoreNode,
+                Box::new(nodes::StoreNode { name, expr }),
+            );
+        } else if self.next_is_type(TokenType::LParen) {
             self.advance();
             self.advance();
 
-            let mut args = Vec::new();            
-            while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof) {
+            let mut args = Vec::new();
+            while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof)
+            {
                 args.push(self.expr(Precedence::Lowest));
                 if self.current_is_type(TokenType::RParen) {
                     self.advance();
@@ -256,29 +312,77 @@ impl<'a> Parser<'a> {
                 self.expect(TokenType::Comma);
             }
 
-            return nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    nodes::NodeType::Call, 
-                                    Box::new(nodes::CallNode {name, args}));
+            let ident = nodes::Node::new(
+                Position::create_from_parts(
+                    self.current.startcol,
+                    self.current.endcol,
+                    self.current.line,
+                ),
+                Position::create_from_parts(
+                    self.current.startcol,
+                    self.current.endcol,
+                    self.current.line,
+                ),
+                nodes::NodeType::Identifier,
+                Box::new(nodes::IdentifierNode { name }),
+            );
+
+            return nodes::Node::new(
+                Position::create_from_parts(
+                    self.current.startcol,
+                    self.current.endcol,
+                    self.current.line,
+                ),
+                Position::create_from_parts(
+                    self.current.startcol,
+                    self.current.endcol,
+                    self.current.line,
+                ),
+                nodes::NodeType::Call,
+                Box::new(nodes::CallNode { ident, args }),
+            );
         }
 
-        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                    nodes::NodeType::Identifier, 
-                                    Box::new(nodes::IdentifierNode {name}))
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Identifier,
+            Box::new(nodes::IdentifierNode { name }),
+        )
     }
 
-    fn generate_negate(&mut self) -> Node {            
+    fn generate_negate(&mut self) -> Node {
         self.advance();
 
         let expr = self.expr(Precedence::Lowest);
 
         self.reverse();
-        
-        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::Unary, 
-                                Box::new(nodes::UnaryNode {expr, op: nodes::OpType::Neg}))
+
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Unary,
+            Box::new(nodes::UnaryNode {
+                expr,
+                op: nodes::OpType::Neg,
+            }),
+        )
     }
 
     // ============ Expr ==============
@@ -289,14 +393,31 @@ impl<'a> Parser<'a> {
             TokenType::Hyphen => nodes::OpType::Sub,
             TokenType::Asterisk => nodes::OpType::Mul,
             TokenType::Slash => nodes::OpType::Div,
-            _ => {unreachable!()}};
-            
+            _ => {
+                unreachable!()
+            }
+        };
+
         self.advance();
-        
-        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::Binary, 
-                                Box::new(nodes::BinaryNode {left, right: self.expr(precedence), op: tp}))
+
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Binary,
+            Box::new(nodes::BinaryNode {
+                left,
+                right: self.expr(precedence),
+                op: tp,
+            }),
+        )
     }
 
     // ============ Expr ==============
@@ -306,7 +427,7 @@ impl<'a> Parser<'a> {
         self.ensure_not_eof(vec!["identifier"]);
         let name = self.current.data.clone();
         let mut args = Vec::new();
-        
+
         self.advance();
         self.expect(TokenType::LParen);
         self.advance();
@@ -327,21 +448,41 @@ impl<'a> Parser<'a> {
         self.skip_newlines();
         self.expect(TokenType::RCurly);
         self.advance();
-        
-        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::Function, 
-                                Box::new(nodes::FunctionNode {name, args, code}))
+
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Function,
+            Box::new(nodes::FunctionNode { name, args, code }),
+        )
     }
-    
+
     fn parse_return(&mut self) -> Node {
         self.advance();
-        
+
         let expr = self.expr(Precedence::Lowest);
-        
-        nodes::Node::new(Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                Position::create_from_parts(self.current.startcol, self.current.endcol, self.current.line), 
-                                nodes::NodeType::Return, 
-                                Box::new(nodes::ReturnNode {expr}))
+
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Return,
+            Box::new(nodes::ReturnNode { expr }),
+        )
     }
-} 
+}

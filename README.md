@@ -15,7 +15,7 @@ a=1
 ```
 Total execution time:
 
-Merlin 1.2 (release): 440 ns
+Merlin 1.2 (release): 260 ns
 
 `./merlin program.me -t 100000`
 
@@ -23,7 +23,7 @@ Python 3.10.6: 12.7 ns
 
 `python3 -m timeit -c "a=1"`
 
-Merlin is: 34.64x slower
+Merlin is: 20.47x slower
 
 ## Installation
 To get started with Merlin:

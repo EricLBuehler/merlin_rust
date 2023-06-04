@@ -344,7 +344,7 @@ impl<'a> Compiler<'a> {
                         .get("expr")
                         .expect("Node.nodes.expr not found"),
                 );
-                
+
                 let res = RegisterContext {
                     value: CompilerRegister::R(old),
                     left: Some(expr.value),
@@ -365,7 +365,7 @@ impl<'a> Compiler<'a> {
                         .expect("Node.raw.name not found"),
                 );
                 let res = RegisterContext {
-                    value: CompilerRegister::R(match var {
+                    value: CompilerRegister::V(match var {
                         Some(v) => *v.1,
                         None => -1,
                     }),
@@ -407,7 +407,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: Some(args),
-                    registers: 1+args_registers,
+                    registers: 1 + args_registers,
                 };
                 increment_reg_num!(self);
                 res
@@ -633,7 +633,7 @@ impl<'a> Compiler<'a> {
                 }
             }
         }
-        
+
         self.register_index -= ctx.registers;
     }
 }

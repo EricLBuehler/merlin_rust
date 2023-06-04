@@ -2,6 +2,7 @@ use super::{
     boolobject, create_object_from_type, finalize_type, stringobject, MethodType, MethodValue,
     Object, ObjectInternals, RawObject,
 };
+use crate::objects::utils::object_repr;
 use crate::Arc;
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},

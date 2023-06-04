@@ -1,6 +1,6 @@
 # Merlin
 
-![Minimum rustc 1.72 nightly](https://img.shields.io/badge/rustc-1.72%20nightly-brightgreen)
+![rustc 1.70 stable](https://img.shields.io/badge/rustc-1.70.0-brightgreen)
 [![MIT License](https://img.shields.io/badge/License-MIT-informational)](LICENSE)
 
 <h2><strong>Make your code <i>fly</i></strong></h2>
@@ -32,7 +32,7 @@ Merlin is: 9.26x slower
 ## Installation
 To get started with Merlin:
 - Download rust (preferrably with rustup command line tool)
-- Execute `rustup default nightly` (reversion = default stable)
+- Execute `rustup default nightly` (reversion = default stable) if your system does not have atomics.
 - Run `make release`
 - Execute code using the generated binary!
 

@@ -168,12 +168,12 @@ fn main() {
     };
 
     if args.explain > 0 {
-        let err = num::FromPrimitive::from_i32(args.explain-1);
+        let err = num::FromPrimitive::from_i32(args.explain - 1);
         match err {
             Some(tp) => {
                 println!(
                     "{}:",
-                    format!("error[E{:0>3}]", (args.explain-1) as u8 + 1)
+                    format!("error[E{:0>3}]", (args.explain - 1) as u8 + 1)
                         .red()
                         .bold()
                 );

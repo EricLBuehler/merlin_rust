@@ -222,7 +222,7 @@ impl<'a> Parser<'a> {
 
     fn expr(&mut self, precedence: Precedence) -> Node {
         let mut left;
-        
+
         let atomics = vec!["decimal", "identifier", "-"];
 
         match self.atom() {
@@ -256,22 +256,16 @@ impl<'a> Parser<'a> {
                     return left;
                 }
             }
-            i+=1;
+            i += 1;
         }
-        if !self.is_atomic() && !self.current_is_type(TokenType::Eof) {
+
+        if self.is_atomic()
+            && i == 0
+            && !self.current_is_type(TokenType::Eof)
+            && !self.current_is_type(TokenType::Newline)
+        {
             self.raise_error(
-                &format!(
-                    "Invalid or unexpected token (expected one of {}).",
-                    allowed_to_vec!(atomics)
-                ),
-                ErrorType::UnexpectedToken,
-            );
-        }
-        if self.is_atomic() && i==0 {
-            self.raise_error(
-                &format!(
-                    "Trailing atomic tokens are not allowed."
-                ),
+                &format!("Trailing atomic tokens are not allowed."),
                 ErrorType::TrailingAtomics,
             );
         }

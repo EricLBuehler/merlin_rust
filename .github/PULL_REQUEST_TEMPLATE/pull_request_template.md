@@ -1,12 +1,3 @@
----
-name: Pull request
-about: Submit a bug report to help Merlin improve
-title: ''
-labels: ''
-assignees: ''
-
----
-
 **How this improves Merlin**
 Describe how this pull request improves `Merlin`. Include any related issues here.
 

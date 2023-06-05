@@ -1,6 +1,6 @@
 use clap::Parser;
-use std::{time::{Instant}};
 use colored::Colorize;
+use std::time::Instant;
 extern crate num;
 #[macro_use]
 extern crate num_derive;
@@ -22,7 +22,6 @@ mod compiler;
 mod interpreter;
 mod stats;
 
-
 #[cfg(not(target_has_atomic = "ptr"))]
 mod mutexrc;
 #[cfg(not(target_has_atomic = "ptr"))]
@@ -31,20 +30,15 @@ type Arc = mutexrc::Arc;
 #[cfg(target_has_atomic = "ptr")]
 use std::sync::Arc;
 
-
-
 pub struct TimeitHolder {
     baseline: u128,
     time: f64,
 }
 
-
 fn run_file(file: &String, time: Option<i32>) {
     let res = std::fs::read_to_string(file);
     let file_data = match res {
-        Ok(v) => {
-            v
-        }
+        Ok(v) => v,
         Err(_) => {
             println!("File '{}' is unable to be opened or read.", file);
             return;
@@ -69,29 +63,40 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         lexer::print_tokens(lexer.to_owned());
     }
 
-
-    if cfg!(debug_assertions) { println!("\n===== Running parser ====="); }
+    if cfg!(debug_assertions) {
+        println!("\n===== Running parser =====");
+    }
     let ast = parser::new(lexer, &file_info).generate_ast();
-    if cfg!(debug_assertions) { println!("===== Done with parsing ====="); }
+    if cfg!(debug_assertions) {
+        println!("===== Done with parsing =====");
+    }
 
     let vm = Arc::new(interpreter::VM::new(file_info.clone()));
     objects::init_types(vm.clone());
     interpreter::VM::init_cache(vm.clone());
 
-    if cfg!(debug_assertions) { println!("\n===== Running compiler ====="); }
+    if cfg!(debug_assertions) {
+        println!("\n===== Running compiler =====");
+    }
 
-    let mut compiler = compiler::Compiler::new(&file_info, vm.clone(), compiler::CompilerScope::Global);
+    let mut compiler = compiler::Compiler::new(&file_info, vm.clone());
     let bytecode = compiler.generate_bytecode(&ast);
 
     if cfg!(debug_assertions) {
         println!("{:?}", &bytecode.instructions);
         for c in &bytecode.consts {
-            println!("{} = 0x{:x}", objects::utils::object_repr(c), Arc::as_ptr(c) as u64);
+            println!(
+                "{} = 0x{:x}",
+                objects::utils::object_repr(c),
+                Arc::as_ptr(c) as u64
+            );
         }
         println!("===== Done with compiler =====");
     }
 
-    if cfg!(debug_assertions) { println!("\n===== Running interpreter ====="); }
+    if cfg!(debug_assertions) {
+        println!("\n===== Running interpreter =====");
+    }
 
     if let Some(n_exec) = time {
         let mut min = f64::MAX;
@@ -99,43 +104,46 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         for _ in 0..1000 {
             let start = Instant::now();
             let delta = start.elapsed().as_nanos();
-            if delta<baseline && delta>0{
+            if delta < baseline && delta > 0 {
                 baseline = delta;
             }
         }
 
-        
-        let interpreter = interpreter::Interpreter::new(vm.clone().types.clone(), vm.clone().namespaces.clone(), vm.clone().clone());
-        
+        let interpreter = interpreter::Interpreter::new(
+            vm.clone().types.clone(),
+            vm.clone().namespaces.clone(),
+            vm.clone().clone(),
+        );
+
         let refr = Arc::into_raw(vm.clone()) as *mut interpreter::VM;
-        
+
         unsafe {
             (*refr).interpreters.push(Arc::new(interpreter));
             Arc::from_raw(refr);
         }
 
         for _ in 0..n_exec {
-            let mut holder = TimeitHolder {baseline, time: 0.};
+            let mut holder = TimeitHolder { baseline, time: 0. };
             interpreter::VM::execute_timeit(vm.clone(), bytecode.clone(), &mut holder);
             let time = holder.time;
-            if time<min && time>=0. {
+            if time < min && time >= 0. {
                 min = time;
             }
         }
         println!("Best execution time: {} ns.", min);
         println!("Best execution time: {} µs.", min / 1000.0);
         println!("Best execution time: {} ms.", min / 1000000.0);
-    }
-    else {
+    } else {
         interpreter::VM::execute(vm, bytecode);
     }
-    if cfg!(debug_assertions) { println!("\n===== Done with interpreter ====="); }
+    if cfg!(debug_assertions) {
+        println!("\n===== Done with interpreter =====");
+    }
 }
-
 
 //Version: major.minor
 #[derive(Parser, Debug)]
-#[command(author, version = "1.2", about, long_about = None)]
+#[command(author, version = "1.3", about, long_about = None)]
 struct Args {
     /// File to execute
     #[arg(required = true, name = "file")]
@@ -155,24 +163,28 @@ fn main() {
     let args = Args::parse();
 
     let time = match args.time {
-        0 => {
-            None
-        }
-        v=> {
-            Some(v)
-        }
+        0 => None,
+        v => Some(v),
     };
-    
-    if args.explain >= 0 {
-        let err = num::FromPrimitive::from_i32(args.explain);
+
+    if args.explain > 0 {
+        let err = num::FromPrimitive::from_i32(args.explain - 1);
         match err {
             Some(tp) => {
-                println!("{}:", format!("error[E{:0>3}]", args.explain as u8 + 1).red().bold());
+                println!(
+                    "{}:",
+                    format!("error[E{:0>3}]", (args.explain - 1) as u8 + 1)
+                        .red()
+                        .bold()
+                );
                 println!("{}", errors::repr_err(tp).green());
                 return;
             }
             None => {
-                println!("{}", "Error number does not correspond to a valid error.".red());
+                println!(
+                    "{}",
+                    "Error number does not correspond to a valid error.".red()
+                );
                 return;
             }
         }
@@ -184,7 +196,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use crate::run_file;
-    
+
     #[test]
     fn test_literals() {
         run_file(&String::from("tests/literals.me"), None);

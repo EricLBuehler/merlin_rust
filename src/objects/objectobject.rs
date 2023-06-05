@@ -1,24 +1,32 @@
+use crate::interpreter::VM;
 use crate::Arc;
-use crate::{interpreter::VM};
 
-use super::{Object, MethodValue, MethodType, boolobject, stringobject, RawObject, create_object_from_type, finalize_type, intobject};
-
+use super::{
+    boolobject, create_object_from_type, finalize_type, intobject, stringobject, MethodType,
+    MethodValue, Object, RawObject,
+};
 
 fn object_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(create_object_from_type(selfv))
 }
 fn object_repr(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), "object".to_string()))
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        "object".to_string(),
+    ))
 }
 fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), Arc::ptr_eq(&selfv, &other)))
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        Arc::ptr_eq(&selfv, &other),
+    ))
 }
 fn object_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>){
-    let tp: Arc<RawObject<'a>> = Arc::new( RawObject{
+pub fn init<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
         tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("object"),
@@ -39,7 +47,7 @@ pub fn init<'a>(vm: Arc<VM<'a>>){
         mul: None,
         div: None,
         pow: None,
-        
+
         get: None,
         set: None,
         len: None,

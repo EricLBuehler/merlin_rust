@@ -257,7 +257,6 @@
 #[feature(ptr_internals)]
 #[feature(strict_provenance)]
 #[feature(alloc_layout_extra)]
-
 #[cfg(not(test))]
 use std::boxed::Box;
 #[cfg(test)]
@@ -345,7 +344,11 @@ fn rcbox_layout_for_value_layout(layout: Layout) -> Layout {
     // Previously, layout was calculated on the expression
     // `&*(ptr as *const MrcBox<T>)`, but this created a misaligned
     // reference (see #54908).
-    Layout::new::<MrcBox<()>>().extend(layout).unwrap().0.pad_to_align()
+    Layout::new::<MrcBox<()>>()
+        .extend(layout)
+        .unwrap()
+        .0
+        .pad_to_align()
 }
 
 /// A single-threaded reference-counting pointer. 'Mrc' stands for 'Mutex Reference
@@ -388,7 +391,10 @@ impl<T: ?Sized> Mrc<T> {
     }
 
     unsafe fn from_inner(ptr: NonNull<MrcBox<T>>) -> Self {
-        Self { ptr, phantom: PhantomData }
+        Self {
+            ptr,
+            phantom: PhantomData,
+        }
     }
 
     unsafe fn from_ptr(ptr: *mut MrcBox<T>) -> Self {
@@ -414,8 +420,12 @@ impl<T> Mrc<T> {
         // if the weak pointer is stored inside the strong one.
         unsafe {
             Self::from_inner(
-                Box::leak(Box::new(MrcBox { strong: Mutex::new(Cell::new(1)), weak: Mutex::new(Cell::new(1)), value }))
-                    .into(),
+                Box::leak(Box::new(MrcBox {
+                    strong: Mutex::new(Cell::new(1)),
+                    weak: Mutex::new(Cell::new(1)),
+                    value,
+                }))
+                .into(),
             )
         }
     }
@@ -595,8 +605,12 @@ impl<T> Mrc<T> {
         // if the weak pointer is stored inside the strong one.
         unsafe {
             Ok(Self::from_inner(
-                Box::leak(Box::try_new(MrcBox { strong: Mutex::new(Cell::new(1)), weak: Mutex::new(Cell::new(1)), value })?)
-                    .into(),
+                Box::leak(Box::try_new(MrcBox {
+                    strong: Mutex::new(Cell::new(1)),
+                    weak: Mutex::new(Cell::new(1)),
+                    value,
+                })?)
+                .into(),
             ))
         }
     }
@@ -1111,7 +1125,11 @@ impl<T: ?Sized> Mrc<T> {
     /// ```
     #[inline]
     pub fn get_mut(this: &mut Self) -> Option<&mut T> {
-        if Mrc::is_unique(this) { unsafe { Some(Mrc::get_mut_unchecked(this)) } } else { None }
+        if Mrc::is_unique(this) {
+            unsafe { Some(Mrc::get_mut_unchecked(this)) }
+        } else {
+            None
+        }
     }
 
     /// Returns a mutable reference into the given `Mrc`,
@@ -1535,7 +1553,12 @@ impl<T> Mrc<[T]> {
             // Pointer to first element
             let elems = &mut (*ptr).value as *mut [T] as *mut T;
 
-            let mut guard = Guard { mem: NonNull::new_unchecked(mem), elems, layout, n_elems: 0 };
+            let mut guard = Guard {
+                mem: NonNull::new_unchecked(mem),
+                elems,
+                layout,
+                n_elems: 0,
+            };
 
             for (i, item) in iter.enumerate() {
                 ptr::write(elems.add(i), item);
@@ -1579,7 +1602,6 @@ impl<T: ?Sized> Deref for Mrc<T> {
         &self.inner().value
     }
 }
-
 
 impl<T: ?Sized> Receiver for Mrc<T> {}
 
@@ -2208,7 +2230,9 @@ impl<T> Weak<T> {
     /// ```
     #[must_use]
     pub const fn new() -> Weak<T> {
-        Weak { ptr: unsafe { NonNull::new_unchecked(ptr::invalid_mut::<MrcBox<T>>(usize::MAX)) } }
+        Weak {
+            ptr: unsafe { NonNull::new_unchecked(ptr::invalid_mut::<MrcBox<T>>(usize::MAX)) },
+        }
     }
 }
 
@@ -2357,7 +2381,9 @@ impl<T: ?Sized> Weak<T> {
         };
 
         // SAFETY: we now have recovered the original Weak pointer, so can create the Weak.
-        Weak { ptr: unsafe { NonNull::new_unchecked(ptr) } }
+        Weak {
+            ptr: unsafe { NonNull::new_unchecked(ptr) },
+        }
     }
 
     /// Attempts to upgrade the `Weak` pointer to an [`Mrc`], delaying
@@ -2403,7 +2429,11 @@ impl<T: ?Sized> Weak<T> {
     /// If `self` was created using [`Weak::new`], this will return 0.
     #[must_use]
     pub fn strong_count(&self) -> usize {
-        if let Some(inner) = self.inner() { inner.strong() } else { 0 }
+        if let Some(inner) = self.inner() {
+            inner.strong()
+        } else {
+            0
+        }
     }
 
     /// Gets the number of `Weak` pointers pointing to this allocation.
@@ -2513,7 +2543,11 @@ unsafe impl<#[may_dangle] T: ?Sized> Drop for Weak<T> {
     /// assert!(other_weak_foo.upgrade().is_none());
     /// ```
     fn drop(&mut self) {
-        let inner = if let Some(inner) = self.inner() { inner } else { return };
+        let inner = if let Some(inner) = self.inner() {
+            inner
+        } else {
+            return;
+        };
 
         inner.dec_weak();
         // the weak count starts at 1, and will only go to zero if all

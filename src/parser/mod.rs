@@ -12,6 +12,8 @@ use crate::parser::nodes::Node;
 mod precedence;
 use precedence::Precedence;
 
+use self::nodes::NodeType;
+
 pub struct Parser<'a> {
     tokens: Vec<Token>,
     current: Token,
@@ -158,7 +160,11 @@ impl<'a> Parser<'a> {
     fn expect(&mut self, typ: TokenType) {
         if !self.current_is_type(typ.clone()) {
             self.raise_error(
-                format!("Invalid '{}', got '{}'.", typ, self.current.tp).as_str(),
+                format!(
+                    "Invalid or unexpected token (expected '{}', got '{}').",
+                    typ, self.current.tp
+                )
+                .as_str(),
                 ErrorType::UnexpectedToken,
             )
         }
@@ -191,6 +197,8 @@ impl<'a> Parser<'a> {
 
     fn is_atomic(&mut self) -> bool {
         matches!(self.current.tp, TokenType::Decimal)
+            || matches!(self.current.tp, TokenType::Identifier)
+            || matches!(self.current.tp, TokenType::Hyphen)
     }
 
     fn atom(&mut self) -> Option<Node> {
@@ -214,7 +222,7 @@ impl<'a> Parser<'a> {
 
     fn expr(&mut self, precedence: Precedence) -> Node {
         let mut left;
-
+        println!("{}", self.current);
         let atomics = vec!["decimal", "identifier", "-"];
 
         match self.atom() {
@@ -228,7 +236,12 @@ impl<'a> Parser<'a> {
             Some(val) => left = val,
         }
 
+        if left.tp == NodeType::StoreNode {
+            return left;
+        }
+
         self.advance();
+        let mut i = 0;
         while !self.current_is_type(TokenType::Eof)
             && (precedence as u32) < (self.get_precedence() as u32)
         {
@@ -236,19 +249,30 @@ impl<'a> Parser<'a> {
                 TokenType::Plus | TokenType::Hyphen | TokenType::Asterisk | TokenType::Slash => {
                     left = self.generate_binary(left, self.get_precedence());
                 }
+                TokenType::LParen => {
+                    left = self.generate_call(left);
+                }
                 _ => {
                     return left;
                 }
             }
+            i+=1;
         }
-        if self.is_atomic() {
-            self.reverse();
+        if !self.is_atomic() && !self.current_is_type(TokenType::Eof) {
             self.raise_error(
                 &format!(
                     "Invalid or unexpected token (expected one of {}).",
                     allowed_to_vec!(atomics)
                 ),
                 ErrorType::UnexpectedToken,
+            );
+        }
+        if self.is_atomic() && i==0 {
+            self.raise_error(
+                &format!(
+                    "Trailing atomic tokens are not allowed."
+                ),
+                ErrorType::TrailingAtomics,
             );
         }
 
@@ -296,50 +320,6 @@ impl<'a> Parser<'a> {
                 ),
                 nodes::NodeType::StoreNode,
                 Box::new(nodes::StoreNode { name, expr }),
-            );
-        } else if self.next_is_type(TokenType::LParen) {
-            self.advance();
-            self.advance();
-
-            let mut args = Vec::new();
-            while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof)
-            {
-                args.push(self.expr(Precedence::Lowest));
-                if self.current_is_type(TokenType::RParen) {
-                    self.advance();
-                    break;
-                }
-                self.expect(TokenType::Comma);
-            }
-
-            let ident = nodes::Node::new(
-                Position::create_from_parts(
-                    self.current.startcol,
-                    self.current.endcol,
-                    self.current.line,
-                ),
-                Position::create_from_parts(
-                    self.current.startcol,
-                    self.current.endcol,
-                    self.current.line,
-                ),
-                nodes::NodeType::Identifier,
-                Box::new(nodes::IdentifierNode { name }),
-            );
-
-            return nodes::Node::new(
-                Position::create_from_parts(
-                    self.current.startcol,
-                    self.current.endcol,
-                    self.current.line,
-                ),
-                Position::create_from_parts(
-                    self.current.startcol,
-                    self.current.endcol,
-                    self.current.line,
-                ),
-                nodes::NodeType::Call,
-                Box::new(nodes::CallNode { ident, args }),
             );
         }
 
@@ -414,6 +394,36 @@ impl<'a> Parser<'a> {
                 op: tp,
             }),
         )
+    }
+
+    fn generate_call(&mut self, left: Node) -> Node {
+        self.advance();
+        self.advance();
+
+        let mut args = Vec::new();
+        while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof) {
+            args.push(self.expr(Precedence::Lowest));
+            if self.current_is_type(TokenType::RParen) {
+                self.advance();
+                break;
+            }
+            self.expect(TokenType::Comma);
+        }
+
+        return nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Call,
+            Box::new(nodes::CallNode { ident: left, args }),
+        );
     }
 
     // ============ Expr ==============

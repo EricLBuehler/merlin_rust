@@ -154,8 +154,11 @@ impl<'a> Compiler<'a> {
         Arc::new(Bytecode {
             instructions: self.instructions.clone(),
             consts: self.consts.clone(),
-            names: self.names.iter()
-            .map(|(k, v)| (v.clone(), k.clone())).collect(),
+            names: self
+                .names
+                .iter()
+                .map(|(k, v)| (v.clone(), k.clone()))
+                .collect(),
             positions: self.positions.clone(),
             n_registers: self.register_max,
             n_variables: self.names.len() as i32,
@@ -622,7 +625,12 @@ impl<'a> Compiler<'a> {
                 );
             }
             NodeType::Call => {
-                let name = *expr.data.get_data().nodes.get("name").expect("Node");
+                let name = *expr
+                    .data
+                    .get_data()
+                    .nodes
+                    .get("name")
+                    .expect("Node.nodes.name not found");
                 self.compile_expr_operation(name, *ctx.leftctx.unwrap());
 
                 for arg in izip!(

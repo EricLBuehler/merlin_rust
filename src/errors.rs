@@ -8,6 +8,7 @@ pub enum ErrorType {
     UnknownKeyword,
     UnexpectedEOF,
     FunctionNotExpression,
+    TrailingAtomics,
 }
 
 impl std::fmt::Display for ErrorType {
@@ -25,6 +26,9 @@ pub fn repr_err(tp: ErrorType) -> &'static str {
         }
         ErrorType::FunctionNotExpression => {
             "Function is not an expression: Functions may not be used as expressions"
+        }
+        ErrorType::TrailingAtomics => {
+            "Trailing atomic tokens are not allowed: Code like: `1a` or `a 1` is not allowed."
         }
     }
 }

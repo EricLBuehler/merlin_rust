@@ -261,10 +261,16 @@ macro_rules! load_register {
             CompilerRegister::V(v) => match &$namespaces.variables.last().unwrap()[v as usize] {
                 Some(v) => v.clone(),
                 None => {
-                    let pos = $bytecode.positions.get($i).expect("Instruction out of range");
+                    let pos = $bytecode
+                        .positions
+                        .get($i)
+                        .expect("Instruction out of range");
                     let exc = exceptionobject::nameexc_from_str(
                         $this.vm.clone(),
-                        &format!("Name '{}' not defined", $bytecode.names.get(&($i as i32)).unwrap()),
+                        &format!(
+                            "Name '{}' not defined",
+                            $bytecode.names.get(&($i as i32)).unwrap()
+                        ),
                         pos.0,
                         pos.1,
                     );
@@ -552,10 +558,18 @@ impl<'a> Interpreter<'a> {
                     arg_registers,
                 } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    let callable = load_register!(self, last, self.namespaces, bytecode, i, *callableregister);
+                    let callable =
+                        load_register!(self, last, self.namespaces, bytecode, i, *callableregister);
                     let mut args = Vec::new();
                     for register in arg_registers {
-                        args.push(load_register!(self, last, self.namespaces, bytecode, i, register.value));
+                        args.push(load_register!(
+                            self,
+                            last,
+                            self.namespaces,
+                            bytecode,
+                            i,
+                            register.value
+                        ));
                     }
                     debug_assert!(callable.call.is_some());
                     let value = (callable.call.expect("Method is not defined"))(

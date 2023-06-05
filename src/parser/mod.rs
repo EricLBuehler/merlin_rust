@@ -207,6 +207,7 @@ impl<'a> Parser<'a> {
             TokenType::Decimal => Some(self.generate_decimal()),
             TokenType::Identifier => Some(self.generate_identifier()),
             TokenType::Hyphen => Some(self.generate_negate()),
+            TokenType::LParen => Some(self.generate_grouped()),
             _ => None,
         }
     }
@@ -363,6 +364,11 @@ impl<'a> Parser<'a> {
                 op: nodes::OpType::Neg,
             }),
         )
+    }
+
+    fn generate_grouped(&mut self) -> Node {
+        self.advance();
+        return self.expr(Precedence::Lowest);
     }
 
     // ============ Expr ==============

@@ -222,7 +222,7 @@ impl<'a> Parser<'a> {
 
     fn expr(&mut self, precedence: Precedence) -> Node {
         let mut left;
-        println!("{}", self.current);
+        
         let atomics = vec!["decimal", "identifier", "-"];
 
         match self.atom() {

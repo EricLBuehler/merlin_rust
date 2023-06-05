@@ -397,6 +397,16 @@ pub fn init_types(vm: Arc<VM<'_>>) {
 }
 
 macro_rules! maybe_handle_exception {
+    ($self:ident, $res:ident, $bytecode:expr, $i:expr) => {
+        if $res.is_error() {
+            let pos = $bytecode.positions.get($i).expect("Instruction out of range");
+            let exc = $res.unwrap_err();
+            $self.raise_exc_pos(exc, pos.0, pos.1);
+        }
+    };
+}
+
+macro_rules! maybe_handle_exception_pos {
     ($self:ident, $res:ident, $start:expr, $end:expr) => {
         if $res.is_error() {
             let exc = $res.unwrap_err();

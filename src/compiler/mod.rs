@@ -102,7 +102,7 @@ impl From<CompilerRegister> for i32 {
 pub struct Bytecode<'a> {
     pub instructions: Vec<CompilerInstruction>,
     pub consts: Vec<Object<'a>>,
-    pub undefnames: HashMap<i32, String>,
+    pub names: HashMap<i32, String>,
     pub positions: Vec<(Position, Position)>,
     pub n_registers: i32,
     pub n_variables: i32,
@@ -154,7 +154,8 @@ impl<'a> Compiler<'a> {
         Arc::new(Bytecode {
             instructions: self.instructions.clone(),
             consts: self.consts.clone(),
-            undefnames: self.undef_names.clone(),
+            names: self.names.iter()
+            .map(|(k, v)| (v.clone(), k.clone())).collect(),
             positions: self.positions.clone(),
             n_registers: self.register_max,
             n_variables: self.names.len() as i32,
@@ -519,7 +520,7 @@ impl<'a> Compiler<'a> {
                         .to_string(),
                 );
 
-                maybe_handle_exception!(self, int, expr.start, expr.end);
+                maybe_handle_exception_pos!(self, int, expr.start, expr.end);
 
                 self.consts.push(int.unwrap());
 

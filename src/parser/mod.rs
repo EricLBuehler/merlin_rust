@@ -199,6 +199,7 @@ impl<'a> Parser<'a> {
         matches!(self.current.tp, TokenType::Decimal)
             || matches!(self.current.tp, TokenType::Identifier)
             || matches!(self.current.tp, TokenType::Hyphen)
+            || matches!(self.current.tp, TokenType::LParen)
     }
 
     fn atom(&mut self) -> Option<Node> {
@@ -317,7 +318,7 @@ impl<'a> Parser<'a> {
             );
         }
 
-        nodes::Node::new(
+        let res = nodes::Node::new(
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,
@@ -330,7 +331,12 @@ impl<'a> Parser<'a> {
             ),
             nodes::NodeType::Identifier,
             Box::new(nodes::IdentifierNode { name }),
-        )
+        );
+        if self.next_is_type(TokenType::LParen) {
+            self.advance();
+            return self.generate_call(res);
+        }
+        res
     }
 
     fn generate_negate(&mut self) -> Node {

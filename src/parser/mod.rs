@@ -38,7 +38,7 @@ impl Position {
     }
 }
 
-//Atom: In-place (not left off after seq)
+//Atom: In-place (not left off after seq). If uses expr, then do not .reverse
 //Expr, Statements, etc: Next (leave off on next)
 
 pub fn new<'a>(lexer: Lexer, info: &'a FileInfo) -> Parser<'a> {
@@ -302,7 +302,6 @@ impl<'a> Parser<'a> {
             self.advance();
             self.advance();
             let expr = self.expr(Precedence::Lowest);
-            self.reverse();
             return nodes::Node::new(
                 Position::create_from_parts(
                     self.current.startcol,

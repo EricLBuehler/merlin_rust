@@ -599,19 +599,40 @@ impl<'a> Compiler<'a> {
                     *ctx.leftctx.unwrap(),
                 );
 
-                self.names.insert(
+                let idx;
+                if self.names.contains_key(
                     expr.data
                         .get_data()
                         .raw
                         .get("name")
-                        .expect("Node.raw.name not found")
-                        .clone(),
-                    self.names.len() as i32,
-                );
+                        .expect("Node.raw.name not found"),
+                ) {
+                    idx = *self
+                        .names
+                        .get(
+                            expr.data
+                                .get_data()
+                                .raw
+                                .get("name")
+                                .expect("Node.raw.name not found"),
+                        )
+                        .unwrap();
+                } else {
+                    self.names.insert(
+                        expr.data
+                            .get_data()
+                            .raw
+                            .get("name")
+                            .expect("Node.raw.name not found")
+                            .clone(),
+                        self.names.len() as i32,
+                    );
+                    idx = (self.names.len() - 1) as i32;
+                }
 
                 self.instructions.push(CompilerInstruction::CopyRegister {
                     from: ctx.left.unwrap(),
-                    to: CompilerRegister::V((self.names.len() - 1) as i32),
+                    to: CompilerRegister::V(idx),
                 });
                 self.positions.push((expr.start, expr.end));
             }

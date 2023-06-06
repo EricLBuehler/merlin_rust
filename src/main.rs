@@ -132,9 +132,9 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             }
             means.push(time);
         }
-        println!("Best execution time: {} ns.", min);
-        println!("Best execution time: {} µs.", min / 1000.0);
-        println!("Best execution time: {} ms.", min / 1000000.0);
+        println!("Best execution time: {:.3} ns.", min);
+        println!("Best execution time: {:.3} µs.", min / 1000.0);
+        println!("Best execution time: {:.3} ms.", min / 1000000.0);
 
         println!();
 
@@ -145,9 +145,9 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             }
             sum
         } / means.len() as f64;
-        println!("Mean execution time: {} ns.", mean);
-        println!("Mean execution time: {} µs.", mean / 1000.0);
-        println!("Mean execution time: {} ms.", mean / 1000000.0);
+        println!("Mean execution time: {:.3} ns.", mean);
+        println!("Mean execution time: {:.3} µs.", mean / 1000.0);
+        println!("Mean execution time: {:.3} ms.", mean / 1000000.0);
     } else {
         interpreter::VM::execute(vm, bytecode);
     }

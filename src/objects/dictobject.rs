@@ -26,13 +26,14 @@ pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
 fn dict_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
-fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
+fn dict_repr<'a>(selfv: Object<'a>) -> MethodType<'_> {
     let mut res = String::from("{");
-    for (key, value) in selfv
-        .internals
-        .get_map()
-        .expect("Expected map internal value")
-        .clone()
+    let sf = selfv.clone();
+    let map =sf
+    .internals
+    .get_map()
+    .expect("Expected map internal value").clone();
+    for (key, value) in map
         .into_iter()
     {
         let repr = utils::object_repr_safe(key);

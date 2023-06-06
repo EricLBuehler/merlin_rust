@@ -11,8 +11,7 @@ use super::{exceptionobject::keynotfoundexc_from_str, utils::object_str_safe, Me
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct HashMap<'a> {
-    values: hashbrown::HashMap<i128, Object<'a>>,
-    keymap: hashbrown::HashMap<i128, Object<'a>>,
+    values: hashbrown::HashMap<i128, (Object<'a>, Object<'a>)>,
 }
 
 impl<'a> Default for HashMap<'a> {
@@ -25,7 +24,6 @@ impl<'a> HashMap<'a> {
     pub fn new() -> Self {
         HashMap {
             values: hashbrown::HashMap::new(),
-            keymap: hashbrown::HashMap::new(),
         }
     }
 
@@ -67,8 +65,7 @@ impl<'a> HashMap<'a> {
         if keyv.is_error() {
             return MethodValue::Error(keyv.unwrap_err());
         }
-        self.values.insert(keyv.unwrap(), value);
-        self.keymap.insert(keyv.unwrap(), key);
+        self.values.insert(keyv.unwrap(), (key, value));
         MethodValue::Some(())
     }
 
@@ -91,7 +88,7 @@ impl<'a> HashMap<'a> {
             );
             return MethodValue::Error(exc);
         }
-        MethodValue::Some(res.unwrap().clone())
+        MethodValue::Some(res.unwrap().1.clone())
     }
 
     pub fn len(&self) -> usize {
@@ -101,8 +98,7 @@ impl<'a> HashMap<'a> {
 
 pub struct HMapIter<'a> {
     keys: Vec<i128>,
-    values: hashbrown::HashMap<i128, Object<'a>>,
-    keymap: hashbrown::HashMap<i128, Object<'a>>,
+    values: hashbrown::HashMap<i128, (Object<'a>, Object<'a>)>,
     i: usize,
 }
 
@@ -112,9 +108,9 @@ impl<'a> Iterator for HMapIter<'a> {
     fn next(&mut self) -> Option<Self::Item> {
         let key = self.keys.get(self.i);
         key?;
+        let get = self.values.get(key.unwrap()).unwrap();
         return Some((
-            self.keymap.get(key.unwrap()).unwrap().clone(),
-            self.values.get(key.unwrap()).unwrap().clone(),
+            get.0.clone(), get.1.clone()
         ));
     }
 }
@@ -127,7 +123,6 @@ impl<'a> IntoIterator for &HashMap<'a> {
         return HMapIter {
             keys: self.values.keys().copied().collect(),
             values: self.values.clone(),
-            keymap: self.keymap.clone(),
             i: 0,
         };
     }

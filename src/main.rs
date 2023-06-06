@@ -122,6 +122,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             Arc::from_raw(refr);
         }
 
+        let mut means = Vec::new();
         for _ in 0..n_exec {
             let mut holder = TimeitHolder { baseline, time: 0. };
             interpreter::VM::execute_timeit(vm.clone(), bytecode.clone(), &mut holder);
@@ -129,10 +130,18 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             if time < min && time >= 0. {
                 min = time;
             }
+            means.push(time);
         }
         println!("Best execution time: {} ns.", min);
         println!("Best execution time: {} µs.", min / 1000.0);
         println!("Best execution time: {} ms.", min / 1000000.0);
+
+        println!();
+        
+        let mean = {let mut sum=0.0; for mean in &means {sum+=mean}; sum} / means.len() as f64;
+        println!("Mean execution time: {} ns.", mean);
+        println!("Mean execution time: {} µs.", mean / 1000.0);
+        println!("Mean execution time: {} ms.", mean / 1000000.0);
     } else {
         interpreter::VM::execute(vm, bytecode);
     }

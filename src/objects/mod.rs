@@ -1,9 +1,5 @@
 use crate::Arc;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
-use std::{
-    collections::hash_map::DefaultHasher,
-    hash::{Hash, Hasher},
-};
 pub mod mhash;
 
 pub mod utils;
@@ -320,7 +316,6 @@ macro_rules! is_type_exact {
         $self.typename == $other.typename
     };
 }
-
 
 fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
     tp.new = basetp.new;

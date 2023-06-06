@@ -1,10 +1,10 @@
 use crate::objects::exceptionobject::typemismatchexc_from_str;
 use crate::parser::Position;
-use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject},
 };
+use crate::{is_type_exact, Arc};
 
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,

@@ -1,15 +1,12 @@
 use super::exceptionobject::typemismatchexc_from_str;
-use super::{
-    create_object_from_type, finalize_type, MethodType, MethodValue, Object,
-    RawObject,
-};
+use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject};
 use crate::parser::Position;
-use crate::{Arc, is_type_exact};
 use crate::{
     compiler::Bytecode,
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
+use crate::{is_type_exact, Arc};
 
 pub fn code_from<'a>(vm: Arc<VM<'a>>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Arc<RawObject> = create_object_from_type(vm.get_type("code"));

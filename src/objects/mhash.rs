@@ -1,8 +1,10 @@
 use crate::{
+    is_type_exact,
     objects::{
-        exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str}, MethodValue,
+        exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str},
+        MethodValue,
     },
-    parser::Position, is_type_exact,
+    parser::Position,
 };
 
 use super::{exceptionobject::keynotfoundexc_from_str, utils::object_str_safe, MethodType, Object};

@@ -1,15 +1,15 @@
 use super::exceptionobject::valueexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, intobject, utils, MethodType,
-    MethodValue, Object, RawObject,
+    create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
+    RawObject,
 };
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
-use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
+use crate::{is_type_exact, Arc};
 
 pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("list"));

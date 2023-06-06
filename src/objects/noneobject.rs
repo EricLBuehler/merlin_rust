@@ -1,9 +1,9 @@
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, MethodType,
-    MethodValue, Object, ObjectInternals, RawObject,
+    boolobject, create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
+    ObjectInternals, RawObject,
 };
-use crate::{Arc, is_type_exact};
 use crate::{interpreter::VM, objects::stringobject};
+use crate::{is_type_exact, Arc};
 
 #[macro_export]
 macro_rules! none_from {

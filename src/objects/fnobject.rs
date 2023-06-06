@@ -3,11 +3,11 @@ use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Obj
 
 use crate::objects::exceptionobject::typemismatchexc_from_str;
 use crate::parser::Position;
-use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
+use crate::{is_type_exact, Arc};
 use itertools::izip;
 
 pub fn fn_from<'a>(

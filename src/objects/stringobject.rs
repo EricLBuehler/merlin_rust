@@ -6,7 +6,7 @@ use crate::interpreter::VM;
 use crate::objects::exceptionobject::valueexc_from_str;
 use crate::objects::{boolobject, intobject};
 use crate::parser::Position;
-use crate::{Arc, is_type_exact};
+use crate::{is_type_exact, Arc};
 
 use super::exceptionobject::typemismatchexc_from_str;
 use super::{

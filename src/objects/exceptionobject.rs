@@ -1,9 +1,9 @@
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, stringobject,
-    utils, ExcData, MethodType, MethodValue, Object, ObjectInternals, RawObject,
+    boolobject, create_object_from_type, finalize_type, intobject, stringobject, utils, ExcData,
+    MethodType, MethodValue, Object, ObjectInternals, RawObject,
 };
-use crate::{Arc, is_type_exact};
 use crate::{interpreter::VM, parser::Position};
+use crate::{is_type_exact, Arc};
 
 fn exc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();

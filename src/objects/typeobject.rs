@@ -2,8 +2,8 @@ use crate::interpreter::VM;
 use crate::Arc;
 
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, stringobject,
-    MethodType, MethodValue, Object, RawObject,
+    boolobject, create_object_from_type, finalize_type, intobject, stringobject, MethodType,
+    MethodValue, Object, RawObject,
 };
 
 fn type_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {

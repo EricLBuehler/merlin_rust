@@ -4,12 +4,12 @@ use super::{
     Object, ObjectInternals, RawObject,
 };
 
-use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
-    objects::{exceptionobject::overflowexc_from_str},
+    objects::exceptionobject::overflowexc_from_str,
     parser::Position,
 };
+use crate::{is_type_exact, Arc};
 use std::collections::hash_map::DefaultHasher;
 
 use std::hash::{Hash, Hasher};

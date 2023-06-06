@@ -137,8 +137,14 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         println!("Best execution time: {} ms.", min / 1000000.0);
 
         println!();
-        
-        let mean = {let mut sum=0.0; for mean in &means {sum+=mean}; sum} / means.len() as f64;
+
+        let mean = {
+            let mut sum = 0.0;
+            for mean in &means {
+                sum += mean
+            }
+            sum
+        } / means.len() as f64;
         println!("Mean execution time: {} ns.", mean);
         println!("Mean execution time: {} µs.", mean / 1000.0);
         println!("Mean execution time: {} ms.", mean / 1000000.0);

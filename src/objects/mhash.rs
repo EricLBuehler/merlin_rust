@@ -109,9 +109,7 @@ impl<'a> Iterator for HMapIter<'a> {
         let key = self.keys.get(self.i);
         key?;
         let get = self.values.get(key.unwrap()).unwrap();
-        return Some((
-            get.0.clone(), get.1.clone()
-        ));
+        Some((get.0.clone(), get.1.clone()))
     }
 }
 

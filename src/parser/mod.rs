@@ -267,7 +267,7 @@ impl<'a> Parser<'a> {
             && !self.current_is_type(TokenType::Newline)
         {
             self.raise_error(
-                &format!("Trailing atomic tokens are not allowed."),
+                "Trailing atomic tokens are not allowed.",
                 ErrorType::TrailingAtomics,
             );
         }
@@ -367,7 +367,7 @@ impl<'a> Parser<'a> {
 
     fn generate_grouped(&mut self) -> Node {
         self.advance();
-        return self.expr(Precedence::Lowest);
+        self.expr(Precedence::Lowest)
     }
 
     // ============ Expr ==============
@@ -415,7 +415,7 @@ impl<'a> Parser<'a> {
             self.expect(TokenType::Comma);
         }
 
-        return nodes::Node::new(
+        nodes::Node::new(
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,
@@ -428,7 +428,7 @@ impl<'a> Parser<'a> {
             ),
             nodes::NodeType::Call,
             Box::new(nodes::CallNode { ident: left, args }),
-        );
+        )
     }
 
     // ============ Expr ==============

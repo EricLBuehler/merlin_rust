@@ -9,7 +9,7 @@ pub fn object_repr(object: &Object<'_>) -> String {
         .clone();
 }
 
-pub fn object_repr_safe<'a>(object: Object<'_>) -> MethodValue<String, Object<'_>> {
+pub fn object_repr_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
     let repr = object.clone().repr;
     if repr.is_none() {
         return MethodValue::Error(stringobject::string_from(
@@ -58,7 +58,7 @@ pub fn object_str(object: &Object<'_>) -> String {
         .clone();
 }
 
-pub fn object_str_safe<'a>(object: Object<'_>) -> MethodValue<String, Object<'_>> {
+pub fn object_str_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
     let str = object.clone().str;
     if str.is_none() {
         return MethodValue::Error(stringobject::string_from(

@@ -15,12 +15,18 @@ pub struct HashMap<'a> {
     keymap: hashbrown::HashMap<i128, Object<'a>>,
 }
 
+impl<'a> Default for HashMap<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> HashMap<'a> {
     pub fn new() -> Self {
-        return HashMap {
+        HashMap {
             values: hashbrown::HashMap::new(),
             keymap: hashbrown::HashMap::new(),
-        };
+        }
     }
 
     fn hash(key: Object<'a>) -> MethodValue<i128, Object<'a>> {
@@ -85,11 +91,11 @@ impl<'a> HashMap<'a> {
             );
             return MethodValue::Error(exc);
         }
-        return MethodValue::Some(res.unwrap().clone());
+        MethodValue::Some(res.unwrap().clone())
     }
 
     pub fn len(&self) -> usize {
-        return self.values.len();
+        self.values.len()
     }
 }
 
@@ -105,9 +111,7 @@ impl<'a> Iterator for HMapIter<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let key = self.keys.get(self.i);
-        if key.is_none() {
-            return None;
-        }
+        key?;
         return Some((
             self.keymap.get(key.unwrap()).unwrap().clone(),
             self.values.get(key.unwrap()).unwrap().clone(),
@@ -121,7 +125,7 @@ impl<'a> IntoIterator for &HashMap<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         return HMapIter {
-            keys: self.values.keys().map(|x| x.clone()).collect(),
+            keys: self.values.keys().copied().collect(),
             values: self.values.clone(),
             keymap: self.keymap.clone(),
             i: 0,

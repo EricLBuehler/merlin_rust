@@ -154,11 +154,7 @@ impl<'a> Compiler<'a> {
         Arc::new(Bytecode {
             instructions: self.instructions.clone(),
             consts: self.consts.clone(),
-            names: self
-                .names
-                .iter()
-                .map(|(k, v)| (v.clone(), k.clone()))
-                .collect(),
+            names: self.names.iter().map(|(k, v)| (*v, k.clone())).collect(),
             positions: self.positions.clone(),
             n_registers: self.register_max,
             n_variables: self.names.len() as i32,
@@ -599,15 +595,14 @@ impl<'a> Compiler<'a> {
                     *ctx.leftctx.unwrap(),
                 );
 
-                let idx;
-                if self.names.contains_key(
+                let idx = if self.names.contains_key(
                     expr.data
                         .get_data()
                         .raw
                         .get("name")
                         .expect("Node.raw.name not found"),
                 ) {
-                    idx = *self
+                    *self
                         .names
                         .get(
                             expr.data
@@ -616,7 +611,7 @@ impl<'a> Compiler<'a> {
                                 .get("name")
                                 .expect("Node.raw.name not found"),
                         )
-                        .unwrap();
+                        .unwrap()
                 } else {
                     self.names.insert(
                         expr.data
@@ -627,8 +622,8 @@ impl<'a> Compiler<'a> {
                             .clone(),
                         self.names.len() as i32,
                     );
-                    idx = (self.names.len() - 1) as i32;
-                }
+                    (self.names.len() - 1) as i32
+                };
 
                 self.instructions.push(CompilerInstruction::CopyRegister {
                     from: ctx.left.unwrap(),

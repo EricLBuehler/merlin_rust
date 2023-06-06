@@ -1,8 +1,8 @@
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, is_instance, stringobject,
+    boolobject, create_object_from_type, finalize_type, intobject, stringobject,
     utils, ExcData, MethodType, MethodValue, Object, ObjectInternals, RawObject,
 };
-use crate::Arc;
+use crate::{Arc, is_type_exact};
 use crate::{interpreter::VM, parser::Position};
 
 fn exc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
@@ -20,7 +20,7 @@ fn exc_hash(selfv: Object<'_>) -> MethodType<'_> {
 fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        is_instance(&selfv, &other),
+        is_type_exact!(&selfv, &other),
     ))
 }
 
@@ -100,7 +100,7 @@ fn nameexc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -
 }
 fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
     let repr = utils::object_str_safe(
-        &selfv
+        selfv
             .internals
             .get_exc()
             .expect("Expected exc internal value")
@@ -129,7 +129,7 @@ fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
 fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        is_instance(&selfv, &other),
+        is_type_exact!(&selfv, &other),
     ))
 }
 
@@ -216,7 +216,7 @@ fn overflowexc_new<'a>(
 }
 fn overflowexc_repr(selfv: Object<'_>) -> MethodType<'_> {
     let repr = utils::object_str_safe(
-        &selfv
+        selfv
             .internals
             .get_exc()
             .expect("Expected exc internal value")
@@ -245,7 +245,7 @@ fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
 fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        is_instance(&selfv, &other),
+        is_type_exact!(&selfv, &other),
     ))
 }
 
@@ -269,6 +269,582 @@ pub fn init_overflowexc<'a>(vm: Arc<VM<'a>>) {
         hash_fn: Some(overflowexc_hash),
 
         eq: Some(overflowexc_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+
+        get: None,
+        set: None,
+        len: None,
+
+        call: None,
+    });
+
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
+}
+
+// =====================
+
+#[allow(dead_code)]
+pub fn methodnotdefinedexc_from_obj<'a>(
+    vm: Arc<VM<'a>>,
+    obj: Object<'a>,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("MethodNotDefinedExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+pub fn methodnotdefinedexc_from_str<'a>(
+    vm: Arc<VM<'a>>,
+    raw: &str,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("MethodNotDefinedExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData {
+            obj: stringobject::string_from(vm.clone(), raw.to_string()),
+            start,
+            end,
+        });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+
+fn methodnotdefinedexc_new<'a>(
+    _selfv: Object<'a>,
+    _args: Object<'a>,
+    _kwargs: Object<'a>,
+) -> MethodType<'a> {
+    unimplemented!();
+}
+fn methodnotdefinedexc_repr(selfv: Object<'_>) -> MethodType<'_> {
+    let repr = utils::object_str_safe(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    );
+    if !repr.is_some() {
+        return MethodValue::NotImplemented;
+    }
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("MethodNotDefinedExc: \"{}\"", repr.unwrap()),
+    ))
+}
+fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    )
+}
+fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+}
+fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_type_exact!(&selfv, &other),
+    ))
+}
+
+pub fn init_methodnotdefinedexc<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+        tp: super::ObjectType::Other(vm.get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("MethodNotDefinedExc"),
+        bases: vec![
+            super::ObjectBase::Other(vm.get_type("Exception")),
+            super::ObjectBase::Other(vm.get_type("object")),
+        ],
+        vm: vm.clone(),
+
+        new: Some(methodnotdefinedexc_new),
+
+        repr: Some(methodnotdefinedexc_repr),
+        str: Some(methodnotdefinedexc_str),
+        abs: None,
+        neg: None,
+        hash_fn: Some(methodnotdefinedexc_hash),
+
+        eq: Some(methodnotdefinedexc_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+
+        get: None,
+        set: None,
+        len: None,
+
+        call: None,
+    });
+
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
+}
+
+// =====================
+
+#[allow(dead_code)]
+pub fn typemismatchexc_from_obj<'a>(
+    vm: Arc<VM<'a>>,
+    obj: Object<'a>,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("TypeMismatchExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+pub fn typemismatchexc_from_str<'a>(
+    vm: Arc<VM<'a>>,
+    raw: &str,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("TypeMismatchExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData {
+            obj: stringobject::string_from(vm.clone(), raw.to_string()),
+            start,
+            end,
+        });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+
+fn typemismatchexc_new<'a>(
+    _selfv: Object<'a>,
+    _args: Object<'a>,
+    _kwargs: Object<'a>,
+) -> MethodType<'a> {
+    unimplemented!();
+}
+fn typemismatchexc_repr(selfv: Object<'_>) -> MethodType<'_> {
+    let repr = utils::object_str_safe(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    );
+    if !repr.is_some() {
+        return MethodValue::NotImplemented;
+    }
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("TypeMismatchExc: \"{}\"", repr.unwrap()),
+    ))
+}
+fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    )
+}
+fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+}
+fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_type_exact!(&selfv, &other),
+    ))
+}
+
+pub fn init_typemismatchexc<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+        tp: super::ObjectType::Other(vm.get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("TypeMismatchExc"),
+        bases: vec![
+            super::ObjectBase::Other(vm.get_type("Exception")),
+            super::ObjectBase::Other(vm.get_type("object")),
+        ],
+        vm: vm.clone(),
+
+        new: Some(typemismatchexc_new),
+
+        repr: Some(typemismatchexc_repr),
+        str: Some(typemismatchexc_str),
+        abs: None,
+        neg: None,
+        hash_fn: Some(typemismatchexc_hash),
+
+        eq: Some(typemismatchexc_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+
+        get: None,
+        set: None,
+        len: None,
+
+        call: None,
+    });
+
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
+}
+
+// =====================
+
+#[allow(dead_code)]
+pub fn keynotfoundexc_from_obj<'a>(
+    vm: Arc<VM<'a>>,
+    obj: Object<'a>,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("KeyNotFoundExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+pub fn keynotfoundexc_from_str<'a>(
+    vm: Arc<VM<'a>>,
+    raw: &str,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("KeyNotFoundExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData {
+            obj: stringobject::string_from(vm.clone(), raw.to_string()),
+            start,
+            end,
+        });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+
+fn keynotfoundexc_new<'a>(
+    _selfv: Object<'a>,
+    _args: Object<'a>,
+    _kwargs: Object<'a>,
+) -> MethodType<'a> {
+    unimplemented!();
+}
+fn keynotfoundexc_repr(selfv: Object<'_>) -> MethodType<'_> {
+    let repr = utils::object_str_safe(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    );
+    if !repr.is_some() {
+        return MethodValue::NotImplemented;
+    }
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("KeyNotFoundExc: \"{}\"", repr.unwrap()),
+    ))
+}
+fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    )
+}
+fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+}
+fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_type_exact!(&selfv, &other),
+    ))
+}
+
+pub fn init_keynotfoundexc<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+        tp: super::ObjectType::Other(vm.get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("KeyNotFoundExc"),
+        bases: vec![
+            super::ObjectBase::Other(vm.get_type("Exception")),
+            super::ObjectBase::Other(vm.get_type("object")),
+        ],
+        vm: vm.clone(),
+
+        new: Some(keynotfoundexc_new),
+
+        repr: Some(keynotfoundexc_repr),
+        str: Some(keynotfoundexc_str),
+        abs: None,
+        neg: None,
+        hash_fn: Some(keynotfoundexc_hash),
+
+        eq: Some(keynotfoundexc_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+
+        get: None,
+        set: None,
+        len: None,
+
+        call: None,
+    });
+
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
+}
+
+// =====================
+
+#[allow(dead_code)]
+pub fn valueexc_from_obj<'a>(
+    vm: Arc<VM<'a>>,
+    obj: Object<'a>,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("ValueExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+pub fn valueexc_from_str<'a>(
+    vm: Arc<VM<'a>>,
+    raw: &str,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("ValueExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData {
+            obj: stringobject::string_from(vm.clone(), raw.to_string()),
+            start,
+            end,
+        });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+
+fn valueexc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
+    unimplemented!();
+}
+fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
+    let repr = utils::object_str_safe(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    );
+    if !repr.is_some() {
+        return MethodValue::NotImplemented;
+    }
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("ValueExc: \"{}\"", repr.unwrap()),
+    ))
+}
+fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    )
+}
+fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+}
+fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_type_exact!(&selfv, &other),
+    ))
+}
+
+pub fn init_valueexc<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+        tp: super::ObjectType::Other(vm.get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("ValueExc"),
+        bases: vec![
+            super::ObjectBase::Other(vm.get_type("Exception")),
+            super::ObjectBase::Other(vm.get_type("object")),
+        ],
+        vm: vm.clone(),
+
+        new: Some(valueexc_new),
+
+        repr: Some(valueexc_repr),
+        str: Some(valueexc_str),
+        abs: None,
+        neg: None,
+        hash_fn: Some(valueexc_hash),
+
+        eq: Some(valueexc_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+
+        get: None,
+        set: None,
+        len: None,
+
+        call: None,
+    });
+
+    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+
+    finalize_type(tp);
+}
+
+// =====================
+
+#[allow(dead_code)]
+pub fn zerodivexc_from_obj<'a>(
+    vm: Arc<VM<'a>>,
+    obj: Object<'a>,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("DivisionByZeroExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+pub fn zerodivexc_from_str<'a>(
+    vm: Arc<VM<'a>>,
+    raw: &str,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let tp = create_object_from_type(vm.get_type("DivisionByZeroExc"));
+    unsafe {
+        let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
+        (*refr).internals = ObjectInternals::Exc(ExcData {
+            obj: stringobject::string_from(vm.clone(), raw.to_string()),
+            start,
+            end,
+        });
+        Arc::from_raw(refr);
+    }
+    tp
+}
+
+fn zerodivexc_new<'a>(
+    _selfv: Object<'a>,
+    _args: Object<'a>,
+    _kwargs: Object<'a>,
+) -> MethodType<'a> {
+    unimplemented!();
+}
+fn zerodivexc_repr(selfv: Object<'_>) -> MethodType<'_> {
+    let repr = utils::object_str_safe(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    );
+    if !repr.is_some() {
+        return MethodValue::NotImplemented;
+    }
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("DivisionByZeroExc: \"{}\"", repr.unwrap()),
+    ))
+}
+fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(
+        selfv
+            .internals
+            .get_exc()
+            .expect("Expected exc internal value")
+            .obj,
+    )
+}
+fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+}
+fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_type_exact!(&selfv, &other),
+    ))
+}
+
+pub fn init_zerodivexc<'a>(vm: Arc<VM<'a>>) {
+    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+        tp: super::ObjectType::Other(vm.get_type("type")),
+        internals: super::ObjectInternals::No,
+        typename: String::from("DivisionByZeroExc"),
+        bases: vec![
+            super::ObjectBase::Other(vm.get_type("Exception")),
+            super::ObjectBase::Other(vm.get_type("object")),
+        ],
+        vm: vm.clone(),
+
+        new: Some(zerodivexc_new),
+
+        repr: Some(zerodivexc_repr),
+        str: Some(zerodivexc_str),
+        abs: None,
+        neg: None,
+        hash_fn: Some(zerodivexc_hash),
+
+        eq: Some(zerodivexc_eq),
         add: None,
         sub: None,
         mul: None,

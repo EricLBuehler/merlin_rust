@@ -1,8 +1,11 @@
+use super::exceptionobject::valueexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, intobject, is_instance, utils, MethodType, MethodValue,
-    Object, RawObject,
+    create_object_from_type, finalize_type, intobject, utils, MethodType,
+    MethodValue, Object, RawObject,
 };
-use crate::Arc;
+use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
+use crate::parser::Position;
+use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
@@ -25,7 +28,7 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
         .get_arr()
         .expect("Expected arr internal value")
     {
-        let repr = utils::object_repr_safe(item);
+        let repr = utils::object_repr_safe(item.clone());
         if !repr.is_some() {
             return MethodValue::NotImplemented;
         }
@@ -41,7 +44,16 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&other, &selfv.vm.get_type("int")));
+    if !is_type_exact!(&other, &selfv.vm.get_type("int")) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            &format!("Expected 'int' index, got '{}'", other.typename),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = selfv
         .internals
@@ -54,24 +66,74 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
                 .expect("Expected int internal value"))
             .unsigned_abs() as usize,
         );
-    debug_assert!(out.is_some());
+
+    if out.is_none() {
+        let exc = valueexc_from_str(
+            selfv.vm.clone(),
+            &format!(
+                "Index out of range: maximum index is '{}', but got '{}'",
+                selfv
+                    .internals
+                    .get_arr()
+                    .expect("Expected arr internal value")
+                    .len(),
+                (*other
+                    .internals
+                    .get_int()
+                    .expect("Expected int internal value"))
+                .unsigned_abs()
+            ),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
     MethodValue::Some(out.unwrap().clone())
 }
 fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&other, &selfv.vm.get_type("int")));
+    if is_type_exact!(&other, &selfv.vm.get_type("int")) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            &format!("Expected 'int' index, got '{}'", other.typename),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     //NEGATIVE INDEX IS CONVERTED TO +
-    debug_assert!(
-        ((*other
+    if ((*other
+        .internals
+        .get_int()
+        .expect("Expected int internal value"))
+    .unsigned_abs() as usize)
+        >= selfv
             .internals
-            .get_int()
-            .expect("Expected int internal value"))
-        .unsigned_abs() as usize)
-            < selfv
-                .internals
-                .get_arr()
-                .expect("Expected arr internal value")
-                .len()
-    );
+            .get_arr()
+            .expect("Expected arr internal value")
+            .len()
+    {
+        let exc = valueexc_from_str(
+            selfv.vm.clone(),
+            &format!(
+                "Index out of range: maximum index is '{}', but got '{}'",
+                selfv
+                    .internals
+                    .get_arr()
+                    .expect("Expected arr internal value")
+                    .len(),
+                (*other
+                    .internals
+                    .get_int()
+                    .expect("Expected int internal value"))
+                .unsigned_abs()
+            ),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     let mut arr = selfv
         .internals
         .get_arr()
@@ -98,38 +160,56 @@ fn list_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected arr internal value")
         .len()
         .try_into();
-    debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
 fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
-    debug_assert!(
-        selfv
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
+    if selfv
+        .internals
+        .get_arr()
+        .expect("Expected arr internal value")
+        .len()
+        != other
             .internals
             .get_arr()
             .expect("Expected arr internal value")
             .len()
-            == other
-                .internals
-                .get_arr()
-                .expect("Expected arr internal value")
-                .len()
-    );
+    {
+        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
+    }
     for idx in 0..selfv
         .internals
         .get_arr()
         .expect("Expected arr internal value")
         .len()
     {
-        debug_assert!(selfv
+        if selfv
             .internals
             .get_arr()
             .expect("Expected arr internal value")
             .get(idx)
             .unwrap()
             .eq
-            .is_some());
+            .is_none()
+        {
+            let exc = methodnotdefinedexc_from_str(
+                selfv.vm.clone(),
+                "Method 'eq' is not defined for value",
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
+        }
         let v = selfv
             .internals
             .get_arr()
@@ -146,8 +226,19 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
                 .unwrap()
                 .clone(),
         );
-        debug_assert!(res.is_some());
-        debug_assert!(is_instance(&res.unwrap(), &selfv.vm.get_type("bool")));
+        if res.is_error() {
+            return res;
+        }
+        if !is_type_exact!(&res.unwrap(), &selfv.vm.get_type("bool")) {
+            let exc = typemismatchexc_from_str(
+                selfv.vm.clone(),
+                "Method 'eq' did not return 'bool'",
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
+        }
+
         if *res
             .unwrap()
             .internals

@@ -1,7 +1,10 @@
+use super::exceptionobject::typemismatchexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, is_instance, MethodType, MethodValue, Object, RawObject,
+    create_object_from_type, finalize_type, MethodType, MethodValue, Object,
+    RawObject,
 };
-use crate::Arc;
+use crate::parser::Position;
+use crate::{Arc, is_type_exact};
 use crate::{
     compiler::Bytecode,
     interpreter::VM,
@@ -25,7 +28,16 @@ fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
         selfv

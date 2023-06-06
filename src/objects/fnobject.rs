@@ -1,9 +1,12 @@
+use super::exceptionobject::valueexc_from_str;
 use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject};
 
-use crate::Arc;
+use crate::objects::exceptionobject::typemismatchexc_from_str;
+use crate::parser::Position;
+use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
-    objects::{boolobject, is_instance, stringobject, ObjectInternals},
+    objects::{boolobject, stringobject, ObjectInternals},
 };
 use itertools::izip;
 
@@ -57,20 +60,48 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&args, &selfv.vm.clone().get_type("list")));
+    if !is_type_exact!(&args, &selfv.vm.clone().get_type("list")) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Expected args to be a 'list'",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
 
-    debug_assert!(
-        args.internals
-            .get_arr()
-            .expect("Expected arr internal value")
+    if args
+        .internals
+        .get_arr()
+        .expect("Expected arr internal value")
+        .len()
+        != selfv
+            .internals
+            .get_fn()
+            .expect("Expected Fn internal value")
+            .args
             .len()
-            == selfv
-                .internals
-                .get_fn()
-                .expect("Expected Fn internal value")
-                .args
-                .len()
-    );
+    {
+        let exc = valueexc_from_str(
+            selfv.vm.clone(),
+            &format!(
+                "Expected {} arguments, got {}",
+                args.internals
+                    .get_arr()
+                    .expect("Expected arr internal value")
+                    .len(),
+                selfv
+                    .internals
+                    .get_fn()
+                    .expect("Expected Fn internal value")
+                    .args
+                    .len()
+            ),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
     let mut map = hashbrown::HashMap::new();
     for (value, index) in izip!(
         args.internals

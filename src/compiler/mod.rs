@@ -270,7 +270,7 @@ impl<'a> Compiler<'a> {
     }
 
     fn raise_exc_pos(&mut self, exc_obj: Object<'a>, start: Position, end: Position) -> ! {
-        let header: String = match object_repr_safe(&exc_obj) {
+        let header: String = match object_repr_safe(exc_obj) {
             crate::objects::MethodValue::Some(v) => v,
             _ => {
                 unimplemented!()

@@ -1,12 +1,13 @@
+use super::exceptionobject::{typemismatchexc_from_str, zerodivexc_from_str};
 use super::{
     boolobject, create_object_from_type, finalize_type, stringobject, MethodType, MethodValue,
     Object, ObjectInternals, RawObject,
 };
 
-use crate::Arc;
+use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
-    objects::{exceptionobject::overflowexc_from_str, is_instance},
+    objects::{exceptionobject::overflowexc_from_str},
     parser::Position,
 };
 use std::collections::hash_map::DefaultHasher;
@@ -70,12 +71,29 @@ fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
         .get_int()
         .expect("Expected int internal value")
         .checked_abs();
-    debug_assert!(res.is_some());
+    if res.is_none() {
+        let exc = overflowexc_from_str(
+            selfv.vm.clone(),
+            "int absolute value overflow (value is i128 minimum)",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
 
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
         selfv
@@ -108,7 +126,16 @@ fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     let otherv = *other
         .internals
         .get_int()
@@ -132,7 +159,15 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
 
     let otherv = *other
         .internals
@@ -157,7 +192,16 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     let otherv = *other
         .internals
         .get_int()
@@ -181,12 +225,29 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     let otherv = *other
         .internals
         .get_int()
         .expect("Expected int internal value");
-    debug_assert!(otherv != 0);
+    if otherv == 0 {
+        let exc = zerodivexc_from_str(
+            selfv.vm.clone(),
+            "Divison by 0",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
 
     let res = selfv
         .internals
@@ -206,13 +267,30 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
 }
 fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     let otherv = *other
         .internals
         .get_int()
         .expect("Expected int internal value");
 
-    debug_assert!(otherv < std::u32::MAX as i128);
+    if otherv >= std::u32::MAX as i128 {
+        let exc = overflowexc_from_str(
+            selfv.vm.clone(),
+            "Power is too large",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
 
     let res = selfv
         .internals

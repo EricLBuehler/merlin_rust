@@ -3,9 +3,12 @@ use std::hash::{Hash, Hasher};
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::interpreter::VM;
-use crate::objects::{boolobject, intobject, is_instance};
-use crate::Arc;
+use crate::objects::exceptionobject::valueexc_from_str;
+use crate::objects::{boolobject, intobject};
+use crate::parser::Position;
+use crate::{Arc, is_type_exact};
 
+use super::exceptionobject::typemismatchexc_from_str;
 use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, ObjectInternals,
     RawObject,
@@ -45,7 +48,16 @@ fn string_str(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
         selfv
@@ -60,7 +72,16 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    is_instance(&other, &selfv.vm.get_type("int"));
+    if !is_type_exact!(&other, &selfv.vm.get_type("int")) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            &format!("Expected 'int' index, got '{}'", other.typename),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = UnicodeSegmentation::graphemes(
         selfv
@@ -77,7 +98,28 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .expect("Expected int internal value"))
         .unsigned_abs() as usize,
     );
-    debug_assert!(out.is_some());
+
+    if out.is_none() {
+        let exc = valueexc_from_str(
+            selfv.vm.clone(),
+            &format!(
+                "Index out of range: maximum index is '{}', but got '{}'",
+                selfv
+                    .internals
+                    .get_str()
+                    .expect("Expected str internal value")
+                    .len(),
+                (*other
+                    .internals
+                    .get_int()
+                    .expect("Expected int internal value"))
+                .unsigned_abs()
+            ),
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
     MethodValue::Some(string_from(selfv.vm.clone(), out.unwrap().to_string()))
 }
 fn string_len(selfv: Object<'_>) -> MethodType<'_> {
@@ -87,7 +129,6 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected str internal value")
         .len()
         .try_into();
-    debug_assert!(convert.is_ok());
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 

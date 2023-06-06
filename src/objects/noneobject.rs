@@ -1,8 +1,8 @@
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, is_instance, MethodType,
+    boolobject, create_object_from_type, finalize_type, intobject, MethodType,
     MethodValue, Object, ObjectInternals, RawObject,
 };
-use crate::Arc;
+use crate::{Arc, is_type_exact};
 use crate::{interpreter::VM, objects::stringobject};
 
 #[macro_export]
@@ -27,7 +27,7 @@ fn none_hash(selfv: Object<'_>) -> MethodType<'_> {
 fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        is_instance(&selfv, &other),
+        is_type_exact!(&selfv, &other),
     ))
 }
 

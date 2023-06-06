@@ -4,6 +4,7 @@ use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
 };
+pub mod mhash;
 
 pub mod utils;
 
@@ -109,23 +110,6 @@ impl<'a> PartialEq for RawObject<'a> {
     }
 }
 
-impl<'a> Hash for RawObject<'a> {
-    #[inline]
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        debug_assert!(self.hash_fn.is_some());
-        let res = (self.hash_fn.expect("Hash function not found"))(Arc::new(self.clone()));
-        debug_assert!(res.is_some());
-        debug_assert!(is_instance(&res.unwrap(), &self.vm.get_type("int")));
-
-        state.write_i128(
-            *res.unwrap()
-                .internals
-                .get_int()
-                .expect("Expected int internal value"),
-        );
-    }
-}
-
 pub type Object<'a> = Arc<RawObject<'a>>;
 pub type MethodType<'a> = MethodValue<Object<'a>, Object<'a>>;
 
@@ -153,7 +137,7 @@ pub enum ObjectInternals<'a> {
     Int(i128),
     Str(String),
     Arr(Vec<Object<'a>>),
-    Map(hashbrown::HashMap<Object<'a>, Object<'a>>),
+    Map(mhash::HashMap<'a>),
     Code(Arc<Bytecode<'a>>),
     Fn(FnData<'a>),
     Exc(ExcData<'a>),
@@ -232,7 +216,7 @@ impl<'a> ObjectInternals<'a> {
         matches!(self, ObjectInternals::Map(_))
     }
     #[inline]
-    pub fn get_map(&self) -> Option<&hashbrown::HashMap<Object<'a>, Object<'a>>> {
+    pub fn get_map(&self) -> Option<&mhash::HashMap<'a>> {
         match self {
             ObjectInternals::Map(v) => Some(v),
             _ => None,
@@ -330,17 +314,13 @@ fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
     Arc::new(obj)
 }
 
-#[inline]
-fn get_typeid(selfv: Object<'_>) -> u64 {
-    let mut hasher = DefaultHasher::new();
-    selfv.typename.hash(&mut hasher);
-    hasher.finish()
+#[macro_export]
+macro_rules! is_type_exact {
+    ($self:expr, $other:expr) => {
+        $self.typename == $other.typename
+    };
 }
 
-#[inline]
-fn is_instance<'a>(selfv: &Object<'a>, other: &Object<'a>) -> bool {
-    get_typeid(selfv.clone()) == get_typeid(other.clone())
-}
 
 fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
     tp.new = basetp.new;
@@ -394,6 +374,11 @@ pub fn init_types(vm: Arc<VM<'_>>) {
     exceptionobject::init_exc(vm.clone());
     exceptionobject::init_nameexc(vm.clone());
     exceptionobject::init_overflowexc(vm.clone());
+    exceptionobject::init_methodnotdefinedexc(vm.clone());
+    exceptionobject::init_typemismatchexc(vm.clone());
+    exceptionobject::init_keynotfoundexc(vm.clone());
+    exceptionobject::init_valueexc(vm.clone());
+    exceptionobject::init_zerodivexc(vm.clone());
 }
 
 macro_rules! maybe_handle_exception {

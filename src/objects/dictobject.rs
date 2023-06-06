@@ -1,18 +1,19 @@
+use super::mhash::HashMap;
 use super::{
-    create_object_from_type, finalize_type, intobject, is_instance, utils, MethodType, MethodValue,
-    Object, RawObject,
+    create_object_from_type, finalize_type, intobject, utils, MethodType,
+    MethodValue, Object, RawObject,
 };
-use crate::Arc;
+
+use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
+use crate::parser::Position;
+use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
 
 #[allow(dead_code)]
-pub fn dict_from<'a>(
-    vm: Arc<VM<'a>>,
-    raw: hashbrown::HashMap<Object<'a>, Object<'a>>,
-) -> Object<'a> {
+pub fn dict_from<'a>(vm: Arc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
     let tp = create_object_from_type(vm.get_type("dict"));
     unsafe {
         let refr = Arc::into_raw(tp.clone()) as *mut RawObject<'a>;
@@ -31,6 +32,8 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
         .internals
         .get_map()
         .expect("Expected map internal value")
+        .clone()
+        .into_iter()
     {
         let repr = utils::object_repr_safe(key);
         if !repr.is_some() {
@@ -54,14 +57,26 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    is_instance(&other, &selfv.vm.get_type("int"));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = selfv
         .internals
         .get_map()
         .expect("Expected map internal value")
-        .get(&other);
-    debug_assert!(out.is_some());
+        .get(other);
+
+    if out.is_error() {
+        return MethodValue::Error(out.unwrap_err());
+    }
     MethodValue::Some(out.unwrap().clone())
 }
 
@@ -90,42 +105,81 @@ fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected map internal value")
         .len()
         .try_into();
-    debug_assert!(convert.is_ok());
+
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
 fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
-    debug_assert!(
-        selfv
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
+    if selfv
+        .internals
+        .get_map()
+        .expect("Expected map internal value")
+        .len()
+        != other
             .internals
             .get_map()
             .expect("Expected map internal value")
             .len()
-            == other
-                .internals
-                .get_map()
-                .expect("Expected map internal value")
-                .len()
-    );
+    {
+        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
+    }
     for ((key1, value1), (key2, value2)) in std::iter::zip(
         selfv
             .internals
             .get_map()
-            .expect("Expected map internal value"),
+            .expect("Expected map internal value")
+            .clone()
+            .into_iter(),
         other
             .internals
             .get_map()
-            .expect("Expected map internal value"),
+            .expect("Expected map internal value")
+            .clone()
+            .into_iter(),
     ) {
-        debug_assert!(key1.eq.is_some());
-        debug_assert!(value1.eq.is_some());
-        debug_assert!(key2.eq.is_some());
-        debug_assert!(value2.eq.is_some());
+        if key1.eq.is_none() {
+            let exc = methodnotdefinedexc_from_str(
+                selfv.vm.clone(),
+                "Method 'eq' is not defined for key 1",
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
+        }
+        if value1.eq.is_none() {
+            let exc = methodnotdefinedexc_from_str(
+                selfv.vm.clone(),
+                "Method 'eq' is not defined for value 1",
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
+        }
 
         let res = (key1.eq.expect("Method is not defined"))(key1.clone(), key2.clone());
-        debug_assert!(res.is_some());
-        debug_assert!(is_instance(&res.unwrap(), &selfv.vm.get_type("bool")));
+        if res.is_error() {
+            return res;
+        }
+        if !is_type_exact!(&res.unwrap(), &selfv.vm.get_type("bool")) {
+            let exc = typemismatchexc_from_str(
+                selfv.vm.clone(),
+                "Method 'eq' did not return 'bool'",
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
+        }
+
         if *res
             .unwrap()
             .internals
@@ -137,8 +191,19 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
         let res: MethodValue<Arc<RawObject<'a>>, Arc<RawObject<'a>>> =
             (value1.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
-        debug_assert!(res.is_some());
-        debug_assert!(is_instance(&res.unwrap(), &selfv.vm.get_type("bool")));
+        if res.is_error() {
+            return res;
+        }
+        if !is_type_exact!(&res.unwrap(), &selfv.vm.get_type("bool")) {
+            let exc = typemismatchexc_from_str(
+                selfv.vm.clone(),
+                "Method 'eq' did not return 'bool'",
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
+        }
+
         if *res
             .unwrap()
             .internals

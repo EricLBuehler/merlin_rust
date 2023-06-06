@@ -2,7 +2,7 @@ use crate::interpreter::VM;
 use crate::Arc;
 
 use super::{
-    boolobject, create_object_from_type, finalize_type, get_typeid, intobject, stringobject,
+    boolobject, create_object_from_type, finalize_type, intobject, stringobject,
     MethodType, MethodValue, Object, RawObject,
 };
 
@@ -18,7 +18,7 @@ fn type_repr(selfv: Object<'_>) -> MethodType<'_> {
 fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        get_typeid(selfv) == get_typeid(other),
+        selfv.typename == other.typename,
     ))
 }
 

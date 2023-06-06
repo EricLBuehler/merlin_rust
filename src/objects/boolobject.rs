@@ -1,7 +1,9 @@
-use crate::Arc;
+use crate::objects::exceptionobject::typemismatchexc_from_str;
+use crate::parser::Position;
+use crate::{Arc, is_type_exact};
 use crate::{
     interpreter::VM,
-    objects::{boolobject, is_instance, stringobject},
+    objects::{boolobject, stringobject},
 };
 
 use super::{
@@ -30,7 +32,16 @@ fn bool_repr(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    debug_assert!(is_instance(&selfv, &other));
+    if !is_type_exact!(&selfv, &other) {
+        let exc = typemismatchexc_from_str(
+            selfv.vm.clone(),
+            "Types do not match",
+            Position::default(),
+            Position::default(),
+        );
+        return MethodValue::Error(exc);
+    }
+
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
         selfv

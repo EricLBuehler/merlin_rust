@@ -1,3 +1,3 @@
 When contributing to Merlin, please keep the following in mind:
 
-- Use `cargo fmt` and comply with `cargo clippy` before submitting code
+- Run `make fmt` to ensure that the code base is standardized

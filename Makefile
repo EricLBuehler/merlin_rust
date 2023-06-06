@@ -22,3 +22,7 @@ backtrace: $(file)
 clean:
 	cargo clean
 	rm merlin
+
+fmt:
+	cargo clippy --fix
+	cargo fmt

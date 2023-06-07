@@ -18,27 +18,29 @@ pub enum TokenType {
     RCurly,
     Keyword,
     Comma,
+    String,
 }
 
 impl std::fmt::Display for TokenType {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
-            TokenType::Decimal => write!(f, "decimal"),
-            TokenType::Newline => write!(f, "newline"),
-            TokenType::Unknown => write!(f, "UNKNOWN"),
-            TokenType::Plus => write!(f, "plus"),
-            TokenType::Eof => write!(f, "EOF"),
-            TokenType::Asterisk => write!(f, "asterisk"),
-            TokenType::Slash => write!(f, "slash"),
-            TokenType::Hyphen => write!(f, "hyphen"),
-            TokenType::Equals => write!(f, "equals"),
-            TokenType::Identifier => write!(f, "identifier"),
-            TokenType::LParen => write!(f, "l-paren"),
-            TokenType::RParen => write!(f, "r-paren"),
-            TokenType::LCurly => write!(f, "l-curly"),
-            TokenType::RCurly => write!(f, "r-curly"),
-            TokenType::Keyword => write!(f, "keyword"),
-            TokenType::Comma => write!(f, "comma"),
+            Self::Decimal => write!(f, "decimal"),
+            Self::Newline => write!(f, "newline"),
+            Self::Unknown => write!(f, "UNKNOWN"),
+            Self::Plus => write!(f, "plus"),
+            Self::Eof => write!(f, "EOF"),
+            Self::Asterisk => write!(f, "asterisk"),
+            Self::Slash => write!(f, "slash"),
+            Self::Hyphen => write!(f, "hyphen"),
+            Self::Equals => write!(f, "equals"),
+            Self::Identifier => write!(f, "identifier"),
+            Self::LParen => write!(f, "l-paren"),
+            Self::RParen => write!(f, "r-paren"),
+            Self::LCurly => write!(f, "l-curly"),
+            Self::RCurly => write!(f, "r-curly"),
+            Self::Keyword => write!(f, "keyword"),
+            Self::Comma => write!(f, "comma"),
+            Self::String => write!(f, "string"),
         }
     }
 }
@@ -64,6 +66,8 @@ impl<'a> Iterator for Lexer<'a> {
             Some(make_decimal(self))
         } else if cur.is_alphabetic() {
             Some(make_identifier(self))
+        } else if cur == '"' {
+            Some(make_string(self))
         } else if cur == '\n' {
             Some(add_char_token(self, cur, TokenType::Newline))
         } else if cur == '#' {
@@ -245,5 +249,35 @@ fn make_identifier(lexer: &mut Lexer) -> Token {
         line,
         startcol: start,
         endcol: end + 1,
+    }
+}
+
+
+fn make_string(lexer: &mut Lexer) -> Token {
+    let mut data = String::from("");
+    let start = lexer.col;
+
+    let mut end = lexer.col;
+    let mut line = lexer.line;
+    advance(lexer);
+
+    while (lexer.current as char).is_alphanumeric() && (lexer.current as char) != '"' {
+        data.push(lexer.current as char);
+        end = lexer.col;
+        line = lexer.line;
+        advance(lexer);
+        if lexer.current == b'.' {
+            data.push(lexer.current as char);
+            advance(lexer);
+        }
+    }
+    advance(lexer);
+
+    Token {
+        data,
+        tp: TokenType::String,
+        line,
+        startcol: start,
+        endcol: end + 2,
     }
 }

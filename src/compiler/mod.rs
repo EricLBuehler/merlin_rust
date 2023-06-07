@@ -262,6 +262,10 @@ impl<'a> Compiler<'a> {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
+            NodeType::String => {
+                let ctx = self.compile_expr_values(expr);
+                self.compile_expr_operation(expr, ctx);
+            }
         }
     }
 
@@ -500,6 +504,19 @@ impl<'a> Compiler<'a> {
                 increment_reg_num!(self);
                 res
             }
+            NodeType::String => {
+                let res = RegisterContext {
+                    value: CompilerRegister::R(self.register_index),
+                    left: None,
+                    leftctx: None,
+                    right: None,
+                    rightctx: None,
+                    args: None,
+                    registers: 1,
+                };
+                increment_reg_num!(self);
+                res
+            }
             _ => {
                 unreachable!();
             }
@@ -702,6 +719,25 @@ impl<'a> Compiler<'a> {
                         unimplemented!();
                     }
                 }
+            }
+            NodeType::String => {
+                let str = stringobject::string_from(
+                    self.vm.clone(),
+                    expr.data
+                        .get_data()
+                        .raw
+                        .get("value")
+                        .expect("Node.raw.value not found")
+                        .to_string(),
+                );
+
+                self.consts.push(str);
+
+                self.instructions.push(CompilerInstruction::LoadConst {
+                    index: self.consts.len() - 1,
+                    register: ctx.value,
+                });
+                self.positions.push((expr.start, expr.end));
             }
         }
 

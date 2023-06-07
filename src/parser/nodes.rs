@@ -30,6 +30,7 @@ pub enum NodeType {
     Call,
     Return,
     Unary,
+    String,
 }
 
 #[derive(Debug)]
@@ -204,6 +205,23 @@ impl NodeData for UnaryNode {
         let mut value = NodeValue::new();
         value.nodes.insert(String::from("expr"), &self.expr);
         value.op = Some(self.op);
+
+        value
+    }
+}
+
+// ========================
+
+pub struct StringNode {
+    pub value: String,
+}
+
+impl NodeData for StringNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value
+            .raw
+            .insert(String::from("value"), self.value.to_owned());
 
         value
     }

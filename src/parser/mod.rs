@@ -200,6 +200,7 @@ impl<'a> Parser<'a> {
             || matches!(self.current.tp, TokenType::Identifier)
             || matches!(self.current.tp, TokenType::Hyphen)
             || matches!(self.current.tp, TokenType::LParen)
+            || matches!(self.current.tp, TokenType::String)
     }
 
     fn atom(&mut self) -> Option<Node> {
@@ -208,6 +209,7 @@ impl<'a> Parser<'a> {
             TokenType::Identifier => Some(self.generate_identifier()),
             TokenType::Hyphen => Some(self.generate_negate()),
             TokenType::LParen => Some(self.generate_grouped()),
+            TokenType::String => Some(self.generate_string()),
             _ => None,
         }
     }
@@ -225,7 +227,7 @@ impl<'a> Parser<'a> {
     fn expr(&mut self, precedence: Precedence) -> Node {
         let mut left;
 
-        let atomics = vec!["decimal", "identifier", "-"];
+        let atomics = vec!["decimal", "identifier", "-", "(", "string"];
 
         match self.atom() {
             None => self.raise_error(
@@ -368,6 +370,25 @@ impl<'a> Parser<'a> {
     fn generate_grouped(&mut self) -> Node {
         self.advance();
         self.expr(Precedence::Lowest)
+    }
+
+    fn generate_string(&mut self) -> Node {
+        nodes::Node::new(
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::String,
+            Box::new(nodes::StringNode {
+                value: self.current.data.to_owned(),
+            }),
+        )
     }
 
     // ============ Expr ==============

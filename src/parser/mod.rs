@@ -201,6 +201,7 @@ impl<'a> Parser<'a> {
             || matches!(self.current.tp, TokenType::Hyphen)
             || matches!(self.current.tp, TokenType::LParen)
             || matches!(self.current.tp, TokenType::String)
+            || matches!(self.current.tp, TokenType::LCurly)
     }
 
     fn atom(&mut self) -> Option<Node> {
@@ -211,6 +212,7 @@ impl<'a> Parser<'a> {
             TokenType::LParen => Some(self.generate_grouped()),
             TokenType::String => Some(self.generate_string()),
             TokenType::LSquare => Some(self.generate_list()),
+            TokenType::LCurly => Some(self.generate_dict()),
             _ => None,
         }
     }
@@ -420,6 +422,42 @@ impl<'a> Parser<'a> {
             end,
             nodes::NodeType::List,
             Box::new(nodes::ListNode { values }),
+        )
+    }
+
+    fn generate_dict(&mut self) -> Node {
+        let start = Position::create_from_parts(
+            self.current.startcol,
+            self.current.endcol,
+            self.current.line,
+        );
+        self.advance();
+        let mut values = Vec::new();
+        while !self.current_is_type(TokenType::RCurly) && !self.current_is_type(TokenType::Eof) {
+            let key = self.expr(Precedence::Lowest);
+            self.expect(TokenType::Colon);
+            self.advance();
+            let value = self.expr(Precedence::Lowest);
+            values.push((key, value));
+
+            if self.current_is_type(TokenType::RCurly) {
+                self.advance();
+                break;
+            }
+            self.expect(TokenType::Comma);
+            self.advance();
+        }
+        let end = Position::create_from_parts(
+            self.current.startcol,
+            self.current.endcol,
+            self.current.line,
+        );
+
+        nodes::Node::new(
+            start,
+            end,
+            nodes::NodeType::Dict,
+            Box::new(nodes::DictNode { values }),
         )
     }
 

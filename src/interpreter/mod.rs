@@ -1,6 +1,7 @@
 // Interpret bytecode
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
+use crate::objects::{mhash, dictobject};
 use crate::parser::Position;
 use crate::Arc;
 use crate::{
@@ -695,6 +696,38 @@ impl<'a> Interpreter<'a> {
                     }
                     let list = listobject::list_from(self.vm.clone(), values);
                     store_register!(last, self.namespaces, *result, list);
+                }
+                CompilerInstruction::BuildDict {
+                    result,
+                    key_registers,
+                    value_registers,
+                } => {
+                    let last = self.frames.last_mut().expect("No frames");
+                    let mut map = mhash::HashMap::new();
+                    for (key, value) in std::iter::zip(key_registers, value_registers) {
+                        let key = load_register!(
+                            self,
+                            last,
+                            self.namespaces,
+                            bytecode,
+                            i,
+                            key.value
+                        );
+                        let value = load_register!(
+                            self,
+                            last,
+                            self.namespaces,
+                            bytecode,
+                            i,
+                            value.value
+                        );
+                        
+                        let res = map.insert(key, value);
+                        maybe_handle_exception!(self, res, bytecode, i);
+                    }
+                    let dict = dictobject::dict_from(self.vm.clone(), map);
+                    println!("{:?}", dict);
+                    store_register!(last, self.namespaces, *result, dict);
                 }
             }
         }

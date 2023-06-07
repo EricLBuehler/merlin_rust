@@ -32,6 +32,7 @@ pub enum NodeType {
     Unary,
     String,
     List,
+    Dict
 }
 
 #[derive(Debug)]
@@ -41,6 +42,7 @@ pub struct NodeValue<'a> {
     pub op: Option<OpType>,
     pub nodearr: Option<&'a Vec<Node>>,
     pub args: Option<Vec<String>>,
+    pub mapping: Option<&'a Vec<(Node, Node)>>,
 }
 
 pub trait NodeData {
@@ -61,6 +63,7 @@ impl<'a> NodeValue<'a> {
             op: None,
             nodearr: None,
             args: None,
+            mapping: None,
         }
     }
 }
@@ -238,6 +241,21 @@ impl NodeData for ListNode {
     fn get_data(&self) -> NodeValue {
         let mut value = NodeValue::new();
         value.nodearr = Some(&self.values);
+        value
+    }
+}
+
+
+// ========================
+
+pub struct DictNode {
+    pub values: Vec<(Node, Node)>,
+}
+
+impl NodeData for DictNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.mapping = Some(&self.values);
         value
     }
 }

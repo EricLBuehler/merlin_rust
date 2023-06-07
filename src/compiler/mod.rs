@@ -85,6 +85,11 @@ pub enum CompilerInstruction {
         result: CompilerRegister,
         value_registers: Vec<RegisterContext>,
     },
+    BuildDict {
+        result: CompilerRegister,
+        key_registers: Vec<RegisterContext>,
+        value_registers: Vec<RegisterContext>,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -132,6 +137,7 @@ pub struct RegisterContext {
     right: Option<CompilerRegister>,
     rightctx: Option<Box<RegisterContext>>,
     args: Option<Vec<RegisterContext>>,
+    mapping: Option<(Vec<RegisterContext>, Vec<RegisterContext>)>,
     registers: i32, //How many registers this instruction needs
 }
 
@@ -274,6 +280,10 @@ impl<'a> Compiler<'a> {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
+            NodeType::Dict => {
+                let ctx = self.compile_expr_values(expr);
+                self.compile_expr_operation(expr, ctx);
+            }
         }
     }
 
@@ -331,6 +341,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: None,
+                    mapping: None,
                     registers: 1,
                 };
                 increment_reg_num!(self);
@@ -361,6 +372,7 @@ impl<'a> Compiler<'a> {
                     right: Some(right.value),
                     rightctx: Some(Box::new(right)),
                     args: None,
+                    mapping: None,
                     registers: 1,
                 };
                 increment_reg_num!(self);
@@ -383,6 +395,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: None,
+                    mapping: None,
                     registers: 0,
                 }
             }
@@ -434,6 +447,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: None,
+                    mapping: None,
                     registers: 0,
                 }
             }
@@ -466,6 +480,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: Some(args),
+                    mapping: None,
                     registers: 1 + args_registers,
                 };
                 increment_reg_num!(self);
@@ -487,6 +502,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: None,
+                    mapping: None,
                     registers: 0,
                 }
             }
@@ -507,6 +523,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: None,
+                    mapping: None,
                     registers: 0,
                 };
                 increment_reg_num!(self);
@@ -520,6 +537,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: None,
+                    mapping: None,
                     registers: 1,
                 };
                 increment_reg_num!(self);
@@ -546,6 +564,47 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: Some(args),
+                    mapping: None,
+                    registers: 1 + args_registers,
+                };
+                increment_reg_num!(self);
+                res
+            }
+            NodeType::Dict => {
+                let mut args_registers = 0;
+
+                let mut keys = Vec::new();
+                for (arg, _) in expr
+                    .data
+                    .get_data()
+                    .mapping
+                    .expect("Node.mapping is not present")
+                {
+                    let arg = self.compile_expr_values(arg);
+                    args_registers += arg.registers;
+                    keys.push(arg);
+                }
+
+                let mut values = Vec::new();
+                for (_, arg) in expr
+                    .data
+                    .get_data()
+                    .mapping
+                    .expect("Node.mapping is not present")
+                {
+                    let arg = self.compile_expr_values(arg);
+                    args_registers += arg.registers;
+                    values.push(arg);
+                }
+
+                let res = RegisterContext {
+                    value: CompilerRegister::R(self.register_index),
+                    left: None,
+                    leftctx: None,
+                    right: None,
+                    rightctx: None,
+                    args: None,
+                    mapping: Some((keys, values)),
                     registers: 1 + args_registers,
                 };
                 increment_reg_num!(self);
@@ -785,6 +844,32 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::BuildList {
                     result: ctx.value,
                     value_registers: ctx.args.unwrap(),
+                });
+                self.positions.push((expr.start, expr.end));
+            }
+            NodeType::Dict => {
+                for ((key, _), keyctx) in izip!(
+                    expr.data
+                        .get_data()
+                        .mapping
+                        .expect("Node.mapping is not present"),
+                    &ctx.mapping.as_ref().unwrap().0
+                ) {
+                    self.compile_expr_operation(key, keyctx.clone());
+                }
+                for ((_, value), valuectx) in izip!(
+                    expr.data
+                        .get_data()
+                        .mapping
+                        .expect("Node.mapping is not present"),
+                    &ctx.mapping.as_ref().unwrap().1
+                ) {
+                    self.compile_expr_operation(value, valuectx.clone());
+                }
+                self.instructions.push(CompilerInstruction::BuildDict {
+                    result: ctx.value,
+                    key_registers: ctx.mapping.as_ref().unwrap().0.clone(),
+                    value_registers: ctx.mapping.unwrap().1,
                 });
                 self.positions.push((expr.start, expr.end));
             }

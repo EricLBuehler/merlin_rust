@@ -21,6 +21,7 @@ pub enum TokenType {
     String,
     LSquare,
     RSquare,
+    Colon,
 }
 
 impl std::fmt::Display for TokenType {
@@ -45,6 +46,7 @@ impl std::fmt::Display for TokenType {
             Self::String => write!(f, "string"),
             Self::LSquare => write!(f, "l-square"),
             Self::RSquare => write!(f, "r-square"),
+            Self::Colon => write!(f, "colon"),
         }
     }
 }
@@ -110,6 +112,8 @@ impl<'a> Iterator for Lexer<'a> {
             Some(add_char_token(self, cur, TokenType::LSquare))
         } else if cur == ']' {
             Some(add_char_token(self, cur, TokenType::RSquare))
+        } else if cur == ':' {
+            Some(add_char_token(self, cur, TokenType::Colon))
         } else if cur == '\0' {
             if self.len == 0 {
                 self.len = 1;

@@ -35,9 +35,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Run example program (debug)
-      run: cargo run -- program.me --time 1000
+      run: cargo run -- program.me
     - name: Run example program (release)
-      run: cargo run -r program.me
+      run: cargo run -r -- program.me --time 1000
       
   clippy:
     runs-on: ubuntu-latest

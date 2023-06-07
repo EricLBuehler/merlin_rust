@@ -31,7 +31,7 @@ impl<'a> HashMap<'a> {
         if key.hash_fn.is_none() {
             let exc = methodnotdefinedexc_from_str(
                 key.vm.clone(),
-                "Method 'hash' is not defined",
+                &format!("Method 'hash' is not defined for '{}' type", key.typename),
                 Position::default(),
                 Position::default(),
             );

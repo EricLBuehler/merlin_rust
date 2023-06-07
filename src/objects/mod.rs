@@ -1,3 +1,6 @@
+use std::fmt::Debug;
+
+use crate::objects::utils::object_repr;
 use crate::Arc;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
 pub mod mhash;
@@ -103,6 +106,12 @@ impl<'a> PartialEq for RawObject<'a> {
             && self.typename == other.typename
             && self.internals == other.internals
             && self.bases == other.bases
+    }
+}
+
+impl<'a> Debug for RawObject<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", object_repr(&Arc::new(self.clone())))
     }
 }
 

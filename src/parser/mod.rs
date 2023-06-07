@@ -210,6 +210,7 @@ impl<'a> Parser<'a> {
             TokenType::Hyphen => Some(self.generate_negate()),
             TokenType::LParen => Some(self.generate_grouped()),
             TokenType::String => Some(self.generate_string()),
+            TokenType::LSquare => Some(self.generate_list()),
             _ => None,
         }
     }
@@ -227,7 +228,7 @@ impl<'a> Parser<'a> {
     fn expr(&mut self, precedence: Precedence) -> Node {
         let mut left;
 
-        let atomics = vec!["decimal", "identifier", "-", "(", "string"];
+        let atomics = vec!["decimal", "identifier", "-", "(", "string", "["];
 
         match self.atom() {
             None => self.raise_error(
@@ -391,6 +392,39 @@ impl<'a> Parser<'a> {
         )
     }
 
+    fn generate_list(&mut self) -> Node {
+        let start = Position::create_from_parts(
+            self.current.startcol,
+            self.current.endcol,
+            self.current.line,
+        );
+        self.advance();
+        let mut values = Vec::new();
+        while !self.current_is_type(TokenType::RSquare) && !self.current_is_type(TokenType::Eof) {
+            values.push(self.expr(Precedence::Lowest));
+            if self.current_is_type(TokenType::RSquare) {
+                self.advance();
+                break;
+            }
+            self.expect(TokenType::Comma);
+            self.advance();
+        }
+        let end = Position::create_from_parts(
+            self.current.startcol,
+            self.current.endcol,
+            self.current.line,
+        );
+
+        nodes::Node::new(
+            start,
+            end,
+            nodes::NodeType::List,
+            Box::new(nodes::ListNode {
+                values,
+            }),
+        )
+    }
+
     // ============ Expr ==============
 
     fn generate_binary(&mut self, left: Node, precedence: Precedence) -> Node {
@@ -434,6 +468,7 @@ impl<'a> Parser<'a> {
                 break;
             }
             self.expect(TokenType::Comma);
+            self.advance();
         }
 
         nodes::Node::new(
@@ -472,6 +507,7 @@ impl<'a> Parser<'a> {
                 break;
             }
             self.expect(TokenType::Comma);
+            self.advance();
         }
         self.expect(TokenType::LCurly);
         self.advance();

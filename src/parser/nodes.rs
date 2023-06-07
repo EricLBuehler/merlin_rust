@@ -31,6 +31,7 @@ pub enum NodeType {
     Return,
     Unary,
     String,
+    List,
 }
 
 #[derive(Debug)]
@@ -223,6 +224,21 @@ impl NodeData for StringNode {
             .raw
             .insert(String::from("value"), self.value.to_owned());
 
+        value
+    }
+}
+
+
+// ========================
+
+pub struct ListNode {
+    pub values: Vec<Node>,
+}
+
+impl NodeData for ListNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.nodearr = Some(&self.values);
         value
     }
 }

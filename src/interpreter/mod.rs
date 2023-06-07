@@ -675,6 +675,27 @@ impl<'a> Interpreter<'a> {
                     pop_frame!(self);
                     return res;
                 }
+
+                //Data structures
+                CompilerInstruction::BuildList {
+                    result,
+                    value_registers,
+                } => {
+                    let last = self.frames.last_mut().expect("No frames");
+                    let mut values = Vec::new();
+                    for register in value_registers {
+                        values.push(load_register!(
+                            self,
+                            last,
+                            self.namespaces,
+                            bytecode,
+                            i,
+                            register.value
+                        ));
+                    }
+                    let list = listobject::list_from(self.vm.clone(), values);
+                    store_register!(last, self.namespaces, *result, list);
+                }
             }
         }
 

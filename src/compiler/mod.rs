@@ -68,7 +68,7 @@ pub enum CompilerInstruction {
         codeidx: usize,
         idxsidx: usize,
         out: CompilerRegister,
-    }, //All are consts
+    }, //All are in consts
     Call {
         callableregister: CompilerRegister,
         result: CompilerRegister,
@@ -80,6 +80,10 @@ pub enum CompilerInstruction {
     UnaryNeg {
         a: CompilerRegister,
         result: CompilerRegister,
+    },
+    BuildList {
+        result: CompilerRegister,
+        value_registers: Vec<RegisterContext>,
     },
 }
 
@@ -263,6 +267,10 @@ impl<'a> Compiler<'a> {
                 self.compile_expr_operation(expr, ctx);
             }
             NodeType::String => {
+                let ctx = self.compile_expr_values(expr);
+                self.compile_expr_operation(expr, ctx);
+            }
+            NodeType::List => {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
@@ -517,6 +525,32 @@ impl<'a> Compiler<'a> {
                 increment_reg_num!(self);
                 res
             }
+            NodeType::List => {
+                let mut args = Vec::new();
+                let mut args_registers = 0;
+                for arg in expr
+                    .data
+                    .get_data()
+                    .nodearr
+                    .expect("Node.nodearr is not present")
+                {
+                    let arg = self.compile_expr_values(arg);
+                    args_registers += arg.registers;
+                    args.push(arg);
+                }
+
+                let res = RegisterContext {
+                    value: CompilerRegister::R(self.register_index),
+                    left: None,
+                    leftctx: None,
+                    right: None,
+                    rightctx: None,
+                    args: Some(args),
+                    registers: 1+args_registers,
+                };
+                increment_reg_num!(self);
+                res
+            }
             _ => {
                 unreachable!();
             }
@@ -677,10 +711,9 @@ impl<'a> Compiler<'a> {
                 }
                 self.instructions.push(CompilerInstruction::Call {
                     callableregister: ctx.left.unwrap(),
-                    result: CompilerRegister::R(self.register_index - 1),
+                    result: ctx.value,
                     arg_registers: ctx.args.unwrap(),
                 });
-                increment_reg_num!(self);
                 self.positions.push((expr.start, expr.end));
             }
             NodeType::Return => {
@@ -736,6 +769,22 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::LoadConst {
                     index: self.consts.len() - 1,
                     register: ctx.value,
+                });
+                self.positions.push((expr.start, expr.end));
+            }
+            NodeType::List => {
+                for arg in izip!(
+                    expr.data
+                        .get_data()
+                        .nodearr
+                        .expect("Node.nodearr is not present"),
+                    ctx.args.as_ref().unwrap()
+                ) {
+                    self.compile_expr_operation(arg.0, arg.1.clone());
+                }
+                self.instructions.push(CompilerInstruction::BuildList {
+                    result: ctx.value,
+                    value_registers: ctx.args.unwrap(),
                 });
                 self.positions.push((expr.start, expr.end));
             }

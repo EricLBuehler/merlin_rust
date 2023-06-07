@@ -19,6 +19,8 @@ pub enum TokenType {
     Keyword,
     Comma,
     String,
+    LSquare,
+    RSquare,
 }
 
 impl std::fmt::Display for TokenType {
@@ -41,7 +43,8 @@ impl std::fmt::Display for TokenType {
             Self::Keyword => write!(f, "keyword"),
             Self::Comma => write!(f, "comma"),
             Self::String => write!(f, "string"),
-        }
+            Self::LSquare => write!(f, "l-square"),
+            Self::RSquare => write!(f, "r-square"),        }
     }
 }
 
@@ -102,6 +105,10 @@ impl<'a> Iterator for Lexer<'a> {
             Some(add_char_token(self, cur, TokenType::RCurly))
         } else if cur == ',' {
             Some(add_char_token(self, cur, TokenType::Comma))
+        } else if cur == '[' {
+            Some(add_char_token(self, cur, TokenType::LSquare))
+        } else if cur == ']' {
+            Some(add_char_token(self, cur, TokenType::RSquare))
         } else if cur == '\0' {
             if self.len == 0 {
                 self.len = 1;

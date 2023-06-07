@@ -247,6 +247,7 @@ impl<'a> Parser<'a> {
             return left;
         }
 
+        let prev = self.current.clone();
         self.advance();
         let mut i = 0;
         while !self.current_is_type(TokenType::Eof)
@@ -270,6 +271,7 @@ impl<'a> Parser<'a> {
             && i == 0
             && !self.current_is_type(TokenType::Eof)
             && !self.current_is_type(TokenType::Newline)
+            && prev.tp != TokenType::Newline
         {
             self.raise_error(
                 "Trailing atomic tokens are not allowed.",

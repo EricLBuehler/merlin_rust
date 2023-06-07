@@ -461,7 +461,6 @@ impl<'a> Compiler<'a> {
                 let callable = self.compile_expr_values(name);
 
                 let mut args = Vec::new();
-                let mut args_registers = 0;
                 for arg in expr
                     .data
                     .get_data()
@@ -469,7 +468,6 @@ impl<'a> Compiler<'a> {
                     .expect("Node.nodearr is not present")
                 {
                     let arg = self.compile_expr_values(arg);
-                    args_registers += arg.registers;
                     args.push(arg);
                 }
 
@@ -481,7 +479,7 @@ impl<'a> Compiler<'a> {
                     rightctx: None,
                     args: Some(args),
                     mapping: None,
-                    registers: 1 + args_registers,
+                    registers: 1,
                 };
                 increment_reg_num!(self);
                 res
@@ -545,7 +543,6 @@ impl<'a> Compiler<'a> {
             }
             NodeType::List => {
                 let mut args = Vec::new();
-                let mut args_registers = 0;
                 for arg in expr
                     .data
                     .get_data()
@@ -553,7 +550,6 @@ impl<'a> Compiler<'a> {
                     .expect("Node.nodearr is not present")
                 {
                     let arg = self.compile_expr_values(arg);
-                    args_registers += arg.registers;
                     args.push(arg);
                 }
 
@@ -565,14 +561,12 @@ impl<'a> Compiler<'a> {
                     rightctx: None,
                     args: Some(args),
                     mapping: None,
-                    registers: 1 + args_registers,
+                    registers: 1,
                 };
                 increment_reg_num!(self);
                 res
             }
             NodeType::Dict => {
-                let mut args_registers = 0;
-
                 let mut keys = Vec::new();
                 for (arg, _) in expr
                     .data
@@ -581,7 +575,6 @@ impl<'a> Compiler<'a> {
                     .expect("Node.mapping is not present")
                 {
                     let arg = self.compile_expr_values(arg);
-                    args_registers += arg.registers;
                     keys.push(arg);
                 }
 
@@ -593,7 +586,6 @@ impl<'a> Compiler<'a> {
                     .expect("Node.mapping is not present")
                 {
                     let arg = self.compile_expr_values(arg);
-                    args_registers += arg.registers;
                     values.push(arg);
                 }
 
@@ -605,7 +597,7 @@ impl<'a> Compiler<'a> {
                     rightctx: None,
                     args: None,
                     mapping: Some((keys, values)),
-                    registers: 1 + args_registers,
+                    registers: 1,
                 };
                 increment_reg_num!(self);
                 res

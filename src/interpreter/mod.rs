@@ -24,7 +24,7 @@ pub struct Namespaces<'a> {
 }
 
 pub const MIN_INT_CACHE: i128 = -5;
-pub const MAX_INT_CACHE: i128 = 256;
+pub const MAX_INT_CACHE: i128 = 512;
 pub const INT_CACHE_SIZE: i128 = MAX_INT_CACHE - MIN_INT_CACHE;
 
 #[derive(Clone)]
@@ -45,6 +45,7 @@ pub struct VM<'a> {
 }
 
 impl<'a> VM<'a> {
+    #[inline(always)]
     pub fn get_type(&self, name: &str) -> Object<'a> {
         return self.types.get(name).expect("Type not found").clone();
     }

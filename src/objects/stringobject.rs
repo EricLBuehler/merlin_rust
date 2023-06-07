@@ -16,7 +16,7 @@ use super::{
 
 const MFBH_MAX_LEN: usize = 256;
 
-pub fn string_from(vm: Arc<VM<'_>>, raw: String) -> Object<'_> {
+pub(crate) fn string_from(vm: Arc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
     let refr = Arc::make_mut(&mut tp);
     refr.internals = ObjectInternals::Str(raw);
@@ -157,16 +157,14 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     }
 
     let mut res = 0;
-    let mut index = 1;
-    for byte in bytes {
-        res += byte as i128 * index;
-        index += 1;
+    for (i, byte) in bytes.enumerate() {
+        res += byte as i128 * i as i128;
     }
 
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), res))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
+pub(crate) fn init<'a>(vm: Arc<VM<'a>>) {
     let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,

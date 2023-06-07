@@ -27,6 +27,7 @@ impl<'a> HashMap<'a> {
         }
     }
 
+    #[inline]
     fn hash(key: Object<'a>) -> MethodValue<i128, Object<'a>> {
         if key.hash_fn.is_none() {
             let exc = methodnotdefinedexc_from_str(
@@ -60,6 +61,7 @@ impl<'a> HashMap<'a> {
         )
     }
 
+    #[inline]
     pub fn insert(&mut self, key: Object<'a>, value: Object<'a>) -> MethodValue<(), Object<'a>> {
         let keyv = Self::hash(key.clone());
         if keyv.is_error() {

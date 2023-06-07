@@ -150,7 +150,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if key1.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
                 selfv.vm.clone(),
-                &format!("Method 'eq' is not defined for key 1 type '{}'", key1.typename),
+                &format!(
+                    "Method 'eq' is not defined for key 1 type '{}'",
+                    key1.typename
+                ),
                 Position::default(),
                 Position::default(),
             );
@@ -159,7 +162,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if value1.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
                 selfv.vm.clone(),
-                &format!("Method 'eq' is not defined for value 1 type '{}'", value1.typename),
+                &format!(
+                    "Method 'eq' is not defined for value 1 type '{}'",
+                    value1.typename
+                ),
                 Position::default(),
                 Position::default(),
             );

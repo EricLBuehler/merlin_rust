@@ -430,7 +430,11 @@ impl<'a> Interpreter<'a> {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
-                            &format!("Method 'add' is not defined for '{}' type", load_register!(self, last, self.namespaces, bytecode, i, *a).typename),
+                            &format!(
+                                "Method 'add' is not defined for '{}' type",
+                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                    .typename
+                            ),
                             pos.0,
                             pos.1,
                         );
@@ -455,7 +459,11 @@ impl<'a> Interpreter<'a> {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
-                            &format!("Method 'sub' is not defined for '{}' type", load_register!(self, last, self.namespaces, bytecode, i, *a).typename),
+                            &format!(
+                                "Method 'sub' is not defined for '{}' type",
+                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                    .typename
+                            ),
                             pos.0,
                             pos.1,
                         );
@@ -479,7 +487,11 @@ impl<'a> Interpreter<'a> {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
-                            &format!("Method 'mul' is not defined for '{}' type", load_register!(self, last, self.namespaces, bytecode, i, *a).typename),
+                            &format!(
+                                "Method 'mul' is not defined for '{}' type",
+                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                    .typename
+                            ),
                             pos.0,
                             pos.1,
                         );
@@ -504,7 +516,11 @@ impl<'a> Interpreter<'a> {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
-                            &format!("Method 'div' is not defined for '{}' type", load_register!(self, last, self.namespaces, bytecode, i, *a).typename),
+                            &format!(
+                                "Method 'div' is not defined for '{}' type",
+                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                    .typename
+                            ),
                             pos.0,
                             pos.1,
                         );
@@ -532,7 +548,11 @@ impl<'a> Interpreter<'a> {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
-                            &format!("Method 'neg' is not defined for '{}' type", load_register!(self, last, self.namespaces, bytecode, i, *a).typename),
+                            &format!(
+                                "Method 'neg' is not defined for '{}' type",
+                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                    .typename
+                            ),
                             pos.0,
                             pos.1,
                         );
@@ -630,7 +650,10 @@ impl<'a> Interpreter<'a> {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
-                            &format!("Method 'call' is not defined for '{}' type", callable.typename),
+                            &format!(
+                                "Method 'call' is not defined for '{}' type",
+                                callable.typename
+                            ),
                             pos.0,
                             pos.1,
                         );

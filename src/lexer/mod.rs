@@ -252,7 +252,6 @@ fn make_identifier(lexer: &mut Lexer) -> Token {
     }
 }
 
-
 fn make_string(lexer: &mut Lexer) -> Token {
     let mut data = String::from("");
     let start = lexer.col;

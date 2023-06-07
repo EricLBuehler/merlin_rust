@@ -419,9 +419,7 @@ impl<'a> Parser<'a> {
             start,
             end,
             nodes::NodeType::List,
-            Box::new(nodes::ListNode {
-                values,
-            }),
+            Box::new(nodes::ListNode { values }),
         )
     }
 

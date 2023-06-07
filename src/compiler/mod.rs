@@ -546,7 +546,7 @@ impl<'a> Compiler<'a> {
                     right: None,
                     rightctx: None,
                     args: Some(args),
-                    registers: 1+args_registers,
+                    registers: 1 + args_registers,
                 };
                 increment_reg_num!(self);
                 res

@@ -44,7 +44,8 @@ impl std::fmt::Display for TokenType {
             Self::Comma => write!(f, "comma"),
             Self::String => write!(f, "string"),
             Self::LSquare => write!(f, "l-square"),
-            Self::RSquare => write!(f, "r-square"),        }
+            Self::RSquare => write!(f, "r-square"),
+        }
     }
 }
 

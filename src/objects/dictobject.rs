@@ -88,7 +88,10 @@ fn dict_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
         .get_map()
         .expect("Expected map internal value")
         .clone();
-    map.insert(other, value);
+    let res = map.insert(other, value);
+    if res.is_error() {
+        return MethodValue::Error(res.unwrap_err());
+    }
 
     unsafe {
         let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;

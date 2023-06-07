@@ -726,7 +726,6 @@ impl<'a> Interpreter<'a> {
                         maybe_handle_exception!(self, res, bytecode, i);
                     }
                     let dict = dictobject::dict_from(self.vm.clone(), map);
-                    println!("{:?}", dict);
                     store_register!(last, self.namespaces, *result, dict);
                 }
             }

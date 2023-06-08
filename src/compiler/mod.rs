@@ -1,6 +1,6 @@
 //Generate bytecode from AST
 use crate::objects::exceptionobject;
-use crate::objects::utils::object_repr_safe;
+use crate::objects::utils::{object_repr_safe};
 use crate::trc::Trc;
 use crate::{
     errors::{raise_error, ErrorType},
@@ -622,7 +622,6 @@ impl<'a> Compiler<'a> {
                 );
 
                 maybe_handle_exception_pos!(self, int, expr.start, expr.end);
-
                 self.consts.push(int.unwrap());
 
                 self.instructions.push(CompilerInstruction::LoadConst {

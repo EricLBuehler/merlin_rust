@@ -346,6 +346,7 @@ fn inherit_slots<'a>(mut tp: Object<'a>, basetp: Object<'a>) {
 }
 
 fn finalize_type(tp: Object<'_>) {
+    let raw = (*tp).clone();
     let cpy = tp.clone();
     for base in cpy.bases.clone() {
         match base {
@@ -358,8 +359,8 @@ fn finalize_type(tp: Object<'_>) {
             }
         }
     }
-
-    inherit_slots(cpy, tp);
+    
+    inherit_slots(cpy, Trc::new(raw));
 }
 
 pub fn init_types(vm: Trc<VM<'_>>) {

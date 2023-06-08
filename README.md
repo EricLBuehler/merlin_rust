@@ -5,7 +5,7 @@
 
 <h2><strong>Make your code <i>fly</i></strong></h2>
 
-Merlin is a dynamically and strongly typed programming language written in Rust. Merlin's threading system empowers programmers to write powerful code that leverages concurrency.
+Merlin is a dynamically and strongly typed programming language written in Rust. Merlin's threading system empowers programmers to write powerful code that leverages concurrency - regardless of whether your system has atomics.
 
 Merlin uses Rust's atomic data types to remove the need for a GIL without sacrificing performance.
 In addition, it has a register-based interpreter (like CPUs) which has large performance advantages over the Python stack-based interpreter that is simpler and needs to shuffle a lot of memory around.
@@ -34,7 +34,6 @@ Merlin is: 5.62% slower
 ## Installation
 To get started with Merlin:
 - Download rust (preferrably with rustup command line tool)
-- Execute `rustup default nightly` (reversion = default stable) if your system does not have atomics.
 - Run `make release`
 - Execute code using the generated binary!
 

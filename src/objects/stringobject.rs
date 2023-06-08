@@ -17,7 +17,7 @@ use super::{
 
 const MFBH_MAX_LEN: usize = 256;
 
-pub(crate) fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
+pub fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
     tp.internals = ObjectInternals::Str(raw);
     tp
@@ -164,7 +164,7 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), res))
 }
 
-pub(crate) fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,

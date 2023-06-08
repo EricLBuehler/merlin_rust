@@ -5,11 +5,19 @@ use std::{
     borrow::{Borrow, BorrowMut},
     ops::{Deref, DerefMut},
     ptr::NonNull,
-    sync::RwLock,
 };
 
+#[cfg(not(target_has_atomic = "ptr"))]
+use std::sync::RwLock;
+
+#[cfg(target_has_atomic = "ptr")]
+use std::sync::atomic::AtomicUsize;
+
 pub struct AtomicThreadTrc<T> {
+    #[cfg(not(target_has_atomic = "ptr"))]
     atomicref: RwLock<usize>,
+    #[cfg(target_has_atomic = "ptr")]
+    atomicref: AtomicUsize,
     pub data: T,
 }
 
@@ -63,9 +71,36 @@ impl<T> Trc<T> {
     /// let trc = Trc::new(100);
     /// ```
     #[inline]
+    #[cfg(target_has_atomic = "ptr")]
     pub fn new(value: T) -> Self {
         let atomicthreadata = AtomicThreadTrc {
-            atomicref: RwLock::from(1),
+            atomicref: AtomicUsize::new(0),
+            data: value,
+        };
+
+        let abx = Box::new(atomicthreadata);
+
+        let localthreadtrc = LocalThreadTrc {
+            atomicref: NonNull::from(Box::leak(abx)),
+            threadref: 1,
+        };
+
+        let tbx = Box::new(localthreadtrc);
+
+        Trc {
+            data: NonNull::from(Box::leak(tbx)),
+        }
+    }
+
+    /// Creates a new `Trc` from the provided data.
+    /// ```
+    /// let trc = Trc::new(100);
+    /// ```
+    #[inline]
+    #[cfg(not(target_has_atomic = "ptr"))]
+    pub fn new(value: T) -> Self {
+        let atomicthreadata = AtomicThreadTrc {
+            atomicref: RwLock::new(0),
             data: value,
         };
 
@@ -111,6 +146,7 @@ impl<T> Trc<T> {
     /// assert_eq!(*trc, 200);
     /// ```
     #[inline]
+    #[cfg(not(target_has_atomic = "ptr"))]
     pub fn atomic_count(this: &Self) -> usize {
         let mut readlock = this.inner_atomic().atomicref.try_write();
 
@@ -118,6 +154,29 @@ impl<T> Trc<T> {
             readlock = this.inner_atomic().atomicref.try_write();
         }
         *readlock.unwrap()
+    }
+
+    /// Return the atomic reference count of the object. This is how many threads are using the data referenced by this `Trc`./// ```
+    /// use std::thread;
+    ///
+    /// let trc = Trc::new(100);
+    /// let mut trc2 = trc.clone_across_thread();
+    ///
+    /// let handle = thread::spawn(move || {
+    ///     println!("{}", *trc2);
+    ///     *trc2 = 200;
+    ///     assert_eq!(Trc::atomic_count(&trc), 2);
+    /// });
+    ///
+    /// handle.join().unwrap();
+    /// assert_eq!(Trc::atomic_count(&trc), 1);
+    /// println!("{}", *trc);
+    /// assert_eq!(*trc, 200);
+    /// ```
+    #[inline]
+    #[cfg(target_has_atomic = "ptr")]
+    pub fn atomic_count(this: &Self) -> usize {
+        this.inner_atomic().atomicref.load(std::sync::atomic::Ordering::Acquire)
     }
 
     #[inline]
@@ -146,6 +205,7 @@ impl<T> Trc<T> {
     /// let trc2 = trc.clone_across_thread();
     /// ```
     #[inline]
+    #[cfg(not(target_has_atomic = "ptr"))]
     pub fn clone_across_thread(&self) -> Self {
         let mut writelock = self.inner_atomic().atomicref.try_write();
 
@@ -155,6 +215,28 @@ impl<T> Trc<T> {
         let mut writedata = writelock.unwrap();
 
         *writedata += 1;
+
+        let localthreadtrc = LocalThreadTrc {
+            atomicref: self.inner().atomicref,
+            threadref: 1,
+        };
+
+        let tbx = Box::new(localthreadtrc);
+
+        return Trc {
+            data: NonNull::from(Box::leak(tbx)),
+        };
+    }
+
+    /// Clone a `Trc` across threads. This is necessary because otherwise the atomic reference count will not be incremented.use std::thread;
+    /// ```
+    /// let trc = Trc::new(100);
+    /// let trc2 = trc.clone_across_thread();
+    /// ```
+    #[inline]
+    #[cfg(target_has_atomic = "ptr")]
+    pub fn clone_across_thread(&self) -> Self {
+        self.inner_atomic().atomicref.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
         let localthreadtrc = LocalThreadTrc {
             atomicref: self.inner().atomicref,
@@ -209,6 +291,7 @@ impl<T> DerefMut for Trc<T> {
 
 impl<T> Drop for Trc<T> {
     #[inline]
+    #[cfg(not(target_has_atomic = "ptr"))]
     fn drop(&mut self) {
         self.inner_mut().threadref -= 1;
         if self.inner().threadref == 0 {
@@ -224,6 +307,20 @@ impl<T> Drop for Trc<T> {
             if *writedata == 0 {
                 std::mem::drop(writedata);
 
+                unsafe { Box::from_raw(self.inner().atomicref.as_ptr()) };
+                unsafe { Box::from_raw(self.data.as_ptr()) };
+            }
+        }
+    }
+    
+    #[inline]
+    #[cfg(target_has_atomic = "ptr")]
+    fn drop(&mut self) {
+        self.inner_mut().threadref -= 1;
+        if self.inner().threadref == 0 {
+            let res = self.inner_atomic().atomicref.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+
+            if res-1 == 0 {
                 unsafe { Box::from_raw(self.inner().atomicref.as_ptr()) };
                 unsafe { Box::from_raw(self.data.as_ptr()) };
             }

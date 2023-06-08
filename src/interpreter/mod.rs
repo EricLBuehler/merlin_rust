@@ -319,7 +319,8 @@ impl<'a> Interpreter<'a> {
             bytecode.n_variables as usize
         );
 
-        for (i, var) in self.namespaces
+        for (i, var) in self
+            .namespaces
             .variables
             .last_mut()
             .unwrap()

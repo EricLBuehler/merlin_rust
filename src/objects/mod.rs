@@ -359,7 +359,7 @@ fn finalize_type(tp: Object<'_>) {
             }
         }
     }
-    
+
     inherit_slots(cpy, Trc::new(raw));
 }
 

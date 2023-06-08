@@ -1,6 +1,6 @@
 //Generate bytecode from AST
 use crate::objects::exceptionobject;
-use crate::objects::utils::{object_repr_safe};
+use crate::objects::utils::object_repr_safe;
 use crate::trc::Trc;
 use crate::{
     errors::{raise_error, ErrorType},

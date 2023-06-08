@@ -1,9 +1,9 @@
 // Interpret bytecode
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
-use crate::objects::{mhash, dictobject};
+use crate::objects::{dictobject, mhash};
 use crate::parser::Position;
-use crate::Arc;
+use crate::trc::Trc;
 use crate::{
     compiler::{Bytecode, CompilerInstruction, CompilerRegister},
     fileinfo::FileInfo,
@@ -15,6 +15,7 @@ use crate::{
 };
 use colored::Colorize;
 use std::marker::PhantomData;
+use std::ops::DerefMut;
 use std::time::Instant;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -37,9 +38,9 @@ pub struct SingletonCache<'a> {
 
 #[derive(Clone)]
 pub struct VM<'a> {
-    pub types: Arc<hashbrown::HashMap<String, Object<'a>>>,
-    pub interpreters: Vec<Arc<Interpreter<'a>>>,
-    pub namespaces: Arc<Namespaces<'a>>,
+    pub types: Trc<hashbrown::HashMap<String, Object<'a>>>,
+    pub interpreters: Vec<Trc<Interpreter<'a>>>,
+    pub namespaces: Trc<Namespaces<'a>>,
     info: FileInfo<'a>,
     pub cache: SingletonCache<'a>,
 }
@@ -49,15 +50,8 @@ impl<'a> VM<'a> {
     pub fn get_type(&self, name: &str) -> Object<'a> {
         return self.types.get(name).expect("Type not found").clone();
     }
-    pub fn add_type(this: Arc<Self>, name: &str, value: Object<'a>) {
-        unsafe {
-            let refr = Arc::into_raw(this) as *mut VM<'a>;
-            let map_refr =
-                Arc::into_raw((*refr).types.clone()) as *mut hashbrown::HashMap<String, Object>;
-            (*map_refr).insert(name.to_string(), value);
-            Arc::from_raw(refr);
-            Arc::from_raw(map_refr);
-        }
+    pub fn add_type(mut this: Trc<Self>, name: &str, value: Object<'a>) {
+        (*this.types).insert(name.to_string(), value);
     }
 }
 
@@ -74,9 +68,9 @@ impl<'a> PartialEq for VM<'a> {
 #[derive(Clone, PartialEq, Eq)]
 pub struct Interpreter<'a> {
     frames: Vec<Frame<'a>>,
-    types: Arc<hashbrown::HashMap<String, Object<'a>>>,
-    namespaces: Arc<Namespaces<'a>>,
-    vm: Arc<VM<'a>>,
+    types: Trc<hashbrown::HashMap<String, Object<'a>>>,
+    namespaces: Trc<Namespaces<'a>>,
+    vm: Trc<VM<'a>>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -86,26 +80,19 @@ struct Frame<'a> {
 
 macro_rules! pop_frame {
     ($interp:expr) => {{
-        unsafe {
-            let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-            (*namespace_refr).variables.pop();
-            Arc::from_raw(namespace_refr);
-        }
+        (*$interp.namespaces).variables.pop();
         $interp.frames.pop();
     }};
 }
 
 macro_rules! add_frame {
     ($interp:expr, $n_registers:expr, $n_vars:expr) => {{
-        unsafe {
-            let namespace_refr = Arc::into_raw($interp.namespaces.clone()) as *mut Namespaces<'a>;
-            let mut variables = Vec::new();
-            for _ in 0..$n_vars {
-                variables.push(None);
-            }
-            (*namespace_refr).variables.push(variables);
-            Arc::from_raw(namespace_refr);
+        let mut variables = Vec::new();
+        for _ in 0..$n_vars {
+            variables.push(None);
         }
+        (*$interp.namespaces).variables.push(variables);
+            
         let mut registers = Vec::new();
         for _ in 0..$n_registers {
             registers.push(none_from!($interp.vm.clone()));
@@ -123,9 +110,9 @@ impl<'a> VM<'a> {
             _marker: PhantomData,
         };
         VM {
-            types: Arc::new(hashbrown::HashMap::new()),
+            types: Trc::new(hashbrown::HashMap::new()),
             interpreters: Vec::new(),
-            namespaces: Arc::new(Namespaces {
+            namespaces: Trc::new(Namespaces {
                 variables: Vec::new(),
                 _marker: PhantomData,
             }),
@@ -134,123 +121,80 @@ impl<'a> VM<'a> {
         }
     }
 
-    pub fn init_cache(this: Arc<Self>) {
-        unsafe {
-            let refr = Arc::into_raw(this.clone()) as *mut VM;
-            let int_cache_arr_ref = &(*refr).cache.int_cache;
-            let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize]
-                as *mut [Option<Object>; INT_CACHE_SIZE as usize];
-            intobject::generate_cache(this.get_type("int"), ptr);
+    pub fn init_cache(this: Trc<Self>) {
+        let int_cache_arr_ref = &(*this).cache.int_cache;
+        let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize]
+            as *mut [Option<Object>; INT_CACHE_SIZE as usize];
+        intobject::generate_cache(this.get_type("int"), ptr);
 
-            let bool_cache_tup_ref = &(*refr).cache.bool_cache;
-            let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>)
-                as *mut (Option<Object>, Option<Object>);
-            boolobject::generate_cache(this.get_type("bool"), ptr);
+        let bool_cache_tup_ref = &(*this).cache.bool_cache;
+        let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>)
+            as *mut (Option<Object>, Option<Object>);
+        boolobject::generate_cache(this.get_type("bool"), ptr);
 
-            let none_obj_ref = &(*refr).cache.none_singleton;
-            let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
-            noneobject::generate_cache(this.get_type("NoneType"), ptr);
-
-            Arc::from_raw(refr);
-        }
+        let none_obj_ref = &(*this).cache.none_singleton;
+        let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
+        noneobject::generate_cache(this.get_type("NoneType"), ptr);
     }
 
-    pub fn execute(this: Arc<Self>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
+    pub fn execute(mut this: Trc<Self>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         let interpreter =
             Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
 
-        let refr = Arc::into_raw(this.clone()) as *mut VM<'a>;
-        unsafe {
-            (*refr).interpreters.push(Arc::new(interpreter));
-            let interp_refr = Arc::into_raw(
-                (*refr)
-                    .interpreters
-                    .last()
-                    .expect("No interpreters")
-                    .clone(),
-            ) as *mut Interpreter<'a>;
-
-            Arc::from_raw(refr);
-            Arc::from_raw(interp_refr);
-            return (*interp_refr).run_interpreter(bytecode);
-        }
+        (*this).interpreters.push(Trc::new(interpreter));
+        let last = this.deref_mut().interpreters.last_mut().unwrap();
+        return last.run_interpreter(bytecode);
     }
 
     pub fn execute_timeit(
-        this: Arc<Self>,
-        bytecode: Arc<Bytecode<'a>>,
+        mut this: Trc<Self>,
+        bytecode: Trc<Bytecode<'a>>,
         timeit: &mut TimeitHolder,
     ) -> Object<'a> {
-        let refr = Arc::into_raw(this.clone()) as *mut VM<'a>;
+        //See bench.rs, this is a verys similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
 
-        unsafe {
-            let interp_refr = Arc::into_raw(
-                (*refr)
-                    .interpreters
-                    .last()
-                    .expect("No interpreters")
-                    .clone(),
-            ) as *mut Interpreter<'a>;
+        let samples = &mut [0f64; 50];
 
-            //See bench.rs, this is a verys similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
+        //Get initial result
+        let mut res = (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
 
-            let samples = &mut [0f64; 50];
-
-            //Get initial result
-            let mut res = (*interp_refr).run_interpreter(bytecode.clone());
-
-            for p in &mut *samples {
-                let start = Instant::now();
-                for _ in 0..5 {
-                    res = (*interp_refr).run_interpreter(bytecode.clone());
-                }
-                let delta = start.elapsed().as_nanos();
-                let time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
-                    0
-                } else {
-                    delta / 5 - timeit.baseline
-                };
-                *p = time as f64;
+        for p in &mut *samples {
+            let start = Instant::now();
+            for _ in 0..5 {
+                res = (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
             }
-            Arc::from_raw(refr);
-            Arc::from_raw(interp_refr);
-
-            stats::winsorize(samples, 5.0);
-
-            let sum: f64 = samples.iter().sum();
-
-            timeit.time = sum / samples.len() as f64;
-
-            res
+            let delta = start.elapsed().as_nanos();
+            let time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
+                0
+            } else {
+                delta / 5 - timeit.baseline
+            };
+            *p = time as f64;
         }
+
+        stats::winsorize(samples, 5.0);
+
+        let sum: f64 = samples.iter().sum();
+
+        timeit.time = sum / samples.len() as f64;
+
+        res
     }
 
     pub fn execute_vars(
-        this: Arc<Self>,
-        bytecode: Arc<Bytecode<'a>>,
+        mut this: Trc<Self>,
+        bytecode: Trc<Bytecode<'a>>,
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         let interpreter =
-            Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
-        unsafe {
-            let refr = Arc::into_raw(this.clone()) as *mut VM<'a>;
-            (*refr).interpreters.push(Arc::new(interpreter));
-            let interp_refr = Arc::into_raw(
-                (*refr)
-                    .interpreters
-                    .last()
-                    .expect("No interpreters")
-                    .clone(),
-            ) as *mut Interpreter<'a>;
+        Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
+        (*this).interpreters.push(Trc::new(interpreter));
 
-            let res = (*interp_refr).run_interpreter_vars(bytecode, vars);
-            Arc::from_raw(refr);
-            Arc::from_raw(interp_refr);
-            res
-        }
+        let res = (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter_vars(bytecode, vars);
+        res
     }
 
-    pub fn terminate(_: Arc<Self>) -> ! {
+    pub fn terminate(_: Trc<Self>) -> ! {
         //Clean up child threads here
         std::process::exit(1);
     }
@@ -287,19 +231,16 @@ macro_rules! store_register {
     ($last:expr, $namespaces:expr, $register:expr, $value:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v as usize] = $value,
-            CompilerRegister::V(v) => unsafe {
-                let namespace_refr = Arc::into_raw($namespaces.clone()) as *mut Namespaces<'a>;
-                (*namespace_refr).variables.last_mut().unwrap()[v as usize] = Some($value);
-            },
+            CompilerRegister::V(v) => (*$namespaces).variables.last_mut().unwrap()[v as usize] = Some($value),
         }
     };
 }
 
 impl<'a> Interpreter<'a> {
     pub fn new(
-        types: Arc<hashbrown::HashMap<String, Object<'a>>>,
-        namespaces: Arc<Namespaces<'a>>,
-        vm: Arc<VM<'a>>,
+        types: Trc<hashbrown::HashMap<String, Object<'a>>>,
+        namespaces: Trc<Namespaces<'a>>,
+        vm: Trc<VM<'a>>,
     ) -> Interpreter<'a> {
         Interpreter {
             frames: Vec::new(),
@@ -327,13 +268,13 @@ impl<'a> Interpreter<'a> {
         };
         let location: String = format!(
             "{}:{}:{}",
-            self.vm.as_ref().info.name,
+            self.vm.info.name,
             start.line + 1,
             start.startcol + 1
         );
         println!("{}", header.red().bold());
         println!("{}", location.red());
-        let lines = Vec::from_iter(self.vm.as_ref().info.data.split(|num| *num as char == '\n'));
+        let lines = Vec::from_iter(self.vm.info.data.split(|num| *num as char == '\n'));
 
         let snippet: String = format!(
             "{}",
@@ -364,7 +305,7 @@ impl<'a> Interpreter<'a> {
 
     pub fn run_interpreter_vars(
         &mut self,
-        bytecode: Arc<Bytecode<'a>>,
+        bytecode: Trc<Bytecode<'a>>,
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         add_frame!(
@@ -372,27 +313,23 @@ impl<'a> Interpreter<'a> {
             bytecode.n_registers as usize,
             bytecode.n_variables as usize
         );
-        unsafe {
-            let namespace_refr = Arc::into_raw(self.namespaces.clone()) as *mut Namespaces<'a>;
-
-            for (i, var) in (*namespace_refr)
-                .variables
-                .last_mut()
-                .unwrap()
-                .iter_mut()
-                .enumerate()
-            {
-                if vars.get(&(i as i128)).is_some() {
-                    *var = Some(vars.get(&(i as i128)).unwrap().clone());
-                }
+        
+        for (i, var) in (*self.namespaces)
+            .variables
+            .last_mut()
+            .unwrap()
+            .iter_mut()
+            .enumerate()
+        {
+            if vars.get(&(i as i128)).is_some() {
+                *var = Some(vars.get(&(i as i128)).unwrap().clone());
             }
-
-            Arc::from_raw(namespace_refr);
         }
+
         self.run_interpreter_raw(bytecode)
     }
 
-    pub fn run_interpreter(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
+    pub fn run_interpreter(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         if !bytecode.instructions.is_empty() {
             add_frame!(
                 self,
@@ -405,7 +342,7 @@ impl<'a> Interpreter<'a> {
     }
 
     #[inline]
-    pub fn run_interpreter_raw(&mut self, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
+    pub fn run_interpreter_raw(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         for (i, instruction) in bytecode.instructions.iter().enumerate() {
             match instruction {
                 //Constant loading
@@ -706,23 +643,11 @@ impl<'a> Interpreter<'a> {
                     let last = self.frames.last_mut().expect("No frames");
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
-                        let key = load_register!(
-                            self,
-                            last,
-                            self.namespaces,
-                            bytecode,
-                            i,
-                            key.value
-                        );
-                        let value = load_register!(
-                            self,
-                            last,
-                            self.namespaces,
-                            bytecode,
-                            i,
-                            value.value
-                        );
-                        
+                        let key =
+                            load_register!(self, last, self.namespaces, bytecode, i, key.value);
+                        let value =
+                            load_register!(self, last, self.namespaces, bytecode, i, value.value);
+
                         let res = map.insert(key, value);
                         maybe_handle_exception!(self, res, bytecode, i);
                     }

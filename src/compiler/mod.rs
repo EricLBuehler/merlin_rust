@@ -1,7 +1,7 @@
 //Generate bytecode from AST
 use crate::objects::exceptionobject;
 use crate::objects::utils::object_repr_safe;
-use crate::Arc;
+use crate::trc::Trc;
 use crate::{
     errors::{raise_error, ErrorType},
     fileinfo::FileInfo,
@@ -23,7 +23,7 @@ pub struct Compiler<'a> {
     consts: Vec<Object<'a>>,
     names: HashMap<String, i32>,
     info: &'a FileInfo<'a>,
-    vm: Arc<VM<'a>>,
+    vm: Trc<VM<'a>>,
     positions: Vec<(Position, Position)>,
     register_index: i32,
     register_max: i32,
@@ -142,7 +142,7 @@ pub struct RegisterContext {
 }
 
 impl<'a> Compiler<'a> {
-    pub fn new(info: &'a FileInfo<'a>, vm: Arc<VM<'a>>) -> Compiler<'a> {
+    pub fn new(info: &'a FileInfo<'a>, vm: Trc<VM<'a>>) -> Compiler<'a> {
         Compiler {
             instructions: Vec::new(),
             consts: Vec::new(),
@@ -157,11 +157,11 @@ impl<'a> Compiler<'a> {
         }
     }
 
-    pub fn generate_bytecode(&mut self, ast: &Vec<Node>) -> Arc<Bytecode<'a>> {
+    pub fn generate_bytecode(&mut self, ast: &Vec<Node>) -> Trc<Bytecode<'a>> {
         for head_node in ast {
             self.compile_statement(head_node);
         }
-        Arc::new(Bytecode {
+        Trc::new(Bytecode {
             instructions: self.instructions.clone(),
             consts: self.consts.clone(),
             names: self.names.iter().map(|(k, v)| (*v, k.clone())).collect(),

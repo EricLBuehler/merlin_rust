@@ -1,6 +1,7 @@
 use clap::Parser;
 use colored::Colorize;
 use std::time::Instant;
+use trc::Trc;
 extern crate num;
 #[macro_use]
 extern crate num_derive;
@@ -22,13 +23,7 @@ mod compiler;
 mod interpreter;
 mod stats;
 
-#[cfg(not(target_has_atomic = "ptr"))]
-mod mutexrc;
-#[cfg(not(target_has_atomic = "ptr"))]
-type Arc = mutexrc::Arc;
-
-#[cfg(target_has_atomic = "ptr")]
-use std::sync::Arc;
+mod trc;
 
 pub struct TimeitHolder {
     baseline: u128,
@@ -71,7 +66,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         println!("===== Done with parsing =====");
     }
 
-    let vm = Arc::new(interpreter::VM::new(file_info.clone()));
+    let mut vm = Trc::new(interpreter::VM::new(file_info.clone()));
     objects::init_types(vm.clone());
     interpreter::VM::init_cache(vm.clone());
 
@@ -88,7 +83,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             println!(
                 "{} = 0x{:x}",
                 objects::utils::object_repr(c),
-                Arc::as_ptr(c) as u64
+                Trc::as_ptr(c) as u64
             );
         }
         println!("===== Done with compiler =====");
@@ -115,12 +110,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             vm.clone().clone(),
         );
 
-        let refr = Arc::into_raw(vm.clone()) as *mut interpreter::VM;
-
-        unsafe {
-            (*refr).interpreters.push(Arc::new(interpreter));
-            Arc::from_raw(refr);
-        }
+        (*vm).interpreters.push(Trc::new(interpreter));
 
         let mut means = Vec::new();
         for _ in 0..n_exec {

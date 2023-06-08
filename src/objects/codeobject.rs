@@ -1,17 +1,17 @@
 use super::exceptionobject::typemismatchexc_from_str;
 use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject};
+use crate::is_type_exact;
 use crate::parser::Position;
+use crate::trc::Trc;
 use crate::{
     compiler::Bytecode,
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use crate::{is_type_exact, Arc};
 
-pub fn code_from<'a>(vm: Arc<VM<'a>>, bytecode: Arc<Bytecode<'a>>) -> Object<'a> {
-    let mut tp: Arc<RawObject> = create_object_from_type(vm.get_type("code"));
-    let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Code(bytecode);
+pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
+    let mut tp: Trc<RawObject> = create_object_from_type(vm.get_type("code"));
+    (*tp).internals = ObjectInternals::Code(bytecode);
     tp
 }
 
@@ -21,7 +21,7 @@ fn code_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        format!("<code object @ 0x{:x}>", Arc::as_ptr(&selfv) as i128),
+        format!("<code object @ 0x{:x}>", Trc::as_ptr(&selfv) as i128),
     ))
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -48,8 +48,8 @@ fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("code"),

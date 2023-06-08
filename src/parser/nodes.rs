@@ -32,7 +32,7 @@ pub enum NodeType {
     Unary,
     String,
     List,
-    Dict
+    Dict,
 }
 
 #[derive(Debug)]
@@ -244,7 +244,6 @@ impl NodeData for ListNode {
         value
     }
 }
-
 
 // ========================
 

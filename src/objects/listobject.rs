@@ -3,18 +3,18 @@ use super::{
     create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
     RawObject,
 };
+use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
+use crate::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use crate::{is_type_exact, Arc};
 
-pub fn list_from<'a>(vm: Arc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
+pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("list"));
-    let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Arr(raw);
+    (*tp).internals = ObjectInternals::Arr(raw);
     tp
 }
 
@@ -90,7 +90,7 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
     MethodValue::Some(out.unwrap().clone())
 }
-fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
+fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     if is_type_exact!(&other, &selfv.vm.get_type("int")) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
@@ -145,11 +145,7 @@ fn list_set<'a>(selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> Meth
         .expect("Expected int internal value"))
     .unsigned_abs() as usize] = value;
 
-    unsafe {
-        let refr = Arc::into_raw(selfv.clone()) as *mut RawObject<'a>;
-        (*refr).internals = ObjectInternals::Arr(arr.to_vec());
-        Arc::from_raw(refr);
-    }
+    (*selfv).internals = ObjectInternals::Arr(arr.to_vec());
 
     MethodValue::Some(none_from!(selfv.vm.clone()))
 }
@@ -251,8 +247,8 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("list"),

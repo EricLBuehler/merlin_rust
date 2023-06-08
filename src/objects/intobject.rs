@@ -4,17 +4,18 @@ use super::{
     Object, ObjectInternals, RawObject,
 };
 
+use crate::is_type_exact;
+use crate::trc::Trc;
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
     objects::exceptionobject::overflowexc_from_str,
     parser::Position,
 };
-use crate::{is_type_exact, Arc};
 use std::collections::hash_map::DefaultHasher;
 
 use std::hash::{Hash, Hasher};
 
-pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
+pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
         return vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]
             .as_ref()
@@ -22,11 +23,10 @@ pub fn int_from(vm: Arc<VM<'_>>, raw: i128) -> Object<'_> {
             .clone();
     }
     let mut tp = create_object_from_type(vm.get_type("int"));
-    let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Int(raw);
+    (*tp).internals = ObjectInternals::Int(raw);
     tp
 }
-pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
+pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = raw.parse::<i128>();
     if matches!(convert, Result::Err(_)) {
         let exc = overflowexc_from_str(
@@ -46,8 +46,7 @@ pub fn int_from_str(vm: Arc<VM<'_>>, raw: String) -> MethodType<'_> {
         );
     }
     let mut tp = create_object_from_type(vm.get_type("int"));
-    let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Int(convert.unwrap());
+    (*tp).internals = ObjectInternals::Int(convert.unwrap());
     MethodValue::Some(tp)
 }
 
@@ -340,16 +339,15 @@ pub fn generate_cache<'a>(
         let mut i = MIN_INT_CACHE;
         for item in &mut (*arr)[..] {
             let mut tp = create_object_from_type(int.clone());
-            let refr = Arc::make_mut(&mut tp);
-            refr.internals = ObjectInternals::Int(i);
+            (*tp).internals = ObjectInternals::Int(i);
             std::ptr::write(item, Some(tp));
             i += 1;
         }
     }
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("int"),

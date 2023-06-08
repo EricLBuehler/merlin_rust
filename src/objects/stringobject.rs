@@ -3,10 +3,11 @@ use std::hash::{Hash, Hasher};
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::interpreter::VM;
+use crate::is_type_exact;
 use crate::objects::exceptionobject::valueexc_from_str;
 use crate::objects::{boolobject, intobject};
 use crate::parser::Position;
-use crate::{is_type_exact, Arc};
+use crate::trc::Trc;
 
 use super::exceptionobject::typemismatchexc_from_str;
 use super::{
@@ -16,10 +17,9 @@ use super::{
 
 const MFBH_MAX_LEN: usize = 256;
 
-pub(crate) fn string_from(vm: Arc<VM<'_>>, raw: String) -> Object<'_> {
+pub(crate) fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
-    let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Str(raw);
+    (*tp).internals = ObjectInternals::Str(raw);
     tp
 }
 
@@ -164,8 +164,8 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), res))
 }
 
-pub(crate) fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub(crate) fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("str"),

@@ -1,5 +1,4 @@
-use crate::interpreter::VM;
-use crate::Arc;
+use crate::{interpreter::VM, trc::Trc};
 
 use super::{
     boolobject, create_object_from_type, finalize_type, intobject, stringobject, MethodType,
@@ -18,15 +17,15 @@ fn object_repr(selfv: Object<'_>) -> MethodType<'_> {
 fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        Arc::ptr_eq(&selfv, &other),
+        Trc::ptr_eq(&selfv, &other),
     ))
 }
 fn object_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("object"),

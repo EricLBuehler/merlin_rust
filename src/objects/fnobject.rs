@@ -1,25 +1,25 @@
 use super::exceptionobject::valueexc_from_str;
 use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject};
 
+use crate::is_type_exact;
 use crate::objects::exceptionobject::typemismatchexc_from_str;
 use crate::parser::Position;
+use crate::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use crate::{is_type_exact, Arc};
 use itertools::izip;
 
 pub fn fn_from<'a>(
-    vm: Arc<VM<'a>>,
+    vm: Trc<VM<'a>>,
     code: Object<'a>,
     args: Vec<Object<'a>>,
     indices: Vec<Object<'a>>,
     name: String,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("fn"));
-    let refr = Arc::make_mut(&mut tp);
-    refr.internals = ObjectInternals::Fn(super::FnData {
+    (*tp).internals = ObjectInternals::Fn(super::FnData {
         code,
         args,
         name,
@@ -41,7 +41,7 @@ fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
                 .get_fn()
                 .expect("Expected Fn internal value")
                 .name,
-            Arc::as_ptr(&selfv) as i128
+            Trc::as_ptr(&selfv) as i128
         ),
     ))
 }
@@ -132,13 +132,13 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         .expect("Expected Bytecode internal value");
     MethodValue::Some(VM::execute_vars(
         selfv.vm.clone(),
-        Arc::new(code.clone()),
+        Trc::new(code.clone()),
         map,
     ))
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("fn"),

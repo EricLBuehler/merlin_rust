@@ -2,8 +2,9 @@ use super::{
     boolobject, create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
     ObjectInternals, RawObject,
 };
+use crate::is_type_exact;
+use crate::trc::Trc;
 use crate::{interpreter::VM, objects::stringobject};
-use crate::{is_type_exact, Arc};
 
 #[macro_export]
 macro_rules! none_from {
@@ -34,14 +35,13 @@ fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 pub fn generate_cache<'a>(nonetp: Object<'a>, ptr: *mut Option<Object<'a>>) {
     unsafe {
         let mut tp = create_object_from_type(nonetp.clone());
-        let refr = Arc::make_mut(&mut tp);
-        refr.internals = ObjectInternals::None;
+        (*tp).internals = ObjectInternals::None;
         std::ptr::write(ptr, Some(tp));
     }
 }
 
-pub fn init<'a>(vm: Arc<VM<'a>>) {
-    let tp: Arc<RawObject<'a>> = Arc::new(RawObject {
+pub fn init<'a>(vm: Trc<VM<'a>>) {
+    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Other(vm.get_type("type")),
         internals: super::ObjectInternals::No,
         typename: String::from("NoneType"),

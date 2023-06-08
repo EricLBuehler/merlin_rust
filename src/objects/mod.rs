@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use crate::objects::utils::object_repr;
-use crate::Arc;
+use crate::trc::Trc;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
 pub mod mhash;
 
@@ -24,7 +24,7 @@ pub mod stringobject;
 pub enum ObjectType<'a> {
     #[default]
     No,
-    Type(Arc<VM<'a>>),
+    Type(Trc<VM<'a>>),
     Other(Object<'a>),
 }
 
@@ -46,7 +46,7 @@ impl<'a> ObjectType<'a> {
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ObjectBase<'a> {
-    Object(Arc<VM<'a>>),
+    Object(Trc<VM<'a>>),
     Other(Object<'a>),
 }
 
@@ -69,7 +69,7 @@ pub struct RawObject<'a> {
     pub internals: ObjectInternals<'a>,
     pub typename: String,
     pub bases: Vec<ObjectBase<'a>>,
-    pub vm: Arc<VM<'a>>,
+    pub vm: Trc<VM<'a>>,
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
@@ -111,11 +111,11 @@ impl<'a> PartialEq for RawObject<'a> {
 
 impl<'a> Debug for RawObject<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", object_repr(&Arc::new(self.clone())))
+        write!(f, "{}", object_repr(&Trc::new(self.clone())))
     }
 }
 
-pub type Object<'a> = Arc<RawObject<'a>>;
+pub type Object<'a> = Trc<RawObject<'a>>;
 pub type MethodType<'a> = MethodValue<Object<'a>, Object<'a>>;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -143,7 +143,7 @@ pub enum ObjectInternals<'a> {
     Str(String),
     Arr(Vec<Object<'a>>),
     Map(mhash::HashMap<'a>),
-    Code(Arc<Bytecode<'a>>),
+    Code(Trc<Bytecode<'a>>),
     Fn(FnData<'a>),
     Exc(ExcData<'a>),
     None,
@@ -316,7 +316,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
     let mut obj = (*tp).clone();
     obj.tp = ObjectType::Other(tp);
-    Arc::new(obj)
+    Trc::new(obj)
 }
 
 #[macro_export]
@@ -326,45 +326,43 @@ macro_rules! is_type_exact {
     };
 }
 
-fn inherit_slots<'a>(tp: &mut RawObject<'a>, basetp: Object<'a>) {
-    tp.new = basetp.new;
+fn inherit_slots<'a>(mut tp: Object<'a>, basetp: Object<'a>) {
+    (*tp).new = basetp.new;
 
-    tp.repr = basetp.repr;
-    tp.abs = basetp.abs;
-    tp.neg = basetp.neg;
+    (*tp).repr = basetp.repr;
+    (*tp).abs = basetp.abs;
+    (*tp).neg = basetp.neg;
 
-    tp.eq = basetp.eq;
-    tp.add = basetp.add;
-    tp.sub = basetp.sub;
-    tp.mul = basetp.mul;
-    tp.div = basetp.div;
-    tp.pow = basetp.pow;
+    (*tp).eq = basetp.eq;
+    (*tp).add = basetp.add;
+    (*tp).sub = basetp.sub;
+    (*tp).mul = basetp.mul;
+    (*tp).div = basetp.div;
+    (*tp).pow = basetp.pow;
 
-    tp.get = basetp.get;
-    tp.set = basetp.set;
-    tp.len = basetp.len;
+    (*tp).get = basetp.get;
+    (*tp).set = basetp.set;
+    (*tp).len = basetp.len;
 }
 
 fn finalize_type(tp: Object<'_>) {
-    let mut cpy = tp.clone();
-    let refr = Arc::make_mut(&mut cpy);
-
-    for base in refr.bases.clone() {
+    let cpy = tp.clone();
+    for base in cpy.bases.clone() {
         match base {
             ObjectBase::Other(basetp) => {
-                inherit_slots(refr, basetp);
+                inherit_slots(cpy.clone(), basetp);
             }
             ObjectBase::Object(_) => {
-                let x = tp.vm.get_type("object");
-                inherit_slots(refr, x);
+                let x = (*tp).vm.get_type("object");
+                inherit_slots(cpy.clone(), x);
             }
         }
     }
 
-    inherit_slots(refr, tp);
+    inherit_slots(cpy, tp);
 }
 
-pub fn init_types(vm: Arc<VM<'_>>) {
+pub fn init_types(vm: Trc<VM<'_>>) {
     objectobject::init(vm.clone());
     typeobject::init(vm.clone());
     intobject::init(vm.clone());

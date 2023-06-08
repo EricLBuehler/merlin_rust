@@ -41,7 +41,7 @@ fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
                 .get_fn()
                 .expect("Expected Fn internal value")
                 .name,
-            Trc::as_ptr(&selfv) as i128
+            Trc::as_ptr(&selfv) as usize
         ),
     ))
 }

@@ -21,7 +21,7 @@ fn code_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        format!("<code object @ 0x{:x}>", Trc::as_ptr(&selfv) as i128),
+        format!("<code object @ 0x{:x}>", Trc::as_ptr(&selfv) as usize),
     ))
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {

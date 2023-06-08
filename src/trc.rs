@@ -168,11 +168,23 @@ impl<T> Trc<T> {
         };
     }
 
+    /// Checks if the 2 `Trc`s are equal by their internal pointers.
+    /// ```
+    /// let trc1 = Trc::new(100);
+    /// let trc2 = trc1.clone();
+    /// assert!(Trc::ptr_eq(&trc1, &trc2));
+    /// ```
     #[inline]
     pub fn ptr_eq(this: &Self, other: &Self) -> bool {
         return this.inner().atomicref.as_ptr() == other.inner().atomicref.as_ptr();
     }
 
+    /// Gets the raw pointer to the most inner layer of `Trc`.
+    /// The `AtomicThreadTrc` type only contains the data as its only public member.
+    /// ```
+    /// let trc = Trc::new(100);
+    /// println!("{}", Trc::as_ptr(&trc) as usize)
+    /// ```
     #[inline]
     pub fn as_ptr(this: &Self) -> *mut AtomicThreadTrc<T> {
         return this.inner().atomicref.as_ptr();

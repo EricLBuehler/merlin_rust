@@ -327,22 +327,22 @@ macro_rules! is_type_exact {
 }
 
 fn inherit_slots<'a>(mut tp: Object<'a>, basetp: Object<'a>) {
-    (*tp).new = basetp.new;
+    tp.new = basetp.new;
 
-    (*tp).repr = basetp.repr;
-    (*tp).abs = basetp.abs;
-    (*tp).neg = basetp.neg;
+    tp.repr = basetp.repr;
+    tp.abs = basetp.abs;
+    tp.neg = basetp.neg;
 
-    (*tp).eq = basetp.eq;
-    (*tp).add = basetp.add;
-    (*tp).sub = basetp.sub;
-    (*tp).mul = basetp.mul;
-    (*tp).div = basetp.div;
-    (*tp).pow = basetp.pow;
+    tp.eq = basetp.eq;
+    tp.add = basetp.add;
+    tp.sub = basetp.sub;
+    tp.mul = basetp.mul;
+    tp.div = basetp.div;
+    tp.pow = basetp.pow;
 
-    (*tp).get = basetp.get;
-    (*tp).set = basetp.set;
-    (*tp).len = basetp.len;
+    tp.get = basetp.get;
+    tp.set = basetp.set;
+    tp.len = basetp.len;
 }
 
 fn finalize_type(tp: Object<'_>) {
@@ -353,7 +353,7 @@ fn finalize_type(tp: Object<'_>) {
                 inherit_slots(cpy.clone(), basetp);
             }
             ObjectBase::Object(_) => {
-                let x = (*tp).vm.get_type("object");
+                let x = tp.vm.get_type("object");
                 inherit_slots(cpy.clone(), x);
             }
         }

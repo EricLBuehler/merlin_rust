@@ -14,7 +14,7 @@ use crate::{
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("list"));
-    (*tp).internals = ObjectInternals::Arr(raw);
+    tp.internals = ObjectInternals::Arr(raw);
     tp
 }
 
@@ -145,7 +145,7 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
         .expect("Expected int internal value"))
     .unsigned_abs() as usize] = value;
 
-    (*selfv).internals = ObjectInternals::Arr(arr.to_vec());
+    selfv.internals = ObjectInternals::Arr(arr.to_vec());
 
     MethodValue::Some(none_from!(selfv.vm.clone()))
 }

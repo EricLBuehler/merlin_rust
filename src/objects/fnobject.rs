@@ -19,7 +19,7 @@ pub fn fn_from<'a>(
     name: String,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("fn"));
-    (*tp).internals = ObjectInternals::Fn(super::FnData {
+    tp.internals = ObjectInternals::Fn(super::FnData {
         code,
         args,
         name,

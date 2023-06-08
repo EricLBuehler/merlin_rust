@@ -110,7 +110,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             vm.clone().clone(),
         );
 
-        (*vm).interpreters.push(Trc::new(interpreter));
+        vm.interpreters.push(Trc::new(interpreter));
 
         let mut means = Vec::new();
         for _ in 0..n_exec {

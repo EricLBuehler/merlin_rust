@@ -16,7 +16,7 @@ use crate::{
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("dict"));
-    (*tp).internals = ObjectInternals::Map(raw);
+    tp.internals = ObjectInternals::Map(raw);
     tp
 }
 
@@ -90,7 +90,7 @@ fn dict_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
         return MethodValue::Error(res.unwrap_err());
     }
 
-    (*selfv).internals = ObjectInternals::Map(map);
+    selfv.internals = ObjectInternals::Map(map);
 
     MethodValue::Some(none_from!(selfv.vm))
 }

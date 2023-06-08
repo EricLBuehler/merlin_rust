@@ -11,7 +11,7 @@ use crate::{
 
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Trc<RawObject> = create_object_from_type(vm.get_type("code"));
-    (*tp).internals = ObjectInternals::Code(bytecode);
+    tp.internals = ObjectInternals::Code(bytecode);
     tp
 }
 

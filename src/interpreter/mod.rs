@@ -92,7 +92,7 @@ macro_rules! add_frame {
             variables.push(None);
         }
         (*$interp.namespaces).variables.push(variables);
-            
+
         let mut registers = Vec::new();
         for _ in 0..$n_registers {
             registers.push(none_from!($interp.vm.clone()));
@@ -122,17 +122,17 @@ impl<'a> VM<'a> {
     }
 
     pub fn init_cache(this: Trc<Self>) {
-        let int_cache_arr_ref = &(*this).cache.int_cache;
+        let int_cache_arr_ref = &this.cache.int_cache;
         let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize]
             as *mut [Option<Object>; INT_CACHE_SIZE as usize];
         intobject::generate_cache(this.get_type("int"), ptr);
 
-        let bool_cache_tup_ref = &(*this).cache.bool_cache;
+        let bool_cache_tup_ref = &this.cache.bool_cache;
         let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>)
             as *mut (Option<Object>, Option<Object>);
         boolobject::generate_cache(this.get_type("bool"), ptr);
 
-        let none_obj_ref = &(*this).cache.none_singleton;
+        let none_obj_ref = &this.cache.none_singleton;
         let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
         noneobject::generate_cache(this.get_type("NoneType"), ptr);
     }
@@ -141,7 +141,7 @@ impl<'a> VM<'a> {
         let interpreter =
             Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
 
-        (*this).interpreters.push(Trc::new(interpreter));
+        this.interpreters.push(Trc::new(interpreter));
         let last = this.deref_mut().interpreters.last_mut().unwrap();
         return last.run_interpreter(bytecode);
     }
@@ -156,12 +156,14 @@ impl<'a> VM<'a> {
         let samples = &mut [0f64; 50];
 
         //Get initial result
-        let mut res = (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
+        let mut res =
+            (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
 
         for p in &mut *samples {
             let start = Instant::now();
             for _ in 0..5 {
-                res = (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
+                res = (this.deref_mut().interpreters.last_mut().unwrap())
+                    .run_interpreter(bytecode.clone());
             }
             let delta = start.elapsed().as_nanos();
             let time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
@@ -187,10 +189,11 @@ impl<'a> VM<'a> {
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         let interpreter =
-        Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
-        (*this).interpreters.push(Trc::new(interpreter));
+            Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
+        this.interpreters.push(Trc::new(interpreter));
 
-        let res = (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter_vars(bytecode, vars);
+        let res = (this.deref_mut().interpreters.last_mut().unwrap())
+            .run_interpreter_vars(bytecode, vars);
         res
     }
 
@@ -231,7 +234,9 @@ macro_rules! store_register {
     ($last:expr, $namespaces:expr, $register:expr, $value:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v as usize] = $value,
-            CompilerRegister::V(v) => (*$namespaces).variables.last_mut().unwrap()[v as usize] = Some($value),
+            CompilerRegister::V(v) => {
+                (*$namespaces).variables.last_mut().unwrap()[v as usize] = Some($value)
+            }
         }
     };
 }
@@ -313,8 +318,8 @@ impl<'a> Interpreter<'a> {
             bytecode.n_registers as usize,
             bytecode.n_variables as usize
         );
-        
-        for (i, var) in (*self.namespaces)
+
+        for (i, var) in self.namespaces
             .variables
             .last_mut()
             .unwrap()

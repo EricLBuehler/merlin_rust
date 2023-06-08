@@ -19,7 +19,7 @@ const MFBH_MAX_LEN: usize = 256;
 
 pub(crate) fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(vm.get_type("str"));
-    (*tp).internals = ObjectInternals::Str(raw);
+    tp.internals = ObjectInternals::Str(raw);
     tp
 }
 

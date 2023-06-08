@@ -68,12 +68,12 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
 pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
     unsafe {
         let mut tp = create_object_from_type(booltp.clone());
-        (*tp).internals = ObjectInternals::Bool(false);
+        tp.internals = ObjectInternals::Bool(false);
         let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
 
         let mut tp = create_object_from_type(booltp.clone());
-        (*tp).internals = ObjectInternals::Bool(true);
+        tp.internals = ObjectInternals::Bool(true);
         let ptr = &(*tup).1 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
     }

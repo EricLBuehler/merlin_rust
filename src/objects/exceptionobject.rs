@@ -70,7 +70,7 @@ pub fn nameexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("NameExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -82,11 +82,11 @@ pub fn nameexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("NameExc"));
 
-        (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,
-     });
+    });
     tp
 }
 
@@ -176,7 +176,7 @@ pub fn overflowexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("OverflowExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -188,11 +188,11 @@ pub fn overflowexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("OverflowExc"));
 
-        (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,
-     });
+    });
     tp
 }
 
@@ -286,7 +286,7 @@ pub fn methodnotdefinedexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("MethodNotDefinedExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -298,11 +298,11 @@ pub fn methodnotdefinedexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("MethodNotDefinedExc"));
 
-        (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,
-     });
+    });
     tp
 }
 
@@ -396,7 +396,7 @@ pub fn typemismatchexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("TypeMismatchExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -408,11 +408,11 @@ pub fn typemismatchexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("TypeMismatchExc"));
 
-        (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,
-     });
+    });
     tp
 }
 
@@ -506,7 +506,7 @@ pub fn keynotfoundexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("KeyNotFoundExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -518,11 +518,11 @@ pub fn keynotfoundexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("KeyNotFoundExc"));
 
-        (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,
-     });
+    });
     tp
 }
 
@@ -616,7 +616,7 @@ pub fn valueexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("ValueExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -628,11 +628,11 @@ pub fn valueexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("ValueExc"));
 
-        (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,
-     });
+    });
     tp
 }
 
@@ -722,7 +722,7 @@ pub fn zerodivexc_from_obj<'a>(
     end: Position,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("DivisionByZeroExc"));
-    (*tp).internals = ObjectInternals::Exc(ExcData { obj, start, end });
+    tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
 }
@@ -734,7 +734,7 @@ pub fn zerodivexc_from_str<'a>(
 ) -> Object<'a> {
     let mut tp = create_object_from_type(vm.get_type("DivisionByZeroExc"));
 
-    (*tp).internals = ObjectInternals::Exc(ExcData {
+    tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
         start,
         end,

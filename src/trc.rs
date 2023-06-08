@@ -319,8 +319,8 @@ impl<T> Drop for Trc<T> {
         self.inner_mut().threadref -= 1;
         if self.inner().threadref == 0 {
             let res = self.inner_atomic().atomicref.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-
-            if res-1 == 0 {
+            
+            if res == 0 {
                 unsafe { Box::from_raw(self.inner().atomicref.as_ptr()) };
                 unsafe { Box::from_raw(self.data.as_ptr()) };
             }

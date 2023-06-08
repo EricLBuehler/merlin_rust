@@ -10,7 +10,8 @@ dev:
 	cp target/debug/merlin merlin
 
 test:
-	cargo test --verbose
+	cargo test merlin_tests --verbose
+	cargo test trc_tests --verbose
 
 install:
 	make release	

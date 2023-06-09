@@ -29,7 +29,7 @@ Python 3.10.6: 58.7 ns
 
 `python3 -m timeit -c "a=1;b=2;c=3;a/b+c"`
 
-Merlin is: 13.76% slower
+Merlin is: 13.76% faster
 
 ## Installation
 To get started with Merlin:

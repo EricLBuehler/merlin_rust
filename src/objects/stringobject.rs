@@ -18,7 +18,7 @@ use super::{
 const MFBH_MAX_LEN: usize = 256;
 
 pub fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
-    let mut tp = create_object_from_type(vm.get_type("str"));
+    let mut tp = create_object_from_type(vm.types.strtp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Str(raw);
     tp
 }
@@ -72,7 +72,7 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&other, &selfv.vm.get_type("int")) {
+    if !is_type_exact!(&other, &selfv.vm.types.inttp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.typename),
@@ -169,12 +169,12 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), res+len))
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("str"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(string_new),
@@ -199,7 +199,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.strtp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

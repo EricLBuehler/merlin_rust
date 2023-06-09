@@ -22,7 +22,7 @@ pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
             .unwrap()
             .clone();
     }
-    let mut tp = create_object_from_type(vm.get_type("int"));
+    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Int(raw);
     tp
 }
@@ -45,7 +45,7 @@ pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
                 .clone(),
         );
     }
-    let mut tp = create_object_from_type(vm.get_type("int"));
+    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Int(convert.unwrap());
     MethodValue::Some(tp)
 }
@@ -346,12 +346,12 @@ pub fn generate_cache<'a>(
     }
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("int"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(int_new),
@@ -376,7 +376,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.inttp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

@@ -37,38 +37,47 @@ pub struct SingletonCache<'a> {
 }
 
 #[derive(Clone)]
+pub struct Types<'a> {
+    pub typetp: Option<Object<'a>>,
+    pub objecttp: Option<Object<'a>>,
+    pub inttp: Option<Object<'a>>,
+    pub booltp: Option<Object<'a>>,
+    pub codetp: Option<Object<'a>>,
+    pub dicttp: Option<Object<'a>>,
+    pub exctp: Option<Object<'a>>,
+    pub nameexctp: Option<Object<'a>>,
+    pub overflwexctp: Option<Object<'a>>,
+    pub mthntfndexctp: Option<Object<'a>>,
+    pub tpmisexctp: Option<Object<'a>>,
+    pub keyntfndexctp: Option<Object<'a>>,
+    pub valueexctp: Option<Object<'a>>,
+    pub divzeroexctp: Option<Object<'a>>,
+    pub fntp: Option<Object<'a>>,
+    pub listtp: Option<Object<'a>>,
+    pub nonetp: Option<Object<'a>>,
+    pub strtp: Option<Object<'a>>,
+}
+
+#[derive(Clone)]
 pub struct VM<'a> {
-    pub types: Trc<hashbrown::HashMap<String, Object<'a>>>,
+    pub types: Trc<Types<'a>>,
     pub interpreters: Vec<Trc<Interpreter<'a>>>,
     pub namespaces: Trc<Namespaces<'a>>,
     info: FileInfo<'a>,
     pub cache: SingletonCache<'a>,
 }
 
-impl<'a> VM<'a> {
-    #[inline(always)]
-    pub fn get_type(&self, name: &str) -> Object<'a> {
-        return self.types.get(name).expect("Type not found").clone();
-    }
-    pub fn add_type(mut this: Trc<Self>, name: &str, value: Object<'a>) {
-        (*this.types).insert(name.to_string(), value);
-    }
-}
-
 impl<'a> Eq for VM<'a> {}
 
 impl<'a> PartialEq for VM<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.types == other.types
-            && self.interpreters == other.interpreters
-            && self.namespaces == other.namespaces
+        self.namespaces == other.namespaces
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct Interpreter<'a> {
     frames: Vec<Frame<'a>>,
-    types: Trc<hashbrown::HashMap<String, Object<'a>>>,
     namespaces: Trc<Namespaces<'a>>,
     vm: Trc<VM<'a>>,
 }
@@ -110,7 +119,7 @@ impl<'a> VM<'a> {
             _marker: PhantomData,
         };
         VM {
-            types: Trc::new(hashbrown::HashMap::new()),
+            types: Trc::new(Types { typetp: None, objecttp: None, inttp: None, booltp: None, codetp: None, dicttp: None, exctp: None, nameexctp: None, overflwexctp: None, mthntfndexctp: None, tpmisexctp: None, keyntfndexctp: None, valueexctp: None, divzeroexctp: None, fntp: None, listtp: None, nonetp: None, strtp: None }),
             interpreters: Vec::new(),
             namespaces: Trc::new(Namespaces {
                 variables: Vec::new(),
@@ -125,21 +134,21 @@ impl<'a> VM<'a> {
         let int_cache_arr_ref = &this.cache.int_cache;
         let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize]
             as *mut [Option<Object>; INT_CACHE_SIZE as usize];
-        intobject::generate_cache(this.get_type("int"), ptr);
+        intobject::generate_cache(this.types.inttp.as_ref().unwrap().clone(), ptr);
 
         let bool_cache_tup_ref = &this.cache.bool_cache;
         let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>)
             as *mut (Option<Object>, Option<Object>);
-        boolobject::generate_cache(this.get_type("bool"), ptr);
+        boolobject::generate_cache(this.types.booltp.as_ref().unwrap().clone(), ptr);
 
         let none_obj_ref = &this.cache.none_singleton;
         let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
-        noneobject::generate_cache(this.get_type("NoneType"), ptr);
+        noneobject::generate_cache(this.types.nonetp.as_ref().unwrap().clone(), ptr);
     }
 
     pub fn execute(mut this: Trc<Self>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         let interpreter =
-            Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
+            Interpreter::new(this.namespaces.clone(), this.clone());
 
         this.interpreters.push(Trc::new(interpreter));
         let last = this.deref_mut().interpreters.last_mut().unwrap();
@@ -189,7 +198,7 @@ impl<'a> VM<'a> {
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         let interpreter =
-            Interpreter::new(this.types.clone(), this.namespaces.clone(), this.clone());
+            Interpreter::new(this.namespaces.clone(), this.clone());
         this.interpreters.push(Trc::new(interpreter));
 
         let res = (this.deref_mut().interpreters.last_mut().unwrap())
@@ -243,13 +252,11 @@ macro_rules! store_register {
 
 impl<'a> Interpreter<'a> {
     pub fn new(
-        types: Trc<hashbrown::HashMap<String, Object<'a>>>,
         namespaces: Trc<Namespaces<'a>>,
         vm: Trc<VM<'a>>,
     ) -> Interpreter<'a> {
         Interpreter {
             frames: Vec::new(),
-            types,
             namespaces,
             vm,
         }

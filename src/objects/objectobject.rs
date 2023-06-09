@@ -24,7 +24,7 @@ fn object_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
         tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
@@ -54,7 +54,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.objecttp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

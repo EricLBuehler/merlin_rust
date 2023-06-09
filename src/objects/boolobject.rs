@@ -79,12 +79,12 @@ pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Opt
     }
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("bool"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(bool_new),
@@ -109,7 +109,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.booltp = Some(tp.clone());  
 
     finalize_type(tp);
 }

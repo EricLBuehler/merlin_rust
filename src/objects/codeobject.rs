@@ -10,7 +10,7 @@ use crate::{
 };
 
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
-    let mut tp: Trc<RawObject> = create_object_from_type(vm.get_type("code"));
+    let mut tp: Trc<RawObject> = create_object_from_type(vm.types.codetp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Code(bytecode);
     tp
 }
@@ -48,12 +48,12 @@ fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("code"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(code_new),
@@ -77,7 +77,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.codetp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

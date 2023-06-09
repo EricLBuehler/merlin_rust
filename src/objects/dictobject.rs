@@ -15,7 +15,7 @@ use crate::{
 
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("dict"));
+    let mut tp = create_object_from_type(vm.types.dicttp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Map(raw);
     tp
 }
@@ -172,7 +172,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if res.is_error() {
             return res;
         }
-        if !is_type_exact!(&res.unwrap(), &selfv.vm.get_type("bool")) {
+        if !is_type_exact!(&res.unwrap(), &selfv.vm.types.booltp.as_ref().unwrap().clone()) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
@@ -195,7 +195,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if res.is_error() {
             return res;
         }
-        if !is_type_exact!(&res.unwrap(), &selfv.vm.get_type("bool")) {
+        if !is_type_exact!(&res.unwrap(), &selfv.vm.types.booltp.as_ref().unwrap().clone()) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
@@ -217,12 +217,12 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("dict"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(dict_new),
@@ -247,7 +247,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.dicttp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

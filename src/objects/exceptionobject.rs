@@ -25,12 +25,12 @@ fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init_exc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_exc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("Exception"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(exc_new),
@@ -55,7 +55,7 @@ pub fn init_exc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.exctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -69,7 +69,7 @@ pub fn nameexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("NameExc"));
+    let mut tp = create_object_from_type(vm.types.nameexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -80,7 +80,7 @@ pub fn nameexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("NameExc"));
+    let mut tp = create_object_from_type(vm.types.nameexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -128,14 +128,14 @@ fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init_nameexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_nameexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("NameExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -160,8 +160,8 @@ pub fn init_nameexc<'a>(vm: Trc<VM<'a>>) {
 
         call: None,
     });
-
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    
+    vm.types.nameexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -175,7 +175,7 @@ pub fn overflowexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("OverflowExc"));
+    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -186,7 +186,7 @@ pub fn overflowexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("OverflowExc"));
+    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -238,14 +238,14 @@ fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init_overflowexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_overflowexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("OverflowExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -271,7 +271,7 @@ pub fn init_overflowexc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.overflwexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -285,7 +285,7 @@ pub fn methodnotdefinedexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("MethodNotDefinedExc"));
+    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -296,7 +296,7 @@ pub fn methodnotdefinedexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("MethodNotDefinedExc"));
+    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -348,14 +348,14 @@ fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodTyp
     ))
 }
 
-pub fn init_methodnotdefinedexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_methodnotdefinedexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("MethodNotDefinedExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -381,7 +381,7 @@ pub fn init_methodnotdefinedexc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.mthntfndexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -395,7 +395,7 @@ pub fn typemismatchexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("TypeMismatchExc"));
+    let mut tp = create_object_from_type(vm.types.tpmisexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -406,7 +406,7 @@ pub fn typemismatchexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("TypeMismatchExc"));
+    let mut tp = create_object_from_type(vm.types.tpmisexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -458,14 +458,14 @@ fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a
     ))
 }
 
-pub fn init_typemismatchexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_typemismatchexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("TypeMismatchExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -491,7 +491,7 @@ pub fn init_typemismatchexc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.tpmisexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -505,7 +505,7 @@ pub fn keynotfoundexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("KeyNotFoundExc"));
+    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -516,7 +516,7 @@ pub fn keynotfoundexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("KeyNotFoundExc"));
+    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -568,14 +568,14 @@ fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a>
     ))
 }
 
-pub fn init_keynotfoundexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_keynotfoundexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("KeyNotFoundExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -601,7 +601,7 @@ pub fn init_keynotfoundexc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.keyntfndexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -615,7 +615,7 @@ pub fn valueexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("ValueExc"));
+    let mut tp = create_object_from_type(vm.types.valueexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -626,7 +626,7 @@ pub fn valueexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("ValueExc"));
+    let mut tp = create_object_from_type(vm.types.valueexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -674,14 +674,14 @@ fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init_valueexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_valueexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("ValueExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -707,7 +707,7 @@ pub fn init_valueexc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.valueexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }
@@ -721,7 +721,7 @@ pub fn zerodivexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("DivisionByZeroExc"));
+    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -732,7 +732,7 @@ pub fn zerodivexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("DivisionByZeroExc"));
+    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -784,14 +784,14 @@ fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init_zerodivexc<'a>(vm: Trc<VM<'a>>) {
+pub fn init_zerodivexc<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("DivisionByZeroExc"),
         bases: vec![
-            super::ObjectBase::Other(vm.get_type("Exception")),
-            super::ObjectBase::Other(vm.get_type("object")),
+            super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
+            super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
 
@@ -817,7 +817,7 @@ pub fn init_zerodivexc<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.divzeroexctp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

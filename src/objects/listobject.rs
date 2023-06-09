@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("list"));
+    let mut tp = create_object_from_type(vm.types.listtp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Arr(raw);
     tp
 }
@@ -44,7 +44,7 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&other, &selfv.vm.get_type("int")) {
+    if !is_type_exact!(&other, &selfv.vm.types.inttp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.typename),
@@ -91,7 +91,7 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(out.unwrap().clone())
 }
 fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
-    if is_type_exact!(&other, &selfv.vm.get_type("int")) {
+    if is_type_exact!(&other, &selfv.vm.types.inttp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.typename),
@@ -225,7 +225,7 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if res.is_error() {
             return res;
         }
-        if !is_type_exact!(&res.unwrap(), &selfv.vm.get_type("bool")) {
+        if !is_type_exact!(&res.unwrap(), &selfv.vm.types.booltp.as_ref().unwrap().clone()) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
@@ -247,12 +247,12 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("list"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(list_new),
@@ -276,7 +276,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.listtp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

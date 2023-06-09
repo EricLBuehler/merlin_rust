@@ -18,7 +18,7 @@ pub fn fn_from<'a>(
     indices: Vec<Object<'a>>,
     name: String,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.get_type("fn"));
+    let mut tp = create_object_from_type(vm.types.fntp.as_ref().unwrap().clone());
     tp.internals = ObjectInternals::Fn(super::FnData {
         code,
         args,
@@ -60,7 +60,7 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&args, &selfv.vm.clone().get_type("list")) {
+    if !is_type_exact!(&args, &selfv.vm.types.listtp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             "Expected args to be a 'list'",
@@ -137,12 +137,12 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn init<'a>(vm: Trc<VM<'a>>) {
+pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.get_type("type")),
+        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("fn"),
-        bases: vec![super::ObjectBase::Other(vm.get_type("object"))],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(fn_new),
@@ -166,7 +166,7 @@ pub fn init<'a>(vm: Trc<VM<'a>>) {
         call: Some(fn_call),
     });
 
-    VM::add_type(vm.clone(), &tp.clone().typename, tp.clone());
+    vm.types.fntp = Some(tp.clone()); 
 
     finalize_type(tp);
 }

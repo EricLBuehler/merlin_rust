@@ -43,7 +43,7 @@ impl<'a> HashMap<'a> {
             return MethodValue::Error(res.unwrap_err());
         }
         
-        if !is_type_exact!(&res.unwrap(), &key.vm.get_type("int")) {
+        if !is_type_exact!(&res.unwrap(), &key.vm.types.inttp.as_ref().unwrap().clone()) {
             let exc = typemismatchexc_from_str(
                 key.vm.clone(),
                 "Method 'hash' did not return 'int'",

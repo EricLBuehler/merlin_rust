@@ -34,7 +34,7 @@ impl<'a> ObjectType<'a> {
         match self {
             ObjectType::Other(v) => v.clone(),
             ObjectType::Type(vm) => {
-                let tp = vm.get_type("type");
+                let tp = vm.types.typetp.as_ref().unwrap().clone();
                 tp
             }
             _ => {
@@ -56,7 +56,7 @@ impl<'a> ObjectBase<'a> {
         match self {
             ObjectBase::Other(v) => v.clone(),
             ObjectBase::Object(vm) => {
-                let tp = vm.get_type("object");
+                let tp = vm.types.objecttp.as_ref().unwrap().clone();
                 tp
             }
         }
@@ -354,7 +354,7 @@ fn finalize_type(tp: Object<'_>) {
                 inherit_slots(cpy.clone(), basetp);
             }
             ObjectBase::Object(_) => {
-                let x = tp.vm.get_type("object");
+                let x = tp.vm.types.objecttp.as_ref().unwrap().clone();
                 inherit_slots(cpy.clone(), x);
             }
         }

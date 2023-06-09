@@ -112,7 +112,7 @@ fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
         .get_int()
         .expect("Expected int internal value")
         .checked_neg();
-    if matches!(res, Option::None) {
+    if res == None {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "int negation overflow (value is i128 minimum)",
@@ -145,7 +145,7 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .get_int()
         .expect("Expected int internal value")
         .checked_add(otherv);
-    if matches!(res, Option::None) {
+    if res == None {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "int addition overflow",
@@ -178,7 +178,7 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .get_int()
         .expect("Expected int internal value")
         .checked_sub(otherv);
-    if matches!(res, Option::None) {
+    if res == None {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "int subtraction overflow",
@@ -211,7 +211,7 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .get_int()
         .expect("Expected int internal value")
         .checked_mul(otherv);
-    if matches!(res, Option::None) {
+    if res == None {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "int multiplication overflow",
@@ -253,7 +253,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .get_int()
         .expect("Expected int internal value")
         .checked_div(otherv);
-    if matches!(res, Option::None) {
+    if res == None {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "int division overflow",
@@ -296,7 +296,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .get_int()
         .expect("Expected int internal value")
         .checked_pow(otherv as u32);
-    if matches!(res, Option::None) {
+    if res == None {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "int power overflow",

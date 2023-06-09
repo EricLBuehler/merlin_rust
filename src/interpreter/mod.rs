@@ -235,6 +235,7 @@ macro_rules! load_register {
                     $this.raise_exc_pos(exc, pos.0, pos.1);
                 }
             },
+            CompilerRegister::C(v) => $bytecode.consts.get(v).unwrap().clone()
         }
     };
 }
@@ -246,6 +247,7 @@ macro_rules! store_register {
             CompilerRegister::V(v) => {
                 (*$namespaces).variables.last_mut().unwrap()[v as usize] = Some($value)
             }
+            CompilerRegister::C(_) => unreachable!("Impossible.")
         }
     };
 }
@@ -358,20 +360,6 @@ impl<'a> Interpreter<'a> {
     pub fn run_interpreter_raw(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         for (i, instruction) in bytecode.instructions.iter().enumerate() {
             match instruction {
-                //Constant loading
-                CompilerInstruction::LoadConst { index, register } => {
-                    store_register!(
-                        self.frames.last_mut().expect("No frames"),
-                        self.namespaces,
-                        *register,
-                        bytecode
-                            .consts
-                            .get(*index)
-                            .expect("Bytecode consts index out of range")
-                            .clone()
-                    );
-                }
-
                 //Binary operations
                 CompilerInstruction::BinaryAdd { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");

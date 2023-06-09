@@ -34,10 +34,6 @@ pub struct Compiler<'a> {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CompilerInstruction {
-    LoadConst {
-        index: usize,
-        register: CompilerRegister,
-    }, //consts[index]
     BinaryAdd {
         a: CompilerRegister,
         b: CompilerRegister,
@@ -96,6 +92,7 @@ pub enum CompilerInstruction {
 pub enum CompilerRegister {
     R(i32),
     V(i32),
+    C(usize),
 }
 
 impl From<CompilerRegister> for i32 {
@@ -103,6 +100,7 @@ impl From<CompilerRegister> for i32 {
         match value {
             CompilerRegister::V(v) => v,
             CompilerRegister::R(v) => v,
+            CompilerRegister::C(v) => v as i32,
         }
     }
 }
@@ -334,8 +332,21 @@ impl<'a> Compiler<'a> {
     fn compile_expr_values(&mut self, expr: &Node) -> RegisterContext {
         match expr.tp {
             NodeType::Decimal => {
+                let int = intobject::int_from_str(
+                    self.vm.clone(),
+                    expr.data
+                        .get_data()
+                        .raw
+                        .get("value")
+                        .expect("Node.raw.value not found")
+                        .to_string(),
+                );
+
+                maybe_handle_exception_pos!(self, int, expr.start, expr.end);
+                self.consts.push(int.unwrap());
+
                 let res = RegisterContext {
-                    value: CompilerRegister::R(self.register_index),
+                    value: CompilerRegister::C(self.consts.len()-1),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -526,8 +537,20 @@ impl<'a> Compiler<'a> {
                 res
             }
             NodeType::String => {
+                let str = stringobject::string_from(
+                    self.vm.clone(),
+                    expr.data
+                        .get_data()
+                        .raw
+                        .get("value")
+                        .expect("Node.raw.value not found")
+                        .to_string(),
+                );
+
+                self.consts.push(str);
+
                 let res = RegisterContext {
-                    value: CompilerRegister::R(self.register_index),
+                    value: CompilerRegister::C(self.consts.len()-1),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -609,24 +632,6 @@ impl<'a> Compiler<'a> {
     fn compile_expr_operation(&mut self, expr: &Node, ctx: RegisterContext) {
         match expr.tp {
             NodeType::Decimal => {
-                let int = intobject::int_from_str(
-                    self.vm.clone(),
-                    expr.data
-                        .get_data()
-                        .raw
-                        .get("value")
-                        .expect("Node.raw.value not found")
-                        .to_string(),
-                );
-
-                maybe_handle_exception_pos!(self, int, expr.start, expr.end);
-                self.consts.push(int.unwrap());
-
-                self.instructions.push(CompilerInstruction::LoadConst {
-                    index: self.consts.len() - 1,
-                    register: ctx.value,
-                });
-                self.positions.push((expr.start, expr.end));
             }
             NodeType::Binary => {
                 self.compile_expr_operation(
@@ -802,23 +807,6 @@ impl<'a> Compiler<'a> {
                 }
             }
             NodeType::String => {
-                let str = stringobject::string_from(
-                    self.vm.clone(),
-                    expr.data
-                        .get_data()
-                        .raw
-                        .get("value")
-                        .expect("Node.raw.value not found")
-                        .to_string(),
-                );
-
-                self.consts.push(str);
-
-                self.instructions.push(CompilerInstruction::LoadConst {
-                    index: self.consts.len() - 1,
-                    register: ctx.value,
-                });
-                self.positions.push((expr.start, expr.end));
             }
             NodeType::List => {
                 for arg in izip!(

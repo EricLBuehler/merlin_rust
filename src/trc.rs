@@ -33,7 +33,7 @@ struct LocalThreadTrc<T> {
 /// This implementation of biased reference counting sets the atomic reference count to the number of threads using the data.
 /// When the thread drops the object, the atomic refernce count is decremented, and the data is freed.
 ///
-/// For ease of developer use, `Trc` comes with `Deref` and `DerefMut` implemented to allow internal mutation.
+/// For ease of developer use, `Trc` comes with [`Deref`] and [`DerefMut`] implemented to allow internal mutation.
 ///
 /// Example in a single thread:
 /// ```
@@ -156,7 +156,8 @@ impl<T> Trc<T> {
         *readlock.unwrap()
     }
 
-    /// Return the atomic reference count of the object. This is how many threads are using the data referenced by this `Trc`./// ```
+    /// Return the atomic reference count of the object. This is how many threads are using the data referenced by this `Trc`.
+    /// ```
     /// use std::thread;
     ///
     /// let trc = Trc::new(100);
@@ -201,7 +202,7 @@ impl<T> Trc<T> {
         unsafe { &mut *(*self.data.as_ptr()).atomicref.as_ptr() }
     }
 
-    /// Clone a `Trc` across threads. This is necessary because otherwise the atomic reference count will not be incremented.use std::thread;
+    /// Clone a `Trc` across threads. This is necessary because otherwise the atomic reference count will not be incremented.
     /// ```
     /// let trc = Trc::new(100);
     /// let trc2 = trc.clone_across_thread();
@@ -230,7 +231,7 @@ impl<T> Trc<T> {
         };
     }
 
-    /// Clone a `Trc` across threads (increase it's atomic reference count). This is necessary because otherwise the atomic reference count will not be incremented.use std::thread;
+    /// Clone a `Trc` across threads (increase it's atomic reference count). This is necessary because otherwise the atomic reference count will not be incremented.
     /// ```
     /// let trc = Trc::new(100);
     /// let trc2 = trc.clone_across_thread();
@@ -254,7 +255,7 @@ impl<T> Trc<T> {
         };
     }
 
-    /// Checks if the 2 `Trc`s are equal by their internal pointers.
+    /// Checks if the other `Trc` is equal to this one according to their internal pointers.
     /// ```
     /// let trc1 = Trc::new(100);
     /// let trc2 = trc1.clone();

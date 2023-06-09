@@ -635,7 +635,7 @@ impl<'a> Interpreter<'a> {
                             self.namespaces,
                             bytecode,
                             i,
-                            register.value
+                            register.clone()
                         ));
                     }
                     let list = listobject::list_from(self.vm.clone(), values);
@@ -650,9 +650,9 @@ impl<'a> Interpreter<'a> {
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
                         let key =
-                            load_register!(self, last, self.namespaces, bytecode, i, key.value);
+                            load_register!(self, last, self.namespaces, bytecode, i, key.clone());
                         let value =
-                            load_register!(self, last, self.namespaces, bytecode, i, value.value);
+                            load_register!(self, last, self.namespaces, bytecode, i, value.clone());
 
                         let res = map.insert(key, value);
                         maybe_handle_exception!(self, res, bytecode, i);

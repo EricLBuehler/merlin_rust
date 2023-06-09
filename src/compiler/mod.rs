@@ -15,7 +15,7 @@ use crate::{
 };
 use colored::Colorize;
 use hashbrown::HashMap;
-use itertools::izip;
+use itertools::{izip, Itertools};
 use std::marker::PhantomData;
 
 pub struct Compiler<'a> {
@@ -83,12 +83,12 @@ pub enum CompilerInstruction {
     },
     BuildList {
         result: CompilerRegister,
-        value_registers: Vec<RegisterContext>,
+        value_registers: Vec<CompilerRegister>,
     },
     BuildDict {
         result: CompilerRegister,
-        key_registers: Vec<RegisterContext>,
-        value_registers: Vec<RegisterContext>,
+        key_registers: Vec<CompilerRegister>,
+        value_registers: Vec<CompilerRegister>,
     },
 }
 
@@ -138,7 +138,7 @@ pub struct RegisterContext {
     rightctx: Option<Box<RegisterContext>>,
     args: Option<Vec<RegisterContext>>,
     mapping: Option<(Vec<RegisterContext>, Vec<RegisterContext>)>,
-    registers: i32, //How many registers this instruction needs
+    registers: i32, //How many registers this instruction needs - if it uses other exprs this should be 0
 }
 
 impl<'a> Compiler<'a> {
@@ -373,9 +373,8 @@ impl<'a> Compiler<'a> {
                     rightctx: Some(Box::new(right)),
                     args: None,
                     mapping: None,
-                    registers: 1,
+                    registers: 0,
                 };
-                increment_reg_num!(self);
                 res
             }
             NodeType::StoreNode => {
@@ -458,6 +457,7 @@ impl<'a> Compiler<'a> {
                     .nodes
                     .get("name")
                     .expect("Node.nodes.name not found");
+                let old = self.register_index;
                 let callable = self.compile_expr_values(name);
 
                 let mut args = Vec::new();
@@ -472,16 +472,15 @@ impl<'a> Compiler<'a> {
                 }
 
                 let res = RegisterContext {
-                    value: CompilerRegister::R(self.register_index),
+                    value: CompilerRegister::R(old),
                     left: Some(callable.value),
                     leftctx: Some(Box::new(callable)),
                     right: None,
                     rightctx: None,
                     args: Some(args),
                     mapping: None,
-                    registers: 1,
+                    registers: 0,
                 };
-                increment_reg_num!(self);
                 res
             }
             NodeType::Return => {
@@ -524,7 +523,6 @@ impl<'a> Compiler<'a> {
                     mapping: None,
                     registers: 0,
                 };
-                increment_reg_num!(self);
                 res
             }
             NodeType::String => {
@@ -542,6 +540,7 @@ impl<'a> Compiler<'a> {
                 res
             }
             NodeType::List => {
+                let old = self.register_index;
                 let mut args = Vec::new();
                 for arg in expr
                     .data
@@ -554,19 +553,19 @@ impl<'a> Compiler<'a> {
                 }
 
                 let res = RegisterContext {
-                    value: CompilerRegister::R(self.register_index),
+                    value: CompilerRegister::R(old),
                     left: None,
                     leftctx: None,
                     right: None,
                     rightctx: None,
                     args: Some(args),
                     mapping: None,
-                    registers: 1,
+                    registers: 0,
                 };
-                increment_reg_num!(self);
                 res
             }
             NodeType::Dict => {
+                let old = self.register_index;
                 let mut keys = Vec::new();
                 for (arg, _) in expr
                     .data
@@ -590,16 +589,15 @@ impl<'a> Compiler<'a> {
                 }
 
                 let res = RegisterContext {
-                    value: CompilerRegister::R(self.register_index),
+                    value: CompilerRegister::R(old),
                     left: None,
                     leftctx: None,
                     right: None,
                     rightctx: None,
                     args: None,
                     mapping: Some((keys, values)),
-                    registers: 1,
+                    registers: 0,
                 };
-                increment_reg_num!(self);
                 res
             }
             _ => {
@@ -834,7 +832,7 @@ impl<'a> Compiler<'a> {
                 }
                 self.instructions.push(CompilerInstruction::BuildList {
                     result: ctx.value,
-                    value_registers: ctx.args.unwrap(),
+                    value_registers: ctx.args.unwrap().iter().map(|x| x.value).collect_vec(),
                 });
                 self.positions.push((expr.start, expr.end));
             }
@@ -859,8 +857,8 @@ impl<'a> Compiler<'a> {
                 }
                 self.instructions.push(CompilerInstruction::BuildDict {
                     result: ctx.value,
-                    key_registers: ctx.mapping.as_ref().unwrap().0.clone(),
-                    value_registers: ctx.mapping.unwrap().1,
+                    key_registers: ctx.mapping.as_ref().unwrap().0.iter().map(|x| x.value).collect_vec(),
+                    value_registers: ctx.mapping.unwrap().1.iter().map(|x| x.value).collect_vec(),
                 });
                 self.positions.push((expr.start, expr.end));
             }

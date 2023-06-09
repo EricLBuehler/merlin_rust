@@ -138,7 +138,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("fn"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

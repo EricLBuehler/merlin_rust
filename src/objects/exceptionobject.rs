@@ -26,7 +26,7 @@ fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init_exc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("Exception"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
@@ -129,7 +129,7 @@ fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init_nameexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("NameExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -237,7 +237,7 @@ fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init_overflowexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("OverflowExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -345,7 +345,7 @@ fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodTyp
 }
 
 pub fn init_methodnotdefinedexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("MethodNotDefinedExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -453,7 +453,7 @@ fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a
 }
 
 pub fn init_typemismatchexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("TypeMismatchExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -561,7 +561,7 @@ fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a>
 }
 
 pub fn init_keynotfoundexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("KeyNotFoundExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -665,7 +665,7 @@ fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init_valueexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("ValueExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -773,7 +773,7 @@ fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init_zerodivexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("DivisionByZeroExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),

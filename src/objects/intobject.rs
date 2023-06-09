@@ -347,7 +347,7 @@ pub fn generate_cache<'a>(
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("int"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

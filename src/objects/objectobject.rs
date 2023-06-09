@@ -24,7 +24,7 @@ fn object_hash(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
+    let tp = Trc::new(TypeObject {
         typename: String::from("object"),
         bases: vec![super::ObjectBase::Object(vm.clone())],
         vm: vm.clone(),

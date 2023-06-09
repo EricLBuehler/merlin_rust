@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
-    ObjectInternals, RawObject, TypeObject,
+    ObjectInternals, TypeObject,
 };
 
 pub fn bool_from(vm: Trc<VM<'_>>, raw: bool) -> Object<'_> {
@@ -65,7 +65,10 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 
-pub fn generate_cache<'a>(booltp: Trc<TypeObject<'a>>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
+pub fn generate_cache<'a>(
+    booltp: Trc<TypeObject<'a>>,
+    tup: *mut (Option<Object<'a>>, Option<Object<'a>>),
+) {
     unsafe {
         let mut tp = create_object_from_type(booltp.clone());
         tp.internals = ObjectInternals::Bool(false);

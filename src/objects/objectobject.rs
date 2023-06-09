@@ -1,11 +1,10 @@
 use crate::{interpreter::VM, trc::Trc};
 
 use super::{
-    boolobject, finalize_type, intobject, stringobject, MethodType,
-    MethodValue, Object, TypeObject,
+    boolobject, finalize_type, intobject, stringobject, MethodType, MethodValue, Object, TypeObject,
 };
 
-fn object_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
+fn object_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
 fn object_repr(selfv: Object<'_>) -> MethodType<'_> {

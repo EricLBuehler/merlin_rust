@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 use crate::objects::utils::object_repr;
 use crate::trc::Trc;
@@ -21,31 +21,6 @@ pub mod fnobject;
 pub mod listobject;
 pub mod stringobject;
 
-#[derive(Clone, PartialEq, Eq, Default)]
-pub enum ObjectType<'a> {
-    #[default]
-    No,
-    Type(Trc<VM<'a>>),
-    Other(TypeObject<'a>),
-}
-
-impl<'a> Deref for ObjectType<'a> {
-    type Target = TypeObject<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        match self {
-            ObjectType::Other(v) => v,
-            ObjectType::Type(vm) => {
-                let tp = vm.types.typetp.as_ref().unwrap();
-                return &*tp;
-            }
-            _ => {
-                unimplemented!();
-            }
-        }        
-    }
-}
-
 #[derive(Clone, PartialEq, Eq)]
 pub enum ObjectBase<'a> {
     Object(Trc<VM<'a>>),
@@ -58,13 +33,8 @@ impl<'a> Deref for ObjectBase<'a> {
     fn deref(&self) -> &Self::Target {
         match self {
             ObjectBase::Other(v) => v,
-            ObjectBase::Object(vm) => {
-                vm.types.objecttp.as_ref().unwrap()
-            }
-            _ => {
-                unimplemented!();
-            }
-        }        
+            ObjectBase::Object(vm) => vm.types.objecttp.as_ref().unwrap(),
+        }
     }
 }
 
@@ -111,15 +81,13 @@ impl<'a> Eq for RawObject<'a> {}
 
 impl<'a> PartialEq for RawObject<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.tp == other.tp
-            && self.internals == other.internals
+        self.tp == other.tp && self.internals == other.internals
     }
 }
 
 impl<'a> PartialEq for TypeObject<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.typename == other.typename
-            && self.bases == other.bases
+        self.typename == other.typename && self.bases == other.bases
     }
 }
 
@@ -327,7 +295,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 }
 
 #[inline]
-fn create_object_from_type<'a>(tp: Trc<TypeObject<'a>>) -> Object<'a> {
+fn create_object_from_type(tp: Trc<TypeObject<'_>>) -> Object<'_> {
     let raw = RawObject {
         tp,
         internals: ObjectInternals::No,

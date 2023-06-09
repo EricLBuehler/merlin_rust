@@ -1,11 +1,10 @@
 use crate::{interpreter::VM, trc::Trc};
 
 use super::{
-    boolobject, finalize_type, intobject, stringobject, MethodType,
-    MethodValue, Object, TypeObject,
+    boolobject, finalize_type, intobject, stringobject, MethodType, MethodValue, Object, TypeObject,
 };
 
-fn type_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
+fn type_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();
 }
 
@@ -25,7 +24,9 @@ fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("type"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(type_new),

@@ -1,7 +1,7 @@
 use super::exceptionobject::{typemismatchexc_from_str, zerodivexc_from_str};
 use super::{
     boolobject, create_object_from_type, finalize_type, stringobject, MethodType, MethodValue,
-    Object, ObjectInternals, RawObject, TypeObject,
+    Object, ObjectInternals, TypeObject,
 };
 
 use crate::is_type_exact;

@@ -1,10 +1,10 @@
 use super::mhash::HashMap;
 use super::{
     create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
-    RawObject, TypeObject,
+    TypeObject,
 };
 
-use crate::{is_type_exact};
+use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
 use crate::trc::Trc;

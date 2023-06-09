@@ -32,7 +32,10 @@ impl<'a> HashMap<'a> {
         if key.tp.hash_fn.is_none() {
             let exc = methodnotdefinedexc_from_str(
                 key.tp.vm.clone(),
-                &format!("Method 'hash' is not defined for '{}' type", key.tp.typename),
+                &format!(
+                    "Method 'hash' is not defined for '{}' type",
+                    key.tp.typename
+                ),
                 Position::default(),
                 Position::default(),
             );
@@ -43,7 +46,10 @@ impl<'a> HashMap<'a> {
             return MethodValue::Error(res.unwrap_err());
         }
 
-        if !is_type_exact!(&res.unwrap(), key.tp.vm.types.inttp.as_ref().unwrap().clone()) {
+        if !is_type_exact!(
+            &res.unwrap(),
+            key.tp.vm.types.inttp.as_ref().unwrap().clone()
+        ) {
             let exc = typemismatchexc_from_str(
                 key.tp.vm.clone(),
                 "Method 'hash' did not return 'int'",

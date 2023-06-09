@@ -1,6 +1,6 @@
 use super::{
     boolobject, create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
-    ObjectInternals, RawObject, TypeObject,
+    ObjectInternals, TypeObject,
 };
 use crate::is_type_exact;
 use crate::trc::Trc;

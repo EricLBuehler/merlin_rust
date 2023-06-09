@@ -1,7 +1,7 @@
 use super::exceptionobject::valueexc_from_str;
-use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject};
+use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, TypeObject};
 
-use crate::{is_type_exact};
+use crate::is_type_exact;
 use crate::objects::exceptionobject::typemismatchexc_from_str;
 use crate::parser::Position;
 use crate::trc::Trc;

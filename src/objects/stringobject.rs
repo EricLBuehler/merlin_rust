@@ -11,7 +11,8 @@ use crate::trc::Trc;
 
 use super::exceptionobject::typemismatchexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, MethodType, MethodValue, Object, ObjectInternals, TypeObject,
+    create_object_from_type, finalize_type, MethodType, MethodValue, Object, ObjectInternals,
+    TypeObject,
 };
 
 const MFBH_MAX_LEN: usize = 256;

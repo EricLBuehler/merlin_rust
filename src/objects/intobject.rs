@@ -1,7 +1,7 @@
 use super::exceptionobject::{typemismatchexc_from_str, zerodivexc_from_str};
 use super::{
     boolobject, create_object_from_type, finalize_type, stringobject, MethodType, MethodValue,
-    Object, ObjectInternals, RawObject,
+    Object, ObjectInternals, RawObject, TypeObject,
 };
 
 use crate::is_type_exact;
@@ -56,7 +56,7 @@ fn int_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Me
 
 fn int_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_int()
@@ -72,7 +72,7 @@ fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
         .checked_abs();
     if res.is_none() {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int absolute value overflow (value is i128 minimum)",
             Position::default(),
             Position::default(),
@@ -80,12 +80,12 @@ fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -94,7 +94,7 @@ fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_int()
@@ -114,7 +114,7 @@ fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
         .checked_neg();
     if matches!(res, Option::None) {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int negation overflow (value is i128 minimum)",
             Position::default(),
             Position::default(),
@@ -122,12 +122,12 @@ fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -147,7 +147,7 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .checked_add(otherv);
     if matches!(res, Option::None) {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int addition overflow",
             Position::default(),
             Position::default(),
@@ -155,12 +155,12 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -180,7 +180,7 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .checked_sub(otherv);
     if matches!(res, Option::None) {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int subtraction overflow",
             Position::default(),
             Position::default(),
@@ -188,12 +188,12 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -213,7 +213,7 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .checked_mul(otherv);
     if matches!(res, Option::None) {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int multiplication overflow",
             Position::default(),
             Position::default(),
@@ -221,12 +221,12 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -240,7 +240,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .expect("Expected int internal value");
     if otherv == 0 {
         let exc = zerodivexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Divison by 0",
             Position::default(),
             Position::default(),
@@ -255,7 +255,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .checked_div(otherv);
     if matches!(res, Option::None) {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int division overflow",
             Position::default(),
             Position::default(),
@@ -263,12 +263,12 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -283,7 +283,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     if otherv >= std::u32::MAX as i128 {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Power is too large",
             Position::default(),
             Position::default(),
@@ -298,7 +298,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .checked_pow(otherv as u32);
     if matches!(res, Option::None) {
         let exc = overflowexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "int power overflow",
             Position::default(),
             Position::default(),
@@ -306,7 +306,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.tp.vm.clone(), res.unwrap()))
 }
 fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
     let mut hasher = DefaultHasher::new();
@@ -315,7 +315,7 @@ fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
         .get_int()
         .expect("Expected int internal value")
         .hash(&mut hasher);
-    return MethodValue::Some(int_from(selfv.vm.clone(), hasher.finish() as i128));
+    return MethodValue::Some(int_from(selfv.tp.vm.clone(), hasher.finish() as i128));
 }
 
 pub fn init_cache<'a>() -> [Option<Object<'a>>; INT_CACHE_SIZE as usize] {
@@ -332,7 +332,7 @@ pub fn init_cache<'a>() -> [Option<Object<'a>>; INT_CACHE_SIZE as usize] {
 }
 
 pub fn generate_cache<'a>(
-    int: Object<'a>,
+    int: Trc<TypeObject<'a>>,
     arr: *mut [Option<Object<'a>>; INT_CACHE_SIZE as usize],
 ) {
     unsafe {
@@ -347,9 +347,7 @@ pub fn generate_cache<'a>(
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("int"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

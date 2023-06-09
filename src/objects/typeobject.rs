@@ -1,34 +1,31 @@
 use crate::{interpreter::VM, trc::Trc};
 
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, stringobject, MethodType,
-    MethodValue, Object, RawObject,
+    boolobject, finalize_type, intobject, stringobject, MethodType,
+    MethodValue, Object, TypeObject,
 };
 
 fn type_new<'a>(selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
-    MethodValue::Some(create_object_from_type(selfv))
+    unimplemented!();
 }
+
 fn type_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
-        format!("<class '{}'>", selfv.typename),
+        selfv.tp.vm.clone(),
+        format!("<class '{}'>", selfv.tp.typename),
     ))
 }
 fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        selfv.typename == other.typename,
+        selfv.tp.vm.clone(),
+        selfv.tp == other.tp,
     ))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Type(vm.clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("type"),
-        bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
-        )],
+        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
         vm: vm.clone(),
 
         new: Some(type_new),
@@ -38,7 +35,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         abs: None,
         neg: None,
         hash_fn: Some(|selfv: Object<'a>| {
-            MethodValue::Some(intobject::int_from(selfv.vm.clone(), -3))
+            MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -3))
         }),
 
         eq: Some(type_eq),

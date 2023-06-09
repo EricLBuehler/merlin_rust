@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
-    ObjectInternals, RawObject,
+    ObjectInternals, RawObject, TypeObject,
 };
 
 pub fn bool_from(vm: Trc<VM<'_>>, raw: bool) -> Object<'_> {
@@ -24,7 +24,7 @@ fn bool_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn bool_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_bool()
@@ -33,9 +33,9 @@ fn bool_repr(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -44,7 +44,7 @@ fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_bool()
@@ -57,7 +57,7 @@ fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         *selfv
             .internals
             .get_bool()
@@ -65,7 +65,7 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 
-pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
+pub fn generate_cache<'a>(booltp: Trc<TypeObject<'a>>, tup: *mut (Option<Object<'a>>, Option<Object<'a>>)) {
     unsafe {
         let mut tp = create_object_from_type(booltp.clone());
         tp.internals = ObjectInternals::Bool(false);
@@ -80,9 +80,7 @@ pub fn generate_cache<'a>(booltp: Object<'a>, tup: *mut (Option<Object<'a>>, Opt
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("bool"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

@@ -1,5 +1,5 @@
 use super::exceptionobject::typemismatchexc_from_str;
-use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject};
+use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject};
 use crate::is_type_exact;
 use crate::parser::Position;
 use crate::trc::Trc;
@@ -20,14 +20,14 @@ fn code_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("<code object @ 0x{:x}>", Trc::as_ptr(&selfv) as usize),
     ))
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -36,7 +36,7 @@ fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_code()
@@ -49,9 +49,7 @@ fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("code"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

@@ -1,7 +1,7 @@
 use super::{stringobject, MethodValue, Object};
 
 pub fn object_repr(object: &Object<'_>) -> String {
-    return (object.clone().repr.expect("Method is not defined"))(object.clone())
+    return (object.clone().tp.repr.expect("Method is not defined"))(object.clone())
         .unwrap()
         .internals
         .get_str()
@@ -10,10 +10,10 @@ pub fn object_repr(object: &Object<'_>) -> String {
 }
 
 pub fn object_repr_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
-    let repr = object.clone().repr;
+    let repr = object.clone().tp.repr;
     if repr.is_none() {
         return MethodValue::Error(stringobject::string_from(
-            object.vm.clone(),
+            object.tp.vm.clone(),
             String::from("__repr__ is not implemented."),
         ));
     }
@@ -26,14 +26,14 @@ pub fn object_repr_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
 
     if reprv.is_not_implemented() {
         return MethodValue::Error(stringobject::string_from(
-            object.vm.clone(),
+            object.tp.vm.clone(),
             String::from("__repr__ is not implemented."),
         ));
     }
 
     if !reprv.unwrap().internals.is_str() {
         return MethodValue::Error(stringobject::string_from(
-            object.vm.clone(),
+            object.tp.vm.clone(),
             String::from("__repr__ returned non-string."),
         ));
     }
@@ -50,7 +50,7 @@ pub fn object_repr_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
 
 #[allow(dead_code)]
 pub fn object_str(object: &Object<'_>) -> String {
-    return (object.clone().str.expect("Method is not defined"))(object.clone())
+    return (object.clone().tp.str.expect("Method is not defined"))(object.clone())
         .unwrap()
         .internals
         .get_str()
@@ -59,10 +59,10 @@ pub fn object_str(object: &Object<'_>) -> String {
 }
 
 pub fn object_str_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
-    let str = object.clone().str;
+    let str = object.clone().tp.str;
     if str.is_none() {
         return MethodValue::Error(stringobject::string_from(
-            object.vm.clone(),
+            object.tp.vm.clone(),
             String::from("__repr__ is not implemented."),
         ));
     }
@@ -75,14 +75,14 @@ pub fn object_str_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
 
     if strv.is_not_implemented() {
         return MethodValue::Error(stringobject::string_from(
-            object.vm.clone(),
+            object.tp.vm.clone(),
             String::from("__repr__ is not implemented."),
         ));
     }
 
     if !strv.unwrap().internals.is_str() {
         return MethodValue::Error(stringobject::string_from(
-            object.vm.clone(),
+            object.tp.vm.clone(),
             String::from("__repr__ returned non-string."),
         ));
     }

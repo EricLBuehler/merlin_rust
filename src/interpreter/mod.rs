@@ -1,7 +1,7 @@
 // Interpret bytecode
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
-use crate::objects::{dictobject, mhash};
+use crate::objects::{dictobject, mhash, TypeObject};
 use crate::parser::Position;
 use crate::trc::Trc;
 use crate::{
@@ -38,24 +38,24 @@ pub struct SingletonCache<'a> {
 
 #[derive(Clone)]
 pub struct Types<'a> {
-    pub typetp: Option<Object<'a>>,
-    pub objecttp: Option<Object<'a>>,
-    pub inttp: Option<Object<'a>>,
-    pub booltp: Option<Object<'a>>,
-    pub codetp: Option<Object<'a>>,
-    pub dicttp: Option<Object<'a>>,
-    pub exctp: Option<Object<'a>>,
-    pub nameexctp: Option<Object<'a>>,
-    pub overflwexctp: Option<Object<'a>>,
-    pub mthntfndexctp: Option<Object<'a>>,
-    pub tpmisexctp: Option<Object<'a>>,
-    pub keyntfndexctp: Option<Object<'a>>,
-    pub valueexctp: Option<Object<'a>>,
-    pub divzeroexctp: Option<Object<'a>>,
-    pub fntp: Option<Object<'a>>,
-    pub listtp: Option<Object<'a>>,
-    pub nonetp: Option<Object<'a>>,
-    pub strtp: Option<Object<'a>>,
+    pub typetp: Option<Trc<TypeObject<'a>>>,
+    pub objecttp: Option<Trc<TypeObject<'a>>>,
+    pub inttp: Option<Trc<TypeObject<'a>>>,
+    pub booltp: Option<Trc<TypeObject<'a>>>,
+    pub codetp: Option<Trc<TypeObject<'a>>>,
+    pub dicttp: Option<Trc<TypeObject<'a>>>,
+    pub exctp: Option<Trc<TypeObject<'a>>>,
+    pub nameexctp: Option<Trc<TypeObject<'a>>>,
+    pub overflwexctp: Option<Trc<TypeObject<'a>>>,
+    pub mthntfndexctp: Option<Trc<TypeObject<'a>>>,
+    pub tpmisexctp: Option<Trc<TypeObject<'a>>>,
+    pub keyntfndexctp: Option<Trc<TypeObject<'a>>>,
+    pub valueexctp: Option<Trc<TypeObject<'a>>>,
+    pub divzeroexctp: Option<Trc<TypeObject<'a>>>,
+    pub fntp: Option<Trc<TypeObject<'a>>>,
+    pub listtp: Option<Trc<TypeObject<'a>>>,
+    pub nonetp: Option<Trc<TypeObject<'a>>>,
+    pub strtp: Option<Trc<TypeObject<'a>>>,
 }
 
 #[derive(Clone)]
@@ -378,7 +378,7 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryAdd { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     if load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .add
+                        .tp.add
                         .is_none()
                     {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -387,7 +387,7 @@ impl<'a> Interpreter<'a> {
                             &format!(
                                 "Method 'add' is not defined for '{}' type",
                                 load_register!(self, last, self.namespaces, bytecode, i, *a)
-                                    .typename
+                                    .tp.typename
                             ),
                             pos.0,
                             pos.1,
@@ -396,7 +396,7 @@ impl<'a> Interpreter<'a> {
                     }
 
                     let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .add
+                        .tp.add
                         .expect("Method is not defined"))(
                         load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
                         load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
@@ -407,7 +407,7 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinarySub { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     if load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .sub
+                        .tp.sub
                         .is_none()
                     {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -416,7 +416,7 @@ impl<'a> Interpreter<'a> {
                             &format!(
                                 "Method 'sub' is not defined for '{}' type",
                                 load_register!(self, last, self.namespaces, bytecode, i, *a)
-                                    .typename
+                                    .tp.typename
                             ),
                             pos.0,
                             pos.1,
@@ -424,7 +424,7 @@ impl<'a> Interpreter<'a> {
                         self.raise_exc(exc);
                     }
                     let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .sub
+                        .tp.sub
                         .expect("Method is not defined"))(
                         load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
                         load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
@@ -435,7 +435,7 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryMul { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     if load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .mul
+                        .tp.mul
                         .is_none()
                     {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -444,7 +444,7 @@ impl<'a> Interpreter<'a> {
                             &format!(
                                 "Method 'mul' is not defined for '{}' type",
                                 load_register!(self, last, self.namespaces, bytecode, i, *a)
-                                    .typename
+                                    .tp.typename
                             ),
                             pos.0,
                             pos.1,
@@ -453,7 +453,7 @@ impl<'a> Interpreter<'a> {
                     }
 
                     let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .mul
+                        .tp.mul
                         .expect("Method is not defined"))(
                         load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
                         load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
@@ -464,7 +464,7 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryDiv { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     if load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .div
+                        .tp.div
                         .is_none()
                     {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -473,7 +473,7 @@ impl<'a> Interpreter<'a> {
                             &format!(
                                 "Method 'div' is not defined for '{}' type",
                                 load_register!(self, last, self.namespaces, bytecode, i, *a)
-                                    .typename
+                                    .tp.typename
                             ),
                             pos.0,
                             pos.1,
@@ -482,7 +482,7 @@ impl<'a> Interpreter<'a> {
                     }
 
                     let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .div
+                        .tp.div
                         .expect("Method is not defined"))(
                         load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
                         load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
@@ -496,7 +496,7 @@ impl<'a> Interpreter<'a> {
                     let last = self.frames.last_mut().expect("No frames");
 
                     if load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .neg
+                        .tp.neg
                         .is_none()
                     {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -505,7 +505,7 @@ impl<'a> Interpreter<'a> {
                             &format!(
                                 "Method 'neg' is not defined for '{}' type",
                                 load_register!(self, last, self.namespaces, bytecode, i, *a)
-                                    .typename
+                                    .tp.typename
                             ),
                             pos.0,
                             pos.1,
@@ -514,7 +514,7 @@ impl<'a> Interpreter<'a> {
                     }
 
                     let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
-                        .neg
+                        .tp.neg
                         .expect("Method is not defined"))(
                         load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
                     );
@@ -600,13 +600,13 @@ impl<'a> Interpreter<'a> {
                             register.value
                         ));
                     }
-                    if callable.call.is_none() {
+                    if callable.tp.call.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
                                 "Method 'call' is not defined for '{}' type",
-                                callable.typename
+                                callable.tp.typename
                             ),
                             pos.0,
                             pos.1,
@@ -614,7 +614,7 @@ impl<'a> Interpreter<'a> {
                         self.raise_exc(exc);
                     }
 
-                    let value = (callable.call.expect("Method is not defined"))(
+                    let value = (callable.tp.call.expect("Method is not defined"))(
                         callable,
                         listobject::list_from(self.vm.clone(), args),
                     );

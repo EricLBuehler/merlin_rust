@@ -1,6 +1,6 @@
 use super::{
     boolobject, create_object_from_type, finalize_type, intobject, stringobject, utils, ExcData,
-    MethodType, MethodValue, Object, ObjectInternals, RawObject,
+    MethodType, MethodValue, Object, ObjectInternals, RawObject, TypeObject,
 };
 use crate::is_type_exact;
 use crate::trc::Trc;
@@ -11,24 +11,22 @@ fn exc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Me
 }
 fn exc_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         String::from("Exception<>"),
     ))
 }
 fn exc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_exc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("Exception"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
@@ -107,7 +105,7 @@ fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("NameExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -121,19 +119,17 @@ fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_nameexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("NameExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -217,7 +213,7 @@ fn overflowexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("OverflowExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -231,19 +227,17 @@ fn overflowexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_overflowexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("OverflowExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -327,7 +321,7 @@ fn methodnotdefinedexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("MethodNotDefinedExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -341,19 +335,17 @@ fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_methodnotdefinedexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("MethodNotDefinedExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -437,7 +429,7 @@ fn typemismatchexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("TypeMismatchExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -451,19 +443,17 @@ fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_typemismatchexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("TypeMismatchExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -547,7 +537,7 @@ fn keynotfoundexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("KeyNotFoundExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -561,19 +551,17 @@ fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_keynotfoundexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("KeyNotFoundExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -653,7 +641,7 @@ fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("ValueExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -667,19 +655,17 @@ fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_valueexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("ValueExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
@@ -763,7 +749,7 @@ fn zerodivexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         format!("DivisionByZeroExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -777,19 +763,17 @@ fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
 pub fn init_zerodivexc<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("DivisionByZeroExc"),
         bases: vec![
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),

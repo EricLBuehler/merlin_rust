@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::ops::{Deref, DerefMut};
 
 use crate::objects::utils::object_repr;
 use crate::trc::Trc;
@@ -25,48 +26,56 @@ pub enum ObjectType<'a> {
     #[default]
     No,
     Type(Trc<VM<'a>>),
-    Other(Object<'a>),
+    Other(TypeObject<'a>),
 }
 
-#[allow(dead_code)]
-impl<'a> ObjectType<'a> {
-    pub fn get_value(&self) -> Object<'a> {
+impl<'a> Deref for ObjectType<'a> {
+    type Target = TypeObject<'a>;
+
+    fn deref(&self) -> &Self::Target {
         match self {
-            ObjectType::Other(v) => v.clone(),
+            ObjectType::Other(v) => v,
             ObjectType::Type(vm) => {
-                let tp = vm.types.typetp.as_ref().unwrap().clone();
-                tp
+                let tp = vm.types.typetp.as_ref().unwrap();
+                return &*tp;
             }
             _ => {
                 unimplemented!();
             }
-        }
+        }        
     }
 }
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum ObjectBase<'a> {
     Object(Trc<VM<'a>>),
-    Other(Object<'a>),
+    Other(Trc<TypeObject<'a>>),
 }
 
-#[allow(dead_code)]
-impl<'a> ObjectBase<'a> {
-    pub fn get_value(&self) -> Object<'a> {
+impl<'a> Deref for ObjectBase<'a> {
+    type Target = TypeObject<'a>;
+
+    fn deref(&self) -> &Self::Target {
         match self {
-            ObjectBase::Other(v) => v.clone(),
+            ObjectBase::Other(v) => v,
             ObjectBase::Object(vm) => {
-                let tp = vm.types.objecttp.as_ref().unwrap().clone();
-                tp
+                vm.types.objecttp.as_ref().unwrap()
             }
-        }
+            _ => {
+                unimplemented!();
+            }
+        }        
     }
 }
 
 #[derive(Clone)]
 pub struct RawObject<'a> {
-    pub tp: ObjectType<'a>,
+    pub tp: Trc<TypeObject<'a>>,
     pub internals: ObjectInternals<'a>,
+}
+
+#[derive(Clone, Eq)]
+pub struct TypeObject<'a> {
     pub typename: String,
     pub bases: Vec<ObjectBase<'a>>,
     pub vm: Trc<VM<'a>>,
@@ -103,8 +112,13 @@ impl<'a> Eq for RawObject<'a> {}
 impl<'a> PartialEq for RawObject<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.tp == other.tp
-            && self.typename == other.typename
             && self.internals == other.internals
+    }
+}
+
+impl<'a> PartialEq for TypeObject<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.typename == other.typename
             && self.bases == other.bases
     }
 }
@@ -313,20 +327,22 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 }
 
 #[inline]
-fn create_object_from_type(tp: Object<'_>) -> Object<'_> {
-    let mut obj = (*tp).clone();
-    obj.tp = ObjectType::Other(tp);
-    Trc::new(obj)
+fn create_object_from_type<'a>(tp: Trc<TypeObject<'a>>) -> Object<'a> {
+    let raw = RawObject {
+        tp,
+        internals: ObjectInternals::No,
+    };
+    Trc::new(raw)
 }
 
 #[macro_export]
 macro_rules! is_type_exact {
     ($self:expr, $other:expr) => {
-        $self.typename == $other.typename
+        $self.tp == $other
     };
 }
 
-fn inherit_slots<'a>(mut tp: Object<'a>, basetp: Object<'a>) {
+fn inherit_slots<'a>(mut tp: Trc<TypeObject<'a>>, basetp: TypeObject<'a>) {
     tp.new = basetp.new;
 
     tp.repr = basetp.repr;
@@ -345,22 +361,14 @@ fn inherit_slots<'a>(mut tp: Object<'a>, basetp: Object<'a>) {
     tp.len = basetp.len;
 }
 
-fn finalize_type(tp: Object<'_>) {
+fn finalize_type(tp: Trc<TypeObject<'_>>) {
     let raw = (*tp).clone();
     let cpy = tp.clone();
     for base in cpy.bases.clone() {
-        match base {
-            ObjectBase::Other(basetp) => {
-                inherit_slots(cpy.clone(), basetp);
-            }
-            ObjectBase::Object(_) => {
-                let x = tp.vm.types.objecttp.as_ref().unwrap().clone();
-                inherit_slots(cpy.clone(), x);
-            }
-        }
+        inherit_slots(cpy.clone(), (*base).clone());
     }
 
-    inherit_slots(cpy, Trc::new(raw));
+    inherit_slots(cpy, raw);
 }
 
 pub fn init_types(vm: Trc<VM<'_>>) {

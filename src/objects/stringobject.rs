@@ -11,8 +11,7 @@ use crate::trc::Trc;
 
 use super::exceptionobject::typemismatchexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, MethodType, MethodValue, Object, ObjectInternals,
-    RawObject,
+    create_object_from_type, finalize_type, MethodType, MethodValue, Object, ObjectInternals, TypeObject,
 };
 
 const MFBH_MAX_LEN: usize = 256;
@@ -28,7 +27,7 @@ fn string_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 }
 fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         "\"".to_owned()
             + selfv
                 .internals
@@ -39,7 +38,7 @@ fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 fn string_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_str()
@@ -48,9 +47,9 @@ fn string_str(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -59,7 +58,7 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         selfv
             .internals
             .get_str()
@@ -72,10 +71,10 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&other, &selfv.vm.types.inttp.as_ref().unwrap().clone()) {
+    if !is_type_exact!(&other, selfv.tp.vm.types.inttp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
-            &format!("Expected 'int' index, got '{}'", other.typename),
+            selfv.tp.vm.clone(),
+            &format!("Expected 'int' index, got '{}'", other.tp.typename),
             Position::default(),
             Position::default(),
         );
@@ -101,7 +100,7 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     if out.is_none() {
         let exc = valueexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             &format!(
                 "Index out of range: maximum index is '{}', but got '{}'",
                 selfv
@@ -120,7 +119,7 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         );
         return MethodValue::Error(exc);
     }
-    MethodValue::Some(string_from(selfv.vm.clone(), out.unwrap().to_string()))
+    MethodValue::Some(string_from(selfv.tp.vm.clone(), out.unwrap().to_string()))
 }
 fn string_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv
@@ -129,7 +128,7 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected str internal value")
         .len()
         .try_into();
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), convert.unwrap()))
 }
 
 #[inline]
@@ -152,27 +151,25 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
             .expect("Expected str internal value")
             .hash(&mut hasher);
         return MethodValue::Some(intobject::int_from(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             hasher.finish() as i128,
         ));
     }
 
     let len = bytes.len() as i128;
     if len == 0 {
-        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), 0));
+        return MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), 0));
     } else if len == 1 {
-        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), bytes[0] as i128));
+        return MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), bytes[0] as i128));
     }
 
     let res = bytes[0] as i128 + bytes[bytes.len() - 1] as i128;
 
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res + len))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), res + len))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("str"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

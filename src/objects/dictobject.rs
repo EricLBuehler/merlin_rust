@@ -1,10 +1,10 @@
 use super::mhash::HashMap;
 use super::{
     create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
-    RawObject,
+    RawObject, TypeObject,
 };
 
-use crate::is_type_exact;
+use crate::{is_type_exact};
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
 use crate::trc::Trc;
@@ -50,13 +50,13 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
         res.pop();
     }
     res += "}";
-    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
+    MethodValue::Some(stringobject::string_from(selfv.tp.vm.clone(), res))
 }
 
 fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -92,7 +92,7 @@ fn dict_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
 
     selfv.internals = ObjectInternals::Map(map);
 
-    MethodValue::Some(none_from!(selfv.vm))
+    MethodValue::Some(none_from!(selfv.tp.vm))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv
@@ -102,13 +102,13 @@ fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
         .len()
         .try_into();
 
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), convert.unwrap()))
 }
 
 fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, &other) {
+    if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
+            selfv.tp.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -127,7 +127,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .expect("Expected map internal value")
             .len()
     {
-        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
+        return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
     }
     for ((key1, value1), (key2, value2)) in std::iter::zip(
         selfv
@@ -143,24 +143,24 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .clone()
             .into_iter(),
     ) {
-        if key1.eq.is_none() {
+        if key1.tp.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
-                selfv.vm.clone(),
+                selfv.tp.vm.clone(),
                 &format!(
                     "Method 'eq' is not defined for key 1 type '{}'",
-                    key1.typename
+                    key1.tp.typename
                 ),
                 Position::default(),
                 Position::default(),
             );
             return MethodValue::Error(exc);
         }
-        if value1.eq.is_none() {
+        if value1.tp.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
-                selfv.vm.clone(),
+                selfv.tp.vm.clone(),
                 &format!(
                     "Method 'eq' is not defined for value 1 type '{}'",
-                    value1.typename
+                    value1.tp.typename
                 ),
                 Position::default(),
                 Position::default(),
@@ -168,16 +168,16 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        let res = (key1.eq.expect("Method is not defined"))(key1.clone(), key2.clone());
+        let res = (key1.tp.eq.expect("Method is not defined"))(key1.clone(), key2.clone());
         if res.is_error() {
             return res;
         }
         if !is_type_exact!(
             &res.unwrap(),
-            &selfv.vm.types.booltp.as_ref().unwrap().clone()
+            selfv.tp.vm.types.booltp.as_ref().unwrap().clone()
         ) {
             let exc = typemismatchexc_from_str(
-                selfv.vm.clone(),
+                selfv.tp.vm.clone(),
                 "Method 'eq' did not return 'bool'",
                 Position::default(),
                 Position::default(),
@@ -191,19 +191,19 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .get_bool()
             .expect("Expected bool internal value")
         {
-            return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
+            return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
         }
 
-        let res = (value1.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
+        let res = (value1.tp.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
         if res.is_error() {
             return res;
         }
         if !is_type_exact!(
             &res.unwrap(),
-            &selfv.vm.types.booltp.as_ref().unwrap().clone()
+            selfv.tp.vm.types.booltp.as_ref().unwrap().clone()
         ) {
             let exc = typemismatchexc_from_str(
-                selfv.vm.clone(),
+                selfv.tp.vm.clone(),
                 "Method 'eq' did not return 'bool'",
                 Position::default(),
                 Position::default(),
@@ -217,16 +217,14 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .get_bool()
             .expect("Expected bool internal value")
         {
-            return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
+            return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
         }
     }
-    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
+    MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), true))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("dict"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

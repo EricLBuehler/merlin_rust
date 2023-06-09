@@ -1,6 +1,6 @@
 use super::{
     boolobject, create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
-    ObjectInternals, RawObject,
+    ObjectInternals, RawObject, TypeObject,
 };
 use crate::is_type_exact;
 use crate::trc::Trc;
@@ -18,21 +18,21 @@ fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn none_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.vm.clone(),
+        selfv.tp.vm.clone(),
         String::from("None"),
     ))
 }
 fn none_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
 }
 fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.vm.clone(),
-        is_type_exact!(&selfv, &other),
+        selfv.tp.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
     ))
 }
 
-pub fn generate_cache<'a>(nonetp: Object<'a>, ptr: *mut Option<Object<'a>>) {
+pub fn generate_cache<'a>(nonetp: Trc<TypeObject<'a>>, ptr: *mut Option<Object<'a>>) {
     unsafe {
         let mut tp = create_object_from_type(nonetp.clone());
         tp.internals = ObjectInternals::None;
@@ -41,9 +41,7 @@ pub fn generate_cache<'a>(nonetp: Object<'a>, ptr: *mut Option<Object<'a>>) {
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
-    let tp: Trc<RawObject<'a>> = Trc::new(RawObject {
-        tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
-        internals: super::ObjectInternals::No,
+    let tp: Trc<TypeObject<'a>> = Trc::new(TypeObject {
         typename: String::from("NoneType"),
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),

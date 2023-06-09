@@ -343,10 +343,25 @@ impl<'a> Compiler<'a> {
                 );
 
                 maybe_handle_exception_pos!(self, int, expr.start, expr.end);
-                self.consts.push(int.unwrap());
+                let mut idx = usize::MAX;
+                for (i, var) in self.consts.iter().enumerate() {
+                    if *(var.tp.eq.unwrap())(var.clone(), int.unwrap())
+                        .unwrap()
+                        .internals
+                        .get_bool()
+                        .expect("Expected bool internal value")
+                    {
+                        idx = i;
+                        break;
+                    }
+                }
+                if idx == usize::MAX {
+                    self.consts.push(int.unwrap());
+                    idx = self.consts.len() - 1;
+                }
 
                 let res = RegisterContext {
-                    value: CompilerRegister::C(self.consts.len() - 1),
+                    value: CompilerRegister::C(idx),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -544,10 +559,25 @@ impl<'a> Compiler<'a> {
                         .to_string(),
                 );
 
-                self.consts.push(str);
+                let mut idx = usize::MAX;
+                for (i, var) in self.consts.iter().enumerate() {
+                    if *(var.tp.eq.unwrap())(var.clone(), str.clone())
+                        .unwrap()
+                        .internals
+                        .get_bool()
+                        .expect("Expected bool internal value")
+                    {
+                        idx = i;
+                        break;
+                    }
+                }
+                if idx == usize::MAX {
+                    self.consts.push(str);
+                    idx = self.consts.len() - 1;
+                }
 
                 let res = RegisterContext {
-                    value: CompilerRegister::C(self.consts.len() - 1),
+                    value: CompilerRegister::C(idx),
                     left: None,
                     leftctx: None,
                     right: None,

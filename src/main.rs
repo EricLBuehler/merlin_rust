@@ -220,7 +220,7 @@ mod merlin_tests {
 
 #[cfg(test)]
 mod trc_tests {
-    use std::thread;
+    use std::{thread, time::Duration};
 
     use crate::trc::Trc;
 
@@ -231,6 +231,7 @@ mod trc_tests {
 
     #[test]
     fn test_singlethreaded() {
+        thread::sleep(Duration::from_secs(2));
         println!("============ Trc in single-threading ===========");
 
         let data = Data {
@@ -247,6 +248,7 @@ mod trc_tests {
 
     #[test]
     fn test_multithread1() {
+        thread::sleep(Duration::from_secs(4));
         println!("============ Trc with Threading #1 ===========");
 
         let data = Data {
@@ -275,6 +277,7 @@ mod trc_tests {
 
     #[test]
     fn test_multithread2() {
+        thread::sleep(Duration::from_secs(6));
         println!("============ Trc with Threading #2 ===========");
 
         let trc = Trc::new(100);

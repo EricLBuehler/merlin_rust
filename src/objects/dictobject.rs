@@ -1,7 +1,6 @@
 use super::mhash::HashMap;
 use super::{
-    create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
-    RawObject,
+    create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object, RawObject,
 };
 
 use crate::is_type_exact;

@@ -26,7 +26,7 @@ Merlin 1.3 (release): 124 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: 104 ns 
+Python 3.10.6: 103 ns 
 
 `python3 -m timeit -c "a=1;b=2;c=3;a/b+c;a/b+c"`
 

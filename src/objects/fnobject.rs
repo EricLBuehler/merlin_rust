@@ -33,7 +33,7 @@ fn fn_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Met
 }
 fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!(
             "<fn '{}' @ 0x{:x}>",
             selfv
@@ -47,7 +47,7 @@ fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         selfv
             .internals
             .get_fn()
@@ -60,9 +60,9 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&args, selfv.tp.vm.types.listtp.as_ref().unwrap().clone()) {
+    if !is_type_exact!(&args, selfv.vm.types.listtp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             "Expected args to be a 'list'",
             Position::default(),
             Position::default(),
@@ -83,7 +83,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
             .len()
     {
         let exc = valueexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             &format!(
                 "Expected {} arguments, got {}",
                 args.internals
@@ -131,7 +131,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         .get_code()
         .expect("Expected Bytecode internal value");
     MethodValue::Some(VM::execute_vars(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         Trc::new(code.clone()),
         map,
     ))

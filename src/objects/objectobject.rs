@@ -9,18 +9,18 @@ fn object_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 }
 fn object_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         "object".to_string(),
     ))
 }
 fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         Trc::ptr_eq(&selfv, &other),
     ))
 }
 fn object_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -1))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -1))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {

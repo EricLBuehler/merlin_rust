@@ -42,6 +42,7 @@ impl<'a> Deref for ObjectBase<'a> {
 pub struct RawObject<'a> {
     pub tp: Trc<TypeObject<'a>>,
     pub internals: ObjectInternals<'a>,
+    pub vm: Trc<VM<'a>>,
 }
 
 #[derive(Clone, Eq)]
@@ -297,6 +298,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 #[inline]
 fn create_object_from_type(tp: Trc<TypeObject<'_>>) -> Object<'_> {
     let raw = RawObject {
+        vm: tp.vm.clone(),
         tp,
         internals: ObjectInternals::No,
     };

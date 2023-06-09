@@ -40,13 +40,13 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
         res.pop();
     }
     res += "]";
-    MethodValue::Some(stringobject::string_from(selfv.tp.vm.clone(), res))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
 }
 
 fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&other, selfv.tp.vm.types.inttp.as_ref().unwrap().clone()) {
+    if !is_type_exact!(&other, selfv.vm.types.inttp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.tp.typename),
             Position::default(),
             Position::default(),
@@ -69,7 +69,7 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     if out.is_none() {
         let exc = valueexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             &format!(
                 "Index out of range: maximum index is '{}', but got '{}'",
                 selfv
@@ -91,9 +91,9 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(out.unwrap().clone())
 }
 fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
-    if is_type_exact!(&other, selfv.tp.vm.types.inttp.as_ref().unwrap().clone()) {
+    if is_type_exact!(&other, selfv.vm.types.inttp.as_ref().unwrap().clone()) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.tp.typename),
             Position::default(),
             Position::default(),
@@ -114,7 +114,7 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
             .len()
     {
         let exc = valueexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             &format!(
                 "Index out of range: maximum index is '{}', but got '{}'",
                 selfv
@@ -147,7 +147,7 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
 
     selfv.internals = ObjectInternals::Arr(arr.to_vec());
 
-    MethodValue::Some(none_from!(selfv.tp.vm.clone()))
+    MethodValue::Some(none_from!(selfv.vm.clone()))
 }
 fn list_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv
@@ -156,13 +156,13 @@ fn list_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected arr internal value")
         .len()
         .try_into();
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
 fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -181,7 +181,7 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .expect("Expected arr internal value")
             .len()
     {
-        return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
+        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
     for idx in 0..selfv
         .internals
@@ -200,7 +200,7 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .is_none()
         {
             let exc = methodnotdefinedexc_from_str(
-                selfv.tp.vm.clone(),
+                selfv.vm.clone(),
                 "Method 'eq' is not defined for value",
                 Position::default(),
                 Position::default(),
@@ -228,10 +228,10 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         }
         if !is_type_exact!(
             &res.unwrap(),
-            selfv.tp.vm.types.booltp.as_ref().unwrap().clone()
+            selfv.vm.types.booltp.as_ref().unwrap().clone()
         ) {
             let exc = typemismatchexc_from_str(
-                selfv.tp.vm.clone(),
+                selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
                 Position::default(),
                 Position::default(),
@@ -245,10 +245,10 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .get_bool()
             .expect("Expected bool internal value")
         {
-            return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
+            return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
     }
-    MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), true))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {

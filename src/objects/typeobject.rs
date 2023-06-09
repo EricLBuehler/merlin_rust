@@ -10,13 +10,13 @@ fn type_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 
 fn type_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("<class '{}'>", selfv.tp.typename),
     ))
 }
 fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         selfv.tp == other.tp,
     ))
 }
@@ -36,7 +36,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         abs: None,
         neg: None,
         hash_fn: Some(|selfv: Object<'a>| {
-            MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -3))
+            MethodValue::Some(intobject::int_from(selfv.vm.clone(), -3))
         }),
 
         eq: Some(type_eq),

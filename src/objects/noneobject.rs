@@ -18,16 +18,16 @@ fn none_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn none_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         String::from("None"),
     ))
 }
 fn none_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }

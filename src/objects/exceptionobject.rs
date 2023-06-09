@@ -11,16 +11,16 @@ fn exc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Me
 }
 fn exc_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         String::from("Exception<>"),
     ))
 }
 fn exc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -105,7 +105,7 @@ fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("NameExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -119,11 +119,11 @@ fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -213,7 +213,7 @@ fn overflowexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("OverflowExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -227,11 +227,11 @@ fn overflowexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -321,7 +321,7 @@ fn methodnotdefinedexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("MethodNotDefinedExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -335,11 +335,11 @@ fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -429,7 +429,7 @@ fn typemismatchexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("TypeMismatchExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -443,11 +443,11 @@ fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -537,7 +537,7 @@ fn keynotfoundexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("KeyNotFoundExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -551,11 +551,11 @@ fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -641,7 +641,7 @@ fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("ValueExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -655,11 +655,11 @@ fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }
@@ -749,7 +749,7 @@ fn zerodivexc_repr(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::NotImplemented;
     }
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("DivisionByZeroExc: \"{}\"", repr.unwrap()),
     ))
 }
@@ -763,11 +763,11 @@ fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
     )
 }
 fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
 }
 fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         is_type_exact!(&selfv, other.tp),
     ))
 }

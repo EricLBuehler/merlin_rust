@@ -22,14 +22,14 @@ fn code_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         format!("<code object @ 0x{:x}>", Trc::as_ptr(&selfv) as usize),
     ))
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -38,7 +38,7 @@ fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     MethodValue::Some(boolobject::bool_from(
-        selfv.tp.vm.clone(),
+        selfv.vm.clone(),
         selfv
             .internals
             .get_code()

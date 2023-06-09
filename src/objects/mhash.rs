@@ -31,7 +31,7 @@ impl<'a> HashMap<'a> {
     fn hash(key: Object<'a>) -> MethodValue<i128, Object<'a>> {
         if key.tp.hash_fn.is_none() {
             let exc = methodnotdefinedexc_from_str(
-                key.tp.vm.clone(),
+                key.vm.clone(),
                 &format!(
                     "Method 'hash' is not defined for '{}' type",
                     key.tp.typename
@@ -39,7 +39,7 @@ impl<'a> HashMap<'a> {
                 Position::default(),
                 Position::default(),
             );
-            key.tp.vm.interpreters.last().unwrap().raise_exc(exc);
+            key.vm.interpreters.last().unwrap().raise_exc(exc);
         }
         let res = (key.tp.hash_fn.expect("Hash function not found"))(key.clone());
         if res.is_error() {
@@ -48,10 +48,10 @@ impl<'a> HashMap<'a> {
 
         if !is_type_exact!(
             &res.unwrap(),
-            key.tp.vm.types.inttp.as_ref().unwrap().clone()
+            key.vm.types.inttp.as_ref().unwrap().clone()
         ) {
             let exc = typemismatchexc_from_str(
-                key.tp.vm.clone(),
+                key.vm.clone(),
                 "Method 'hash' did not return 'int'",
                 Position::default(),
                 Position::default(),
@@ -89,7 +89,7 @@ impl<'a> HashMap<'a> {
                 return MethodValue::Error(str.unwrap_err());
             }
             let exc = keynotfoundexc_from_str(
-                key.tp.vm.clone(),
+                key.vm.clone(),
                 &format!("Key '{}' not found", str.unwrap()),
                 Position::default(),
                 Position::default(),

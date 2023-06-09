@@ -50,13 +50,13 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
         res.pop();
     }
     res += "}";
-    MethodValue::Some(stringobject::string_from(selfv.tp.vm.clone(), res))
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
 }
 
 fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -92,7 +92,7 @@ fn dict_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
 
     selfv.internals = ObjectInternals::Map(map);
 
-    MethodValue::Some(none_from!(selfv.tp.vm))
+    MethodValue::Some(none_from!(selfv.vm))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv
@@ -102,13 +102,13 @@ fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
         .len()
         .try_into();
 
-    MethodValue::Some(intobject::int_from(selfv.tp.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
 fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         let exc = typemismatchexc_from_str(
-            selfv.tp.vm.clone(),
+            selfv.vm.clone(),
             "Types do not match",
             Position::default(),
             Position::default(),
@@ -127,7 +127,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .expect("Expected map internal value")
             .len()
     {
-        return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
+        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
     for ((key1, value1), (key2, value2)) in std::iter::zip(
         selfv
@@ -145,7 +145,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ) {
         if key1.tp.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
-                selfv.tp.vm.clone(),
+                selfv.vm.clone(),
                 &format!(
                     "Method 'eq' is not defined for key 1 type '{}'",
                     key1.tp.typename
@@ -157,7 +157,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         }
         if value1.tp.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
-                selfv.tp.vm.clone(),
+                selfv.vm.clone(),
                 &format!(
                     "Method 'eq' is not defined for value 1 type '{}'",
                     value1.tp.typename
@@ -174,10 +174,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         }
         if !is_type_exact!(
             &res.unwrap(),
-            selfv.tp.vm.types.booltp.as_ref().unwrap().clone()
+            selfv.vm.types.booltp.as_ref().unwrap().clone()
         ) {
             let exc = typemismatchexc_from_str(
-                selfv.tp.vm.clone(),
+                selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
                 Position::default(),
                 Position::default(),
@@ -191,7 +191,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .get_bool()
             .expect("Expected bool internal value")
         {
-            return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
+            return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
 
         let res = (value1.tp.eq.expect("Method is not defined"))(value1.clone(), value2.clone());
@@ -200,10 +200,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         }
         if !is_type_exact!(
             &res.unwrap(),
-            selfv.tp.vm.types.booltp.as_ref().unwrap().clone()
+            selfv.vm.types.booltp.as_ref().unwrap().clone()
         ) {
             let exc = typemismatchexc_from_str(
-                selfv.tp.vm.clone(),
+                selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
                 Position::default(),
                 Position::default(),
@@ -217,10 +217,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .get_bool()
             .expect("Expected bool internal value")
         {
-            return MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), false));
+            return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
     }
-    MethodValue::Some(boolobject::bool_from(selfv.tp.vm.clone(), true))
+    MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {

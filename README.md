@@ -25,11 +25,11 @@ Merlin 1.3 (release): 51.6 ns
 
 `./merlin program.me -t 100000`
 
-Python 3.10.6: 52.7 ns 
+Python 3.10.6: 55.7 ns 
 
 `python3 -m timeit -c "a=1;b=2;c=3;a/b+c"`
 
-Merlin is: 2.13% faster
+Merlin is: 5.39% slower
 
 ## Installation
 To get started with Merlin:

@@ -132,6 +132,7 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
 }
 
+#[inline]
 fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     //Use DefaultHasher for long data:
     //https://www.reddit.com/r/rust/comments/hsbai0/default_hasher_for_u8_unexpectedly_expensive/
@@ -140,8 +141,7 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     let bytes = selfv
         .internals
         .get_str()
-        .expect("Expected str internal value")
-        .bytes();
+        .expect("Expected str internal value")[..].as_bytes();
 
     if bytes.len() > MFBH_MAX_LEN {
         let mut hasher = DefaultHasher::new();
@@ -156,12 +156,17 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
         ));
     }
 
-    let mut res = 0;
-    for (i, byte) in bytes.enumerate() {
-        res += byte as i128 * i as i128;
+    let len = bytes.len() as i128;
+    if len == 0 {
+        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), 0))
+    }
+    else if len == 1 {
+        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), bytes[0] as i128))
     }
 
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res))
+    let res = bytes[0] as i128 + bytes[bytes.len()-1] as i128;
+
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res+len))
 }
 
 pub fn init<'a>(vm: Trc<VM<'a>>) {

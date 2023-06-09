@@ -40,7 +40,7 @@ pub fn generate_cache<'a>(nonetp: Trc<TypeObject<'a>>, ptr: *mut Option<Object<'
     }
 }
 
-pub fn init<'a>(mut vm: Trc<VM<'a>>) {
+pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("NoneType"),
         bases: vec![super::ObjectBase::Other(

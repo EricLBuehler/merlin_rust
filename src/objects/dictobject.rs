@@ -223,7 +223,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), true))
 }
 
-pub fn init<'a>(mut vm: Trc<VM<'a>>) {
+pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("dict"),
         bases: vec![super::ObjectBase::Other(

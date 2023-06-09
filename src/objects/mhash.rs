@@ -42,7 +42,7 @@ impl<'a> HashMap<'a> {
         if res.is_error() {
             return MethodValue::Error(res.unwrap_err());
         }
-        debug_assert!(is_type_exact!(&res.unwrap(), &key.vm.get_type("int")));
+        
         if !is_type_exact!(&res.unwrap(), &key.vm.get_type("int")) {
             let exc = typemismatchexc_from_str(
                 key.vm.clone(),

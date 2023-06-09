@@ -230,7 +230,7 @@ impl<T> Trc<T> {
         };
     }
 
-    /// Clone a `Trc` across threads. This is necessary because otherwise the atomic reference count will not be incremented.use std::thread;
+    /// Clone a `Trc` across threads (increase it's atomic reference count). This is necessary because otherwise the atomic reference count will not be incremented.use std::thread;
     /// ```
     /// let trc = Trc::new(100);
     /// let trc2 = trc.clone_across_thread();
@@ -280,6 +280,13 @@ impl<T> Trc<T> {
 impl<T> Deref for Trc<T> {
     type Target = T;
 
+    /// Get an immutable reference to the internal data.
+    /// ```
+    /// let mut trc = Trc::new(100);
+    /// println!("{}", trc);
+    /// let refr = trc.deref();
+    /// println!("{}", refr);
+    /// ```
     #[inline]
     fn deref(&self) -> &Self::Target {
         &self.inner_atomic().borrow().data
@@ -287,6 +294,13 @@ impl<T> Deref for Trc<T> {
 }
 
 impl<T> DerefMut for Trc<T> {
+    /// Get a &mut reference to the internal data.
+    /// ```
+    /// let mut trc = Trc::new(100);
+    /// *trc = 200;
+    /// let mutref = trc.deref_mut();
+    /// *mutref = 300;
+    /// ```
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner_atomic_mut().borrow_mut().data
@@ -336,7 +350,11 @@ impl<T> Drop for Trc<T> {
 }
 
 impl<T> Clone for Trc<T> {
-    ///Be sure to call `clone_across_thread` for threads
+    /// Clone a `Trc` (increase it's local reference count). This can only be used to clone an object that will only stay in one thread.
+    /// ```
+    /// let trc = Trc::new(100);
+    /// let trc2 = trc.clone();
+    /// ```
     #[inline]
     fn clone(&self) -> Self {
         self.inner_mut().threadref += 1;

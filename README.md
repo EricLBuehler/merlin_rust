@@ -28,7 +28,7 @@ Merlin 1.3 (release): 124 ns
 
 Python 3.10.6: 104 ns 
 
-`python3 -m timeit -c "a=1;b=2;c=3;a/b+c"`
+`python3 -m timeit -c "a=1;b=2;c=3;a/b+c;a/b+c"`
 
 Merlin is: 19.23% slower
 

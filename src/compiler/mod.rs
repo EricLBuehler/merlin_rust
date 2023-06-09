@@ -346,7 +346,7 @@ impl<'a> Compiler<'a> {
                 self.consts.push(int.unwrap());
 
                 let res = RegisterContext {
-                    value: CompilerRegister::C(self.consts.len()-1),
+                    value: CompilerRegister::C(self.consts.len() - 1),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -376,7 +376,7 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodes.right not found"),
                 );
 
-                let res = RegisterContext {
+                RegisterContext {
                     value: CompilerRegister::R(old),
                     left: Some(left.value),
                     leftctx: Some(Box::new(left)),
@@ -385,8 +385,7 @@ impl<'a> Compiler<'a> {
                     args: None,
                     mapping: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::StoreNode => {
                 let old = self.register_index;
@@ -482,7 +481,7 @@ impl<'a> Compiler<'a> {
                     args.push(arg);
                 }
 
-                let res = RegisterContext {
+                RegisterContext {
                     value: CompilerRegister::R(old),
                     left: Some(callable.value),
                     leftctx: Some(Box::new(callable)),
@@ -491,8 +490,7 @@ impl<'a> Compiler<'a> {
                     args: Some(args),
                     mapping: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::Return => {
                 let var = self.compile_expr_values(
@@ -524,7 +522,7 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodes.expr not found"),
                 );
 
-                let res = RegisterContext {
+                RegisterContext {
                     value: CompilerRegister::R(old),
                     left: Some(var.value),
                     leftctx: Some(Box::new(var)),
@@ -533,8 +531,7 @@ impl<'a> Compiler<'a> {
                     args: None,
                     mapping: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::String => {
                 let str = stringobject::string_from(
@@ -550,7 +547,7 @@ impl<'a> Compiler<'a> {
                 self.consts.push(str);
 
                 let res = RegisterContext {
-                    value: CompilerRegister::C(self.consts.len()-1),
+                    value: CompilerRegister::C(self.consts.len() - 1),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -575,7 +572,7 @@ impl<'a> Compiler<'a> {
                     args.push(arg);
                 }
 
-                let res = RegisterContext {
+                RegisterContext {
                     value: CompilerRegister::R(old),
                     left: None,
                     leftctx: None,
@@ -584,8 +581,7 @@ impl<'a> Compiler<'a> {
                     args: Some(args),
                     mapping: None,
                     registers: 0,
-                };
-                res
+                }
             }
             NodeType::Dict => {
                 let old = self.register_index;
@@ -611,7 +607,7 @@ impl<'a> Compiler<'a> {
                     values.push(arg);
                 }
 
-                let res = RegisterContext {
+                RegisterContext {
                     value: CompilerRegister::R(old),
                     left: None,
                     leftctx: None,
@@ -620,8 +616,7 @@ impl<'a> Compiler<'a> {
                     args: None,
                     mapping: Some((keys, values)),
                     registers: 0,
-                };
-                res
+                }
             }
             _ => {
                 unreachable!();
@@ -631,8 +626,7 @@ impl<'a> Compiler<'a> {
 
     fn compile_expr_operation(&mut self, expr: &Node, ctx: RegisterContext) {
         match expr.tp {
-            NodeType::Decimal => {
-            }
+            NodeType::Decimal => {}
             NodeType::Binary => {
                 self.compile_expr_operation(
                     expr.data
@@ -806,8 +800,7 @@ impl<'a> Compiler<'a> {
                     }
                 }
             }
-            NodeType::String => {
-            }
+            NodeType::String => {}
             NodeType::List => {
                 for arg in izip!(
                     expr.data
@@ -845,7 +838,14 @@ impl<'a> Compiler<'a> {
                 }
                 self.instructions.push(CompilerInstruction::BuildDict {
                     result: ctx.value,
-                    key_registers: ctx.mapping.as_ref().unwrap().0.iter().map(|x| x.value).collect_vec(),
+                    key_registers: ctx
+                        .mapping
+                        .as_ref()
+                        .unwrap()
+                        .0
+                        .iter()
+                        .map(|x| x.value)
+                        .collect_vec(),
                     value_registers: ctx.mapping.unwrap().1.iter().map(|x| x.value).collect_vec(),
                 });
                 self.positions.push((expr.start, expr.end));

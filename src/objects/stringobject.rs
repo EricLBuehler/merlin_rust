@@ -141,7 +141,8 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     let bytes = selfv
         .internals
         .get_str()
-        .expect("Expected str internal value")[..].as_bytes();
+        .expect("Expected str internal value")[..]
+        .as_bytes();
 
     if bytes.len() > MFBH_MAX_LEN {
         let mut hasher = DefaultHasher::new();
@@ -158,15 +159,14 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
 
     let len = bytes.len() as i128;
     if len == 0 {
-        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), 0))
-    }
-    else if len == 1 {
-        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), bytes[0] as i128))
+        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), 0));
+    } else if len == 1 {
+        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), bytes[0] as i128));
     }
 
-    let res = bytes[0] as i128 + bytes[bytes.len()-1] as i128;
+    let res = bytes[0] as i128 + bytes[bytes.len() - 1] as i128;
 
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res+len))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), res + len))
 }
 
 pub fn init<'a>(mut vm: Trc<VM<'a>>) {
@@ -174,7 +174,9 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("str"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(string_new),
@@ -199,7 +201,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.strtp = Some(tp.clone()); 
+    vm.types.strtp = Some(tp.clone());
 
     finalize_type(tp);
 }

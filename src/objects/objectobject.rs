@@ -54,7 +54,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.objecttp = Some(tp.clone()); 
+    vm.types.objecttp = Some(tp.clone());
 
     finalize_type(tp);
 }

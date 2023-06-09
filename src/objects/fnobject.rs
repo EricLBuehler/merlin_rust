@@ -142,7 +142,9 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("fn"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(fn_new),
@@ -166,7 +168,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         call: Some(fn_call),
     });
 
-    vm.types.fntp = Some(tp.clone()); 
+    vm.types.fntp = Some(tp.clone());
 
     finalize_type(tp);
 }

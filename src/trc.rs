@@ -176,7 +176,9 @@ impl<T> Trc<T> {
     #[inline]
     #[cfg(target_has_atomic = "ptr")]
     pub fn atomic_count(this: &Self) -> usize {
-        this.inner_atomic().atomicref.load(std::sync::atomic::Ordering::Acquire)
+        this.inner_atomic()
+            .atomicref
+            .load(std::sync::atomic::Ordering::Acquire)
     }
 
     #[inline]
@@ -236,7 +238,9 @@ impl<T> Trc<T> {
     #[inline]
     #[cfg(target_has_atomic = "ptr")]
     pub fn clone_across_thread(&self) -> Self {
-        self.inner_atomic().atomicref.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        self.inner_atomic()
+            .atomicref
+            .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
 
         let localthreadtrc = LocalThreadTrc {
             atomicref: self.inner().atomicref,
@@ -312,14 +316,17 @@ impl<T> Drop for Trc<T> {
             }
         }
     }
-    
+
     #[inline]
     #[cfg(target_has_atomic = "ptr")]
     fn drop(&mut self) {
         self.inner_mut().threadref -= 1;
         if self.inner().threadref == 0 {
-            let res = self.inner_atomic().atomicref.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
-            
+            let res = self
+                .inner_atomic()
+                .atomicref
+                .fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+
             if res == 0 {
                 unsafe { Box::from_raw(self.inner().atomicref.as_ptr()) };
                 unsafe { Box::from_raw(self.data.as_ptr()) };

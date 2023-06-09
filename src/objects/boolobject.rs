@@ -84,7 +84,9 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("bool"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(bool_new),
@@ -109,7 +111,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.booltp = Some(tp.clone());  
+    vm.types.booltp = Some(tp.clone());
 
     finalize_type(tp);
 }

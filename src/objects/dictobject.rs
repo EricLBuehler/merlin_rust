@@ -172,7 +172,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if res.is_error() {
             return res;
         }
-        if !is_type_exact!(&res.unwrap(), &selfv.vm.types.booltp.as_ref().unwrap().clone()) {
+        if !is_type_exact!(
+            &res.unwrap(),
+            &selfv.vm.types.booltp.as_ref().unwrap().clone()
+        ) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
@@ -195,7 +198,10 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         if res.is_error() {
             return res;
         }
-        if !is_type_exact!(&res.unwrap(), &selfv.vm.types.booltp.as_ref().unwrap().clone()) {
+        if !is_type_exact!(
+            &res.unwrap(),
+            &selfv.vm.types.booltp.as_ref().unwrap().clone()
+        ) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
                 "Method 'eq' did not return 'bool'",
@@ -222,7 +228,9 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("dict"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(dict_new),
@@ -247,7 +255,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.dicttp = Some(tp.clone()); 
+    vm.types.dicttp = Some(tp.clone());
 
     finalize_type(tp);
 }

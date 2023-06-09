@@ -119,7 +119,26 @@ impl<'a> VM<'a> {
             _marker: PhantomData,
         };
         VM {
-            types: Trc::new(Types { typetp: None, objecttp: None, inttp: None, booltp: None, codetp: None, dicttp: None, exctp: None, nameexctp: None, overflwexctp: None, mthntfndexctp: None, tpmisexctp: None, keyntfndexctp: None, valueexctp: None, divzeroexctp: None, fntp: None, listtp: None, nonetp: None, strtp: None }),
+            types: Trc::new(Types {
+                typetp: None,
+                objecttp: None,
+                inttp: None,
+                booltp: None,
+                codetp: None,
+                dicttp: None,
+                exctp: None,
+                nameexctp: None,
+                overflwexctp: None,
+                mthntfndexctp: None,
+                tpmisexctp: None,
+                keyntfndexctp: None,
+                valueexctp: None,
+                divzeroexctp: None,
+                fntp: None,
+                listtp: None,
+                nonetp: None,
+                strtp: None,
+            }),
             interpreters: Vec::new(),
             namespaces: Trc::new(Namespaces {
                 variables: Vec::new(),
@@ -147,8 +166,7 @@ impl<'a> VM<'a> {
     }
 
     pub fn execute(mut this: Trc<Self>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
-        let interpreter =
-            Interpreter::new(this.namespaces.clone(), this.clone());
+        let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
 
         this.interpreters.push(Trc::new(interpreter));
         let last = this.deref_mut().interpreters.last_mut().unwrap();
@@ -197,8 +215,7 @@ impl<'a> VM<'a> {
         bytecode: Trc<Bytecode<'a>>,
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
-        let interpreter =
-            Interpreter::new(this.namespaces.clone(), this.clone());
+        let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
         this.interpreters.push(Trc::new(interpreter));
 
         let res = (this.deref_mut().interpreters.last_mut().unwrap())
@@ -235,7 +252,7 @@ macro_rules! load_register {
                     $this.raise_exc_pos(exc, pos.0, pos.1);
                 }
             },
-            CompilerRegister::C(v) => $bytecode.consts.get(v).unwrap().clone()
+            CompilerRegister::C(v) => $bytecode.consts.get(v).unwrap().clone(),
         }
     };
 }
@@ -247,16 +264,13 @@ macro_rules! store_register {
             CompilerRegister::V(v) => {
                 (*$namespaces).variables.last_mut().unwrap()[v as usize] = Some($value)
             }
-            CompilerRegister::C(_) => unreachable!("Impossible.")
+            CompilerRegister::C(_) => unreachable!("Impossible."),
         }
     };
 }
 
 impl<'a> Interpreter<'a> {
-    pub fn new(
-        namespaces: Trc<Namespaces<'a>>,
-        vm: Trc<VM<'a>>,
-    ) -> Interpreter<'a> {
+    pub fn new(namespaces: Trc<Namespaces<'a>>, vm: Trc<VM<'a>>) -> Interpreter<'a> {
         Interpreter {
             frames: Vec::new(),
             namespaces,
@@ -630,7 +644,7 @@ impl<'a> Interpreter<'a> {
                             self.namespaces,
                             bytecode,
                             i,
-                            register.clone()
+                            *register
                         ));
                     }
                     let list = listobject::list_from(self.vm.clone(), values);
@@ -644,10 +658,9 @@ impl<'a> Interpreter<'a> {
                     let last = self.frames.last_mut().expect("No frames");
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
-                        let key =
-                            load_register!(self, last, self.namespaces, bytecode, i, key.clone());
+                        let key = load_register!(self, last, self.namespaces, bytecode, i, *key);
                         let value =
-                            load_register!(self, last, self.namespaces, bytecode, i, value.clone());
+                            load_register!(self, last, self.namespaces, bytecode, i, *value);
 
                         let res = map.insert(key, value);
                         maybe_handle_exception!(self, res, bytecode, i);

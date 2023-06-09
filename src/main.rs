@@ -104,10 +104,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             }
         }
 
-        let interpreter = interpreter::Interpreter::new(
-            vm.clone().namespaces.clone(),
-            vm.clone(),
-        );
+        let interpreter = interpreter::Interpreter::new(vm.clone().namespaces.clone(), vm.clone());
 
         vm.interpreters.push(Trc::new(interpreter));
 

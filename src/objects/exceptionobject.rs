@@ -30,7 +30,9 @@ pub fn init_exc<'a>(mut vm: Trc<VM<'a>>) {
         tp: super::ObjectType::Other(vm.types.typetp.as_ref().unwrap().clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("Exception"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(exc_new),
@@ -55,7 +57,7 @@ pub fn init_exc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.exctp = Some(tp.clone()); 
+    vm.types.exctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -160,8 +162,8 @@ pub fn init_nameexc<'a>(mut vm: Trc<VM<'a>>) {
 
         call: None,
     });
-    
-    vm.types.nameexctp = Some(tp.clone()); 
+
+    vm.types.nameexctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -271,7 +273,7 @@ pub fn init_overflowexc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.overflwexctp = Some(tp.clone()); 
+    vm.types.overflwexctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -381,7 +383,7 @@ pub fn init_methodnotdefinedexc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.mthntfndexctp = Some(tp.clone()); 
+    vm.types.mthntfndexctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -491,7 +493,7 @@ pub fn init_typemismatchexc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.tpmisexctp = Some(tp.clone()); 
+    vm.types.tpmisexctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -601,7 +603,7 @@ pub fn init_keynotfoundexc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.keyntfndexctp = Some(tp.clone()); 
+    vm.types.keyntfndexctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -707,7 +709,7 @@ pub fn init_valueexc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.valueexctp = Some(tp.clone()); 
+    vm.types.valueexctp = Some(tp.clone());
 
     finalize_type(tp);
 }
@@ -817,7 +819,7 @@ pub fn init_zerodivexc<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.divzeroexctp = Some(tp.clone()); 
+    vm.types.divzeroexctp = Some(tp.clone());
 
     finalize_type(tp);
 }

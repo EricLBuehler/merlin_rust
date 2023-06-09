@@ -26,7 +26,9 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         tp: super::ObjectType::Type(vm.clone()),
         internals: super::ObjectInternals::No,
         typename: String::from("type"),
-        bases: vec![super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone())],
+        bases: vec![super::ObjectBase::Other(
+            vm.types.objecttp.as_ref().unwrap().clone(),
+        )],
         vm: vm.clone(),
 
         new: Some(type_new),
@@ -53,7 +55,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         call: None,
     });
 
-    vm.types.typetp = Some(tp.clone()); 
+    vm.types.typetp = Some(tp.clone());
 
     finalize_type(tp);
 }

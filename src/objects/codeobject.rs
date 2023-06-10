@@ -1,9 +1,7 @@
-use super::exceptionobject::typemismatchexc_from_str;
 use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
 use crate::is_type_exact;
-use crate::parser::Position;
 use crate::trc::Trc;
 use crate::{
     compiler::Bytecode,
@@ -29,13 +27,7 @@ fn code_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
-        let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
-            "Types do not match",
-            Position::default(),
-            Position::default(),
-        );
-        return MethodValue::Error(exc);
+        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
 
     MethodValue::Some(boolobject::bool_from(

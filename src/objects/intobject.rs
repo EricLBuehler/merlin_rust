@@ -85,13 +85,7 @@ fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
 }
 fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
-        let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
-            "Types do not match",
-            Position::default(),
-            Position::default(),
-        );
-        return MethodValue::Error(exc);
+        return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
 
     MethodValue::Some(boolobject::bool_from(

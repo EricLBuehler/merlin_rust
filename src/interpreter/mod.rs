@@ -392,7 +392,9 @@ impl<'a> Interpreter<'a> {
                 //Binary operations
                 CompilerInstruction::BinaryAdd { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    if load_register!(self, last, self.namespaces, bytecode, i, *a)
+
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    if selfv
                         .tp
                         .add
                         .is_none()
@@ -402,7 +404,7 @@ impl<'a> Interpreter<'a> {
                             self.vm.clone(),
                             &format!(
                                 "Method 'add' is not defined for '{}' type",
-                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                selfv
                                     .tp
                                     .typename
                             ),
@@ -411,8 +413,6 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     let res = (selfv
                         .tp
                         .add
@@ -425,7 +425,8 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::BinarySub { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    if load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    if selfv
                         .tp
                         .sub
                         .is_none()
@@ -435,7 +436,7 @@ impl<'a> Interpreter<'a> {
                             self.vm.clone(),
                             &format!(
                                 "Method 'sub' is not defined for '{}' type",
-                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                selfv
                                     .tp
                                     .typename
                             ),
@@ -444,7 +445,6 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     let res = (selfv
                         .tp
                         .sub
@@ -457,7 +457,8 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::BinaryMul { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    if load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    if selfv
                         .tp
                         .mul
                         .is_none()
@@ -467,7 +468,7 @@ impl<'a> Interpreter<'a> {
                             self.vm.clone(),
                             &format!(
                                 "Method 'mul' is not defined for '{}' type",
-                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                selfv
                                     .tp
                                     .typename
                             ),
@@ -476,7 +477,6 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     let res = (selfv
                         .tp
                         .mul
@@ -489,7 +489,8 @@ impl<'a> Interpreter<'a> {
                 }
                 CompilerInstruction::BinaryDiv { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-                    if load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    if selfv
                         .tp
                         .div
                         .is_none()
@@ -499,7 +500,7 @@ impl<'a> Interpreter<'a> {
                             self.vm.clone(),
                             &format!(
                                 "Method 'div' is not defined for '{}' type",
-                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                selfv
                                     .tp
                                     .typename
                             ),
@@ -508,7 +509,6 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     let res = (selfv
                         .tp
                         .div
@@ -523,8 +523,8 @@ impl<'a> Interpreter<'a> {
                 //Unary operations
                 CompilerInstruction::UnaryNeg { a, result } => {
                     let last = self.frames.last_mut().expect("No frames");
-
-                    if load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    if selfv
                         .tp
                         .neg
                         .is_none()
@@ -534,7 +534,7 @@ impl<'a> Interpreter<'a> {
                             self.vm.clone(),
                             &format!(
                                 "Method 'neg' is not defined for '{}' type",
-                                load_register!(self, last, self.namespaces, bytecode, i, *a)
+                                selfv
                                     .tp
                                     .typename
                             ),
@@ -543,7 +543,6 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     let res = (selfv
                         .tp
                         .neg

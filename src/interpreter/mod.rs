@@ -1,7 +1,7 @@
 // Interpret bytecode
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
-use crate::objects::{dictobject, mhash, TypeObject};
+use crate::objects::{dictobject, mhash, TypeObject, noneobject, RawObject};
 use crate::parser::Position;
 use crate::trc::Trc;
 use crate::{
@@ -9,7 +9,7 @@ use crate::{
     fileinfo::FileInfo,
     none_from,
     objects::{
-        boolobject, fnobject, intobject, listobject, noneobject, utils::object_repr_safe, Object,
+        boolobject, fnobject, intobject, listobject, Object,
     },
     stats, TimeitHolder,
 };
@@ -303,7 +303,7 @@ impl<'a> Interpreter<'a> {
     }
 
     fn raise_exc_pos(&self, exc_obj: Object<'a>, start: Position, end: Position) -> ! {
-        let header: String = match object_repr_safe(exc_obj) {
+        let header: String = match RawObject::object_repr_safe(exc_obj) {
             crate::objects::MethodValue::Some(v) => v,
             _ => {
                 unimplemented!()

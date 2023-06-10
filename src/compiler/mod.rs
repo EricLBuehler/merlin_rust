@@ -1,6 +1,5 @@
 //Generate bytecode from AST
-use crate::objects::exceptionobject;
-use crate::objects::utils::object_repr_safe;
+use crate::objects::{exceptionobject, RawObject};
 use crate::trc::Trc;
 use crate::{
     errors::{raise_error, ErrorType},
@@ -286,7 +285,7 @@ impl<'a> Compiler<'a> {
     }
 
     fn raise_exc_pos(&mut self, exc_obj: Object<'a>, start: Position, end: Position) -> ! {
-        let header: String = match object_repr_safe(exc_obj) {
+        let header: String = match RawObject::object_repr_safe(exc_obj) {
             crate::objects::MethodValue::Some(v) => v,
             _ => {
                 unimplemented!()

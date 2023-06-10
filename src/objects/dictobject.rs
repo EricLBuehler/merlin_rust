@@ -1,7 +1,7 @@
 use super::mhash::HashMap;
 use super::{
-    create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
-    TypeObject,
+    create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
+    TypeObject, RawObject,
 };
 
 use crate::is_type_exact;
@@ -32,13 +32,13 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected map internal value")
         .clone();
     for (key, value) in map.into_iter() {
-        let repr = utils::object_repr_safe(key);
+        let repr = RawObject::object_repr_safe(key);
         if !repr.is_some() {
             return MethodValue::NotImplemented;
         }
         res += &repr.unwrap();
         res += ": ";
-        let repr = utils::object_repr_safe(value);
+        let repr = RawObject::object_repr_safe(value);
         if !repr.is_some() {
             return MethodValue::NotImplemented;
         }

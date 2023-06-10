@@ -1,7 +1,7 @@
 use super::exceptionobject::valueexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, intobject, utils, MethodType, MethodValue, Object,
-    TypeObject,
+    create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
+    TypeObject, RawObject,
 };
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
@@ -28,7 +28,7 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
         .get_arr()
         .expect("Expected arr internal value")
     {
-        let repr = utils::object_repr_safe(item.clone());
+        let repr = RawObject::object_repr_safe(item.clone());
         if !repr.is_some() {
             return MethodValue::NotImplemented;
         }

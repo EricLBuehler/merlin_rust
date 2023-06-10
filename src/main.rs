@@ -82,7 +82,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         for c in &bytecode.consts {
             println!(
                 "{} = 0x{:x}",
-                objects::utils::object_repr(c),
+                objects::RawObject::object_repr(c),
                 Trc::as_ptr(c) as u64
             );
         }

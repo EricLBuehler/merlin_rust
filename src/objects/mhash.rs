@@ -7,7 +7,7 @@ use crate::{
     parser::Position,
 };
 
-use super::{exceptionobject::keynotfoundexc_from_str, utils::object_str_safe, MethodType, Object};
+use super::{exceptionobject::keynotfoundexc_from_str, MethodType, Object, RawObject};
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct HashMap<'a> {
@@ -81,7 +81,7 @@ impl<'a> HashMap<'a> {
         }
         let res = self.values.get(&keyv.unwrap());
         if res.is_none() {
-            let str = object_str_safe(key.clone());
+            let str = RawObject::object_str_safe(key.clone());
             if str.is_error() {
                 return MethodValue::Error(str.unwrap_err());
             }

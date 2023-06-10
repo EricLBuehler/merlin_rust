@@ -1,6 +1,6 @@
 use super::{
-    boolobject, create_object_from_type, finalize_type, intobject, stringobject, utils, ExcData,
-    MethodType, MethodValue, Object, ObjectInternals, TypeObject,
+    boolobject, create_object_from_type, finalize_type, intobject, stringobject, ExcData,
+    MethodType, MethodValue, Object, ObjectInternals, TypeObject, RawObject,
 };
 use crate::is_type_exact;
 use crate::trc::Trc;
@@ -95,7 +95,7 @@ fn nameexc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -
     unimplemented!();
 }
 fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()
@@ -208,7 +208,7 @@ fn overflowexc_new<'a>(
     unimplemented!();
 }
 fn overflowexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()
@@ -321,7 +321,7 @@ fn methodnotdefinedexc_new<'a>(
     unimplemented!();
 }
 fn methodnotdefinedexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()
@@ -432,7 +432,7 @@ fn typemismatchexc_new<'a>(
     unimplemented!();
 }
 fn typemismatchexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()
@@ -545,7 +545,7 @@ fn keynotfoundexc_new<'a>(
     unimplemented!();
 }
 fn keynotfoundexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()
@@ -652,7 +652,7 @@ fn valueexc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) 
     unimplemented!();
 }
 fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()
@@ -765,7 +765,7 @@ fn zerodivexc_new<'a>(
     unimplemented!();
 }
 fn zerodivexc_repr(selfv: Object<'_>) -> MethodType<'_> {
-    let repr = utils::object_str_safe(
+    let repr = RawObject::object_str_safe(
         selfv
             .internals
             .get_exc()

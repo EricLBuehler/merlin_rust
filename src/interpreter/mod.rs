@@ -1,16 +1,14 @@
 // Interpret bytecode
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
-use crate::objects::{dictobject, mhash, TypeObject, noneobject, RawObject};
+use crate::objects::{dictobject, mhash, noneobject, RawObject, TypeObject};
 use crate::parser::Position;
 use crate::trc::Trc;
 use crate::{
     compiler::{Bytecode, CompilerInstruction, CompilerRegister},
     fileinfo::FileInfo,
     none_from,
-    objects::{
-        boolobject, fnobject, intobject, listobject, Object,
-    },
+    objects::{boolobject, fnobject, intobject, listobject, Object},
     stats, TimeitHolder,
 };
 use colored::Colorize;
@@ -394,29 +392,20 @@ impl<'a> Interpreter<'a> {
                     let last = self.frames.last_mut().expect("No frames");
 
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
-                    if selfv
-                        .tp
-                        .add
-                        .is_none()
-                    {
+                    if selfv.tp.add.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
                                 "Method 'add' is not defined for '{}' type",
-                                selfv
-                                    .tp
-                                    .typename
+                                selfv.tp.typename
                             ),
                             pos.0,
                             pos.1,
                         );
                         self.raise_exc(exc);
                     }
-                    let res = (selfv
-                        .tp
-                        .add
-                        .expect("Method is not defined"))(
+                    let res = (selfv.tp.add.expect("Method is not defined"))(
                         selfv,
                         load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
@@ -426,29 +415,20 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinarySub { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
-                    if selfv
-                        .tp
-                        .sub
-                        .is_none()
-                    {
+                    if selfv.tp.sub.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
                                 "Method 'sub' is not defined for '{}' type",
-                                selfv
-                                    .tp
-                                    .typename
+                                selfv.tp.typename
                             ),
                             pos.0,
                             pos.1,
                         );
                         self.raise_exc(exc);
                     }
-                    let res = (selfv
-                        .tp
-                        .sub
-                        .expect("Method is not defined"))(
+                    let res = (selfv.tp.sub.expect("Method is not defined"))(
                         selfv,
                         load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
@@ -458,29 +438,20 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryMul { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
-                    if selfv
-                        .tp
-                        .mul
-                        .is_none()
-                    {
+                    if selfv.tp.mul.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
                                 "Method 'mul' is not defined for '{}' type",
-                                selfv
-                                    .tp
-                                    .typename
+                                selfv.tp.typename
                             ),
                             pos.0,
                             pos.1,
                         );
                         self.raise_exc(exc);
                     }
-                    let res = (selfv
-                        .tp
-                        .mul
-                        .expect("Method is not defined"))(
+                    let res = (selfv.tp.mul.expect("Method is not defined"))(
                         selfv,
                         load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
@@ -490,29 +461,20 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryDiv { a, b, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
-                    if selfv
-                        .tp
-                        .div
-                        .is_none()
-                    {
+                    if selfv.tp.div.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
                                 "Method 'div' is not defined for '{}' type",
-                                selfv
-                                    .tp
-                                    .typename
+                                selfv.tp.typename
                             ),
                             pos.0,
                             pos.1,
                         );
                         self.raise_exc(exc);
                     }
-                    let res = (selfv
-                        .tp
-                        .div
-                        .expect("Method is not defined"))(
+                    let res = (selfv.tp.div.expect("Method is not defined"))(
                         selfv,
                         load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
@@ -524,31 +486,20 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::UnaryNeg { a, result } => {
                     let last = self.frames.last_mut().expect("No frames");
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
-                    if selfv
-                        .tp
-                        .neg
-                        .is_none()
-                    {
+                    if selfv.tp.neg.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
                                 "Method 'neg' is not defined for '{}' type",
-                                selfv
-                                    .tp
-                                    .typename
+                                selfv.tp.typename
                             ),
                             pos.0,
                             pos.1,
                         );
                         self.raise_exc(exc);
                     }
-                    let res = (selfv
-                        .tp
-                        .neg
-                        .expect("Method is not defined"))(
-                        selfv,
-                    );
+                    let res = (selfv.tp.neg.expect("Method is not defined"))(selfv);
                     maybe_handle_exception!(self, res, bytecode, i);
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }

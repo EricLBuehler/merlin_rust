@@ -385,12 +385,11 @@ impl<'a> Interpreter<'a> {
 
     #[inline]
     pub fn run_interpreter_raw(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
+        let last = self.frames.last_mut().expect("No frames");
         for (i, instruction) in bytecode.instructions.iter().enumerate() {
             match instruction {
                 //Binary operations
                 CompilerInstruction::BinaryAdd { a, b, result } => {
-                    let last = self.frames.last_mut().expect("No frames");
-
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.add.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -413,7 +412,7 @@ impl<'a> Interpreter<'a> {
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinarySub { a, b, result } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.sub.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -436,7 +435,7 @@ impl<'a> Interpreter<'a> {
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryMul { a, b, result } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.mul.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -459,7 +458,7 @@ impl<'a> Interpreter<'a> {
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryDiv { a, b, result } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.div.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -484,7 +483,7 @@ impl<'a> Interpreter<'a> {
 
                 //Unary operations
                 CompilerInstruction::UnaryNeg { a, result } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.neg.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -506,7 +505,7 @@ impl<'a> Interpreter<'a> {
 
                 //Register manipulation
                 CompilerInstruction::CopyRegister { from, to } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     store_register!(
                         last,
                         self.namespaces,
@@ -523,7 +522,7 @@ impl<'a> Interpreter<'a> {
                     idxsidx,
                     out,
                 } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let code = bytecode
                         .consts
                         .get(*codeidx)
@@ -568,7 +567,7 @@ impl<'a> Interpreter<'a> {
                     result,
                     arg_registers,
                 } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let callable =
                         load_register!(self, last, self.namespaces, bytecode, i, *callableregister);
                     let mut args = Vec::new();
@@ -606,7 +605,7 @@ impl<'a> Interpreter<'a> {
 
                 //Control flow
                 CompilerInstruction::Return { register } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let res = load_register!(self, last, self.namespaces, bytecode, i, *register);
                     pop_frame!(self);
                     return res;
@@ -617,7 +616,7 @@ impl<'a> Interpreter<'a> {
                     result,
                     value_registers,
                 } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let mut values = Vec::new();
                     for register in value_registers {
                         values.push(load_register!(
@@ -637,7 +636,7 @@ impl<'a> Interpreter<'a> {
                     key_registers,
                     value_registers,
                 } => {
-                    let last = self.frames.last_mut().expect("No frames");
+                    
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
                         let key = load_register!(self, last, self.namespaces, bytecode, i, *key);

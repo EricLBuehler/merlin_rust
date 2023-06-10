@@ -21,15 +21,15 @@ a/b+c
 ```
 Total execution time:
 
-Merlin 1.3 (release): 35.2 ns
+Merlin 1.3 (release): 33.2 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: 60.3 ns 
+Python 3.10.6: 61.9 ns 
 
 `python3 -m timeit -c "a=1;b=2;c=3;a/b+c"`
 
-Merlin is: 171.31% **faster**
+Merlin is: 86.45% **faster**
 
 ***
 
@@ -46,15 +46,15 @@ a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): 104.4 ns
+Merlin 1.3 (release): 100.66 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: 126 ns 
+Python 3.10.6: 123 ns 
 
 `python3 -m timeit -c "a=1;b=2;c=3;a+b;a+b;a+b;a+b;a+b;a+b"`
 
-Merlin is: 20.69% **faster**
+Merlin is: 22.19% **faster**
 
 ## Installation
 To get started with Merlin:

@@ -412,7 +412,6 @@ impl<'a> Interpreter<'a> {
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinarySub { a, b, result } => {
-                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.sub.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -435,7 +434,6 @@ impl<'a> Interpreter<'a> {
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryMul { a, b, result } => {
-                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.mul.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -458,7 +456,6 @@ impl<'a> Interpreter<'a> {
                     store_register!(last, self.namespaces, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryDiv { a, b, result } => {
-                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.div.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -483,7 +480,6 @@ impl<'a> Interpreter<'a> {
 
                 //Unary operations
                 CompilerInstruction::UnaryNeg { a, result } => {
-                    
                     let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
                     if selfv.tp.neg.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
@@ -505,7 +501,6 @@ impl<'a> Interpreter<'a> {
 
                 //Register manipulation
                 CompilerInstruction::CopyRegister { from, to } => {
-                    
                     store_register!(
                         last,
                         self.namespaces,
@@ -522,7 +517,6 @@ impl<'a> Interpreter<'a> {
                     idxsidx,
                     out,
                 } => {
-                    
                     let code = bytecode
                         .consts
                         .get(*codeidx)
@@ -567,7 +561,6 @@ impl<'a> Interpreter<'a> {
                     result,
                     arg_registers,
                 } => {
-                    
                     let callable =
                         load_register!(self, last, self.namespaces, bytecode, i, *callableregister);
                     let mut args = Vec::new();
@@ -605,7 +598,6 @@ impl<'a> Interpreter<'a> {
 
                 //Control flow
                 CompilerInstruction::Return { register } => {
-                    
                     let res = load_register!(self, last, self.namespaces, bytecode, i, *register);
                     pop_frame!(self);
                     return res;
@@ -616,7 +608,6 @@ impl<'a> Interpreter<'a> {
                     result,
                     value_registers,
                 } => {
-                    
                     let mut values = Vec::new();
                     for register in value_registers {
                         values.push(load_register!(
@@ -636,7 +627,6 @@ impl<'a> Interpreter<'a> {
                     key_registers,
                     value_registers,
                 } => {
-                    
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
                         let key = load_register!(self, last, self.namespaces, bytecode, i, *key);

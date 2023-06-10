@@ -49,7 +49,7 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
-    
+
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
         selfv

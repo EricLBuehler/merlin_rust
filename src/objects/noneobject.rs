@@ -32,9 +32,9 @@ fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn generate_cache<'a>(nonetp: Trc<TypeObject<'a>>, ptr: *mut Option<Object<'a>>) {
+pub fn generate_cache<'a>(vm: Trc<VM<'a>>, nonetp: Trc<TypeObject<'a>>, ptr: *mut Option<Object<'a>>) {
     unsafe {
-        let mut tp = create_object_from_type(nonetp.clone());
+        let mut tp = create_object_from_type(nonetp.clone(), vm);
         tp.internals = ObjectInternals::No;
         std::ptr::write(ptr, Some(tp));
     }
@@ -46,7 +46,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(none_new),

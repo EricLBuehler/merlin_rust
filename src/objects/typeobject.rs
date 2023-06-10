@@ -27,7 +27,6 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(type_new),

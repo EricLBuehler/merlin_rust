@@ -15,7 +15,7 @@ use crate::{
 
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.dicttp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.dicttp.as_ref().unwrap().clone(), vm);
     tp.internals = ObjectInternals::Map(raw);
     tp
 }
@@ -229,7 +229,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(dict_new),

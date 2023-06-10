@@ -31,7 +31,6 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(exc_new),
@@ -71,7 +70,7 @@ pub fn nameexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.nameexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.nameexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -82,7 +81,7 @@ pub fn nameexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.nameexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.nameexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -137,7 +136,6 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(nameexc_new),
@@ -177,7 +175,7 @@ pub fn overflowexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -188,7 +186,7 @@ pub fn overflowexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -247,7 +245,6 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(overflowexc_new),
@@ -287,7 +284,7 @@ pub fn methodnotdefinedexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -298,7 +295,7 @@ pub fn methodnotdefinedexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -357,7 +354,6 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(methodnotdefinedexc_new),
@@ -397,7 +393,7 @@ pub fn typemismatchexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.tpmisexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.tpmisexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -408,7 +404,7 @@ pub fn typemismatchexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.tpmisexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.tpmisexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -467,7 +463,6 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(typemismatchexc_new),
@@ -507,7 +502,7 @@ pub fn keynotfoundexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -518,7 +513,7 @@ pub fn keynotfoundexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -577,7 +572,6 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(keynotfoundexc_new),
@@ -617,7 +611,7 @@ pub fn valueexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.valueexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.valueexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -628,7 +622,7 @@ pub fn valueexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.valueexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.valueexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -683,7 +677,6 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(valueexc_new),
@@ -723,7 +716,7 @@ pub fn zerodivexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -734,7 +727,7 @@ pub fn zerodivexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -793,7 +786,6 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.exctp.as_ref().unwrap().clone()),
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(zerodivexc_new),

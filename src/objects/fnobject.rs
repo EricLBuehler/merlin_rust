@@ -18,7 +18,7 @@ pub fn fn_from<'a>(
     indices: Vec<Object<'a>>,
     name: String,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.fntp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.fntp.as_ref().unwrap().clone(), vm);
     tp.internals = ObjectInternals::Fn(super::FnData {
         code,
         args,
@@ -143,7 +143,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(fn_new),

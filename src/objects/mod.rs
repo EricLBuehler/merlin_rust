@@ -49,7 +49,6 @@ pub struct RawObject<'a> {
 pub struct TypeObject<'a> {
     pub typename: String,
     pub bases: Vec<ObjectBase<'a>>,
-    pub vm: Trc<VM<'a>>,
     pub typeid: u32,
 
     //instantiation
@@ -297,9 +296,9 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 }
 
 #[inline]
-fn create_object_from_type(tp: Trc<TypeObject<'_>>) -> Object<'_> {
+fn create_object_from_type<'a>(tp: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>) -> Object<'a> {
     let raw = RawObject {
-        vm: tp.vm.clone(),
+        vm: vm.clone(),
         tp,
         internals: ObjectInternals::No,
     };

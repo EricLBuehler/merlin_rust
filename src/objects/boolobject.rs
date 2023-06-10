@@ -66,16 +66,17 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 pub fn generate_cache<'a>(
+    vm: Trc<VM<'a>>,
     booltp: Trc<TypeObject<'a>>,
     tup: *mut (Option<Object<'a>>, Option<Object<'a>>),
 ) {
     unsafe {
-        let mut tp = create_object_from_type(booltp.clone());
+        let mut tp = create_object_from_type(booltp.clone(), vm.clone());
         tp.internals = ObjectInternals::Bool(false);
         let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
 
-        let mut tp = create_object_from_type(booltp.clone());
+        let mut tp = create_object_from_type(booltp.clone(), vm);
         tp.internals = ObjectInternals::Bool(true);
         let ptr = &(*tup).1 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
@@ -88,7 +89,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(bool_new),

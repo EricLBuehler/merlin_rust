@@ -27,7 +27,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("object"),
         bases: vec![super::ObjectBase::Object(vm.clone())],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(object_new),

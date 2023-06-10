@@ -13,7 +13,7 @@ use crate::{
 };
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.listtp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.listtp.as_ref().unwrap().clone(), vm);
     tp.internals = ObjectInternals::Arr(raw);
     tp
 }
@@ -257,7 +257,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(list_new),

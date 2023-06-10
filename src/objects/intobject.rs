@@ -22,7 +22,7 @@ pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
             .unwrap()
             .clone();
     }
-    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone(), vm);
     tp.internals = ObjectInternals::Int(raw);
     tp
 }
@@ -45,7 +45,7 @@ pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
                 .clone(),
         );
     }
-    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone(), vm);
     tp.internals = ObjectInternals::Int(convert.unwrap());
     MethodValue::Some(tp)
 }
@@ -332,13 +332,14 @@ pub fn init_cache<'a>() -> [Option<Object<'a>>; INT_CACHE_SIZE as usize] {
 }
 
 pub fn generate_cache<'a>(
+    vm: Trc<VM<'a>>,
     int: Trc<TypeObject<'a>>,
     arr: *mut [Option<Object<'a>>; INT_CACHE_SIZE as usize],
 ) {
     unsafe {
         let mut i = MIN_INT_CACHE;
         for item in &mut (*arr)[..] {
-            let mut tp = create_object_from_type(int.clone());
+            let mut tp = create_object_from_type(int.clone(), vm.clone());
             tp.internals = ObjectInternals::Int(i);
             std::ptr::write(item, Some(tp));
             i += 1;
@@ -352,7 +353,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(int_new),

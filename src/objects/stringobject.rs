@@ -18,7 +18,7 @@ use super::{
 const MFBH_MAX_LEN: usize = 256;
 
 pub fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
-    let mut tp = create_object_from_type(vm.types.strtp.as_ref().unwrap().clone());
+    let mut tp = create_object_from_type(vm.types.strtp.as_ref().unwrap().clone(), vm);
     tp.internals = ObjectInternals::Str(raw);
     tp
 }
@@ -175,7 +175,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         bases: vec![super::ObjectBase::Other(
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
-        vm: vm.clone(),
         typeid: vm.types.n_types,
 
         new: Some(string_new),

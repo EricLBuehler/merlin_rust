@@ -21,7 +21,7 @@ a/b+c
 ```
 Total execution time:
 
-Merlin 1.3 (release): 47.6 ns
+Merlin 1.3 (release): 44.8 ns
 
 `./merlin program.me -t 10000`
 
@@ -29,7 +29,7 @@ Python 3.10.6: 72.8 ns
 
 `python3 -m timeit -c "a=1;b=2;c=3;a/b+c"`
 
-Merlin is: 1.53x faster
+Merlin is: 1.625x faster
 
 ========================
 

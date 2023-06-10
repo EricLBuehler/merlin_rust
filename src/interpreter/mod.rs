@@ -412,12 +412,13 @@ impl<'a> Interpreter<'a> {
                         self.raise_exc(exc);
                     }
 
-                    let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let res = (selfv
                         .tp
                         .add
                         .expect("Method is not defined"))(
-                        load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
-                        load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
+                        selfv,
+                        load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
                     store_register!(last, self.namespaces, *result, res.unwrap());
@@ -443,12 +444,13 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-                    let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let res = (selfv
                         .tp
                         .sub
                         .expect("Method is not defined"))(
-                        load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
-                        load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
+                        selfv,
+                        load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
                     store_register!(last, self.namespaces, *result, res.unwrap());
@@ -474,13 +476,13 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-
-                    let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let res = (selfv
                         .tp
                         .mul
                         .expect("Method is not defined"))(
-                        load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
-                        load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
+                        selfv,
+                        load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
                     store_register!(last, self.namespaces, *result, res.unwrap());
@@ -506,13 +508,13 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-
-                    let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let res = (selfv
                         .tp
                         .div
                         .expect("Method is not defined"))(
-                        load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
-                        load_register!(self, last, self.namespaces, bytecode, i, *b).clone(),
+                        selfv,
+                        load_register!(self, last, self.namespaces, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
                     store_register!(last, self.namespaces, *result, res.unwrap());
@@ -541,12 +543,12 @@ impl<'a> Interpreter<'a> {
                         );
                         self.raise_exc(exc);
                     }
-
-                    let res = (load_register!(self, last, self.namespaces, bytecode, i, *a)
+                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let res = (selfv
                         .tp
                         .neg
                         .expect("Method is not defined"))(
-                        load_register!(self, last, self.namespaces, bytecode, i, *a).clone(),
+                        selfv,
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
                     store_register!(last, self.namespaces, *result, res.unwrap());

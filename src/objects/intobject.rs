@@ -15,6 +15,7 @@ use std::collections::hash_map::DefaultHasher;
 
 use std::hash::{Hash, Hasher};
 
+#[inline]
 pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
         return vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]

@@ -32,7 +32,11 @@ fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     ))
 }
 
-pub fn generate_cache<'a>(vm: Trc<VM<'a>>, nonetp: Trc<TypeObject<'a>>, ptr: *mut Option<Object<'a>>) {
+pub fn generate_cache<'a>(
+    vm: Trc<VM<'a>>,
+    nonetp: Trc<TypeObject<'a>>,
+    ptr: *mut Option<Object<'a>>,
+) {
     unsafe {
         let mut tp = create_object_from_type(nonetp.clone(), vm);
         tp.internals = ObjectInternals::No;

@@ -100,7 +100,8 @@ fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -116,7 +117,8 @@ fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -175,7 +177,8 @@ pub fn overflowexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -186,7 +189,8 @@ pub fn overflowexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.overflwexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -209,7 +213,8 @@ fn overflowexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -225,7 +230,8 @@ fn overflowexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -284,7 +290,8 @@ pub fn methodnotdefinedexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -295,7 +302,8 @@ pub fn methodnotdefinedexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.mthntfndexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -318,7 +326,8 @@ fn methodnotdefinedexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -334,7 +343,8 @@ fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -427,7 +437,8 @@ fn typemismatchexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -443,7 +454,8 @@ fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -502,7 +514,8 @@ pub fn keynotfoundexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -513,7 +526,8 @@ pub fn keynotfoundexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.keyntfndexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -536,7 +550,8 @@ fn keynotfoundexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -552,7 +567,8 @@ fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -641,7 +657,8 @@ fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -657,7 +674,8 @@ fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -716,7 +734,8 @@ pub fn zerodivexc_from_obj<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone(), vm.clone());
     tp.internals = ObjectInternals::Exc(ExcData { obj, start, end });
 
     tp
@@ -727,7 +746,8 @@ pub fn zerodivexc_from_str<'a>(
     start: Position,
     end: Position,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone(), vm.clone());
+    let mut tp =
+        create_object_from_type(vm.types.divzeroexctp.as_ref().unwrap().clone(), vm.clone());
 
     tp.internals = ObjectInternals::Exc(ExcData {
         obj: stringobject::string_from(vm.clone(), raw.to_string()),
@@ -750,7 +770,8 @@ fn zerodivexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -766,7 +787,8 @@ fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj.clone(),
+            .obj
+            .clone(),
     )
 }
 fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {

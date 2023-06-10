@@ -155,16 +155,28 @@ impl<'a> VM<'a> {
         let int_cache_arr_ref = &this.cache.int_cache;
         let ptr = int_cache_arr_ref as *const [Option<Object>; INT_CACHE_SIZE as usize]
             as *mut [Option<Object>; INT_CACHE_SIZE as usize];
-        intobject::generate_cache(this.clone(), this.types.inttp.as_ref().unwrap().clone(), ptr);
+        intobject::generate_cache(
+            this.clone(),
+            this.types.inttp.as_ref().unwrap().clone(),
+            ptr,
+        );
 
         let bool_cache_tup_ref = &this.cache.bool_cache;
         let ptr = bool_cache_tup_ref as *const (Option<Object>, Option<Object>)
             as *mut (Option<Object>, Option<Object>);
-        boolobject::generate_cache(this.clone(), this.types.booltp.as_ref().unwrap().clone(), ptr);
+        boolobject::generate_cache(
+            this.clone(),
+            this.types.booltp.as_ref().unwrap().clone(),
+            ptr,
+        );
 
         let none_obj_ref = &this.cache.none_singleton;
         let ptr = none_obj_ref as *const Option<Object> as *mut Option<Object>;
-        noneobject::generate_cache(this.clone(), this.types.nonetp.as_ref().unwrap().clone(), ptr);
+        noneobject::generate_cache(
+            this.clone(),
+            this.types.nonetp.as_ref().unwrap().clone(),
+            ptr,
+        );
     }
 
     pub fn execute(mut this: Trc<Self>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
@@ -285,7 +297,8 @@ impl<'a> Interpreter<'a> {
         let exc = exc_obj
             .internals
             .get_exc()
-            .expect("Expected exc internal value").clone();
+            .expect("Expected exc internal value")
+            .clone();
         self.raise_exc_pos(exc_obj, exc.start, exc.end);
     }
 

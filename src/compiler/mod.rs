@@ -89,17 +89,17 @@ pub enum CompilerInstruction {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CompilerRegister {
-    R(i32),
-    V(i32),
+    R(usize),
+    V(usize),
     C(usize),
 }
 
-impl From<CompilerRegister> for i32 {
+impl From<CompilerRegister> for usize {
     fn from(value: CompilerRegister) -> Self {
         match value {
             CompilerRegister::V(v) => v,
             CompilerRegister::R(v) => v,
-            CompilerRegister::C(v) => v as i32,
+            CompilerRegister::C(v) => v,
         }
     }
 }
@@ -242,7 +242,7 @@ impl<'a> Compiler<'a> {
                     argsidx,
                     codeidx,
                     idxsidx,
-                    out: CompilerRegister::R(self.register_index),
+                    out: CompilerRegister::R(self.register_index.try_into().unwrap()),
                 });
                 increment_reg_num!(self);
                 registers += 1;
@@ -251,8 +251,8 @@ impl<'a> Compiler<'a> {
 
                 self.names.insert(name, self.names.len() as i32);
                 self.instructions.push(CompilerInstruction::CopyRegister {
-                    from: CompilerRegister::R(self.register_index - 1),
-                    to: CompilerRegister::V((self.names.len() - 1) as i32),
+                    from: CompilerRegister::R((self.register_index - 1).try_into().unwrap()),
+                    to: CompilerRegister::V(self.names.len() - 1),
                 });
                 self.positions.push((expr.start, expr.end));
                 self.register_index -= registers;
@@ -391,7 +391,7 @@ impl<'a> Compiler<'a> {
                 );
 
                 RegisterContext {
-                    value: CompilerRegister::R(old),
+                    value: CompilerRegister::R(old.try_into().unwrap()),
                     left: Some(left.value),
                     leftctx: Some(Box::new(left)),
                     right: Some(right.value),
@@ -412,7 +412,7 @@ impl<'a> Compiler<'a> {
                 );
 
                 RegisterContext {
-                    value: CompilerRegister::R(old),
+                    value: CompilerRegister::R(old.try_into().unwrap()),
                     left: Some(expr.value),
                     leftctx: Some(Box::new(expr)),
                     right: None,
@@ -450,7 +450,7 @@ impl<'a> Compiler<'a> {
 
                 RegisterContext {
                     value: CompilerRegister::V(match var {
-                        Some(v) => *v.1,
+                        Some(v) => (*v.1).try_into().unwrap(),
                         None => {
                             self.undef_index -= 1;
                             self.undef_names.insert(
@@ -462,7 +462,7 @@ impl<'a> Compiler<'a> {
                                     .expect("Node.raw.name not found")
                                     .clone(),
                             );
-                            self.undef_index
+                            self.undef_index.try_into().unwrap()
                         }
                     }),
                     left: None,
@@ -496,7 +496,7 @@ impl<'a> Compiler<'a> {
                 }
 
                 RegisterContext {
-                    value: CompilerRegister::R(old),
+                    value: CompilerRegister::R(old.try_into().unwrap()),
                     left: Some(callable.value),
                     leftctx: Some(Box::new(callable)),
                     right: None,
@@ -537,7 +537,7 @@ impl<'a> Compiler<'a> {
                 );
 
                 RegisterContext {
-                    value: CompilerRegister::R(old),
+                    value: CompilerRegister::R(old.try_into().unwrap()),
                     left: Some(var.value),
                     leftctx: Some(Box::new(var)),
                     right: None,
@@ -602,7 +602,7 @@ impl<'a> Compiler<'a> {
                 }
 
                 RegisterContext {
-                    value: CompilerRegister::R(old),
+                    value: CompilerRegister::R(old.try_into().unwrap()),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -637,7 +637,7 @@ impl<'a> Compiler<'a> {
                 }
 
                 RegisterContext {
-                    value: CompilerRegister::R(old),
+                    value: CompilerRegister::R(old.try_into().unwrap()),
                     left: None,
                     leftctx: None,
                     right: None,
@@ -754,7 +754,7 @@ impl<'a> Compiler<'a> {
 
                 self.instructions.push(CompilerInstruction::CopyRegister {
                     from: ctx.left.unwrap(),
-                    to: CompilerRegister::V(idx),
+                    to: CompilerRegister::V(idx.try_into().unwrap()),
                 });
                 self.positions.push((expr.start, expr.end));
             }

@@ -244,8 +244,8 @@ impl<'a> VM<'a> {
 macro_rules! load_register {
     ($this:expr, $last:expr, $namespaces:expr, $bytecode:expr, $i:expr, $register:expr) => {
         match $register {
-            CompilerRegister::R(v) => $last.registers[v as usize].clone(),
-            CompilerRegister::V(v) => match &$namespaces.variables.last().unwrap()[v as usize] {
+            CompilerRegister::R(v) => $last.registers[v].clone(),
+            CompilerRegister::V(v) => match &$namespaces.variables.last().unwrap()[v] {
                 Some(v) => v.clone(),
                 None => {
                     let pos = $bytecode
@@ -272,9 +272,9 @@ macro_rules! load_register {
 macro_rules! store_register {
     ($last:expr, $namespaces:expr, $register:expr, $value:expr) => {
         match $register {
-            CompilerRegister::R(v) => $last.registers[v as usize] = $value,
+            CompilerRegister::R(v) => $last.registers[v] = $value,
             CompilerRegister::V(v) => {
-                (*$namespaces).variables.last_mut().unwrap()[v as usize] = Some($value)
+                (*$namespaces).variables.last_mut().unwrap()[v] = Some($value)
             }
             CompilerRegister::C(_) => unreachable!("Impossible."),
         }

@@ -28,6 +28,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(type_new),
 
@@ -54,6 +55,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     });
 
     vm.types.typetp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }

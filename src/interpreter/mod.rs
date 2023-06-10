@@ -56,6 +56,7 @@ pub struct Types<'a> {
     pub listtp: Option<Trc<TypeObject<'a>>>,
     pub nonetp: Option<Trc<TypeObject<'a>>>,
     pub strtp: Option<Trc<TypeObject<'a>>>,
+    pub n_types: u32,
 }
 
 #[derive(Clone)]
@@ -138,6 +139,7 @@ impl<'a> VM<'a> {
                 listtp: None,
                 nonetp: None,
                 strtp: None,
+                n_types: 0,
             }),
             interpreters: Vec::new(),
             namespaces: Trc::new(Namespaces {
@@ -188,15 +190,15 @@ impl<'a> VM<'a> {
 
         for p in &mut *samples {
             let start = Instant::now();
-            for _ in 0..15 {
+            for _ in 0..5 {
                 res = (this.deref_mut().interpreters.last_mut().unwrap())
                     .run_interpreter(bytecode.clone());
             }
             let delta = start.elapsed().as_nanos();
-            let time = if (delta as i128 / 15_i128) - (timeit.baseline as i128) < 0 {
+            let time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
                 0
             } else {
-                delta / 15 - timeit.baseline
+                delta / 5 - timeit.baseline
             };
             *p = time as f64;
         }

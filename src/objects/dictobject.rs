@@ -230,6 +230,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(dict_new),
 
@@ -254,6 +255,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.dicttp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }

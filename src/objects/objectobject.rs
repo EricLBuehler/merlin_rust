@@ -28,6 +28,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typename: String::from("object"),
         bases: vec![super::ObjectBase::Object(vm.clone())],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(object_new),
 
@@ -52,6 +53,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.objecttp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }

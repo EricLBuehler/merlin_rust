@@ -50,6 +50,7 @@ pub struct TypeObject<'a> {
     pub typename: String,
     pub bases: Vec<ObjectBase<'a>>,
     pub vm: Trc<VM<'a>>,
+    pub typeid: u32,
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
@@ -308,7 +309,7 @@ fn create_object_from_type(tp: Trc<TypeObject<'_>>) -> Object<'_> {
 #[macro_export]
 macro_rules! is_type_exact {
     ($self:expr, $other:expr) => {
-        $self.tp == $other
+        $self.tp.typeid == $other.typeid
     };
 }
 

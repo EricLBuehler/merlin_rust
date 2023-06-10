@@ -32,6 +32,7 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
             vm.types.objecttp.as_ref().unwrap().clone(),
         )],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(exc_new),
 
@@ -56,6 +57,7 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.exctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -136,6 +138,7 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(nameexc_new),
 
@@ -160,6 +163,7 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.nameexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -244,6 +248,7 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(overflowexc_new),
 
@@ -268,6 +273,7 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.overflwexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -352,6 +358,7 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(methodnotdefinedexc_new),
 
@@ -376,6 +383,7 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.mthntfndexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -460,6 +468,7 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(typemismatchexc_new),
 
@@ -484,6 +493,7 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.tpmisexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -568,6 +578,7 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(keynotfoundexc_new),
 
@@ -592,6 +603,7 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.keyntfndexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -672,6 +684,7 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(valueexc_new),
 
@@ -696,6 +709,7 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.valueexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }
@@ -780,6 +794,7 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(vm.types.objecttp.as_ref().unwrap().clone()),
         ],
         vm: vm.clone(),
+        typeid: vm.types.n_types,
 
         new: Some(zerodivexc_new),
 
@@ -804,6 +819,7 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
     });
 
     vm.types.divzeroexctp = Some(tp.clone());
+    vm.types.n_types += 1;
 
     finalize_type(tp);
 }

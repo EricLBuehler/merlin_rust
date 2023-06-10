@@ -129,7 +129,7 @@ pub enum ObjectInternals<'a> {
     Code(Trc<Bytecode<'a>>),
     Fn(FnData<'a>),
     Exc(ExcData<'a>),
-    None,
+    Type(TypeObject<'a>),
 }
 
 #[allow(dead_code)]
@@ -146,7 +146,7 @@ impl<'a> ObjectInternals<'a> {
     #[inline]
     pub fn get_bool(&self) -> Option<&bool> {
         match self {
-            ObjectInternals::Bool(v) => Some(v),
+            ObjectInternals::Bool(ref v) => Some(v),
             _ => None,
         }
     }
@@ -158,7 +158,7 @@ impl<'a> ObjectInternals<'a> {
     #[inline]
     pub fn get_int(&self) -> Option<&i128> {
         match self {
-            ObjectInternals::Int(v) => Some(v),
+            ObjectInternals::Int(ref v) => Some(v),
             _ => None,
         }
     }
@@ -170,7 +170,7 @@ impl<'a> ObjectInternals<'a> {
     #[inline]
     pub fn get_str(&self) -> Option<&String> {
         match self {
-            ObjectInternals::Str(v) => Some(v),
+            ObjectInternals::Str(ref v) => Some(v),
             _ => None,
         }
     }
@@ -182,19 +182,7 @@ impl<'a> ObjectInternals<'a> {
     #[inline]
     pub fn get_arr(&self) -> Option<&Vec<Object<'a>>> {
         match self {
-            ObjectInternals::Arr(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_none(&self) -> bool {
-        matches!(self, ObjectInternals::None)
-    }
-    #[inline]
-    pub fn get_none(&self) -> Option<()> {
-        match self {
-            ObjectInternals::None => Some(()),
+            ObjectInternals::Arr(ref v) => Some(v),
             _ => None,
         }
     }
@@ -206,7 +194,7 @@ impl<'a> ObjectInternals<'a> {
     #[inline]
     pub fn get_map(&self) -> Option<&mhash::HashMap<'a>> {
         match self {
-            ObjectInternals::Map(v) => Some(v),
+            ObjectInternals::Map(ref v) => Some(v),
             _ => None,
         }
     }
@@ -218,7 +206,7 @@ impl<'a> ObjectInternals<'a> {
     #[inline]
     pub fn get_code(&self) -> Option<&Bytecode<'a>> {
         match self {
-            ObjectInternals::Code(v) => Some(v),
+            ObjectInternals::Code(ref v) => Some(v),
             _ => None,
         }
     }
@@ -240,9 +228,21 @@ impl<'a> ObjectInternals<'a> {
         matches!(self, ObjectInternals::Exc(_))
     }
     #[inline]
-    pub fn get_exc(&self) -> Option<ExcData<'a>> {
+    pub fn get_exc(&self) -> Option<&ExcData<'a>> {
         match self {
-            ObjectInternals::Exc(v) => Some(v.clone()),
+            ObjectInternals::Exc(ref v) => Some(v),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn is_type(&self) -> bool {
+        matches!(self, ObjectInternals::Type(_))
+    }
+    #[inline]
+    pub fn get_type(&self) -> Option<&TypeObject<'a>> {
+        match self {
+            ObjectInternals::Type(ref v) => Some(v),
             _ => None,
         }
     }

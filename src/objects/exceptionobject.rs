@@ -99,7 +99,7 @@ fn nameexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -115,7 +115,7 @@ fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -207,7 +207,7 @@ fn overflowexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -223,7 +223,7 @@ fn overflowexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -315,7 +315,7 @@ fn methodnotdefinedexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -331,7 +331,7 @@ fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -423,7 +423,7 @@ fn typemismatchexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -439,7 +439,7 @@ fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -531,7 +531,7 @@ fn keynotfoundexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -547,7 +547,7 @@ fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -635,7 +635,7 @@ fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -651,7 +651,7 @@ fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
@@ -743,7 +743,7 @@ fn zerodivexc_repr(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     );
     if !repr.is_some() {
         return MethodValue::NotImplemented;
@@ -759,7 +759,7 @@ fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
             .internals
             .get_exc()
             .expect("Expected exc internal value")
-            .obj,
+            .obj.clone(),
     )
 }
 fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {

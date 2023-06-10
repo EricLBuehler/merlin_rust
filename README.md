@@ -46,7 +46,7 @@ a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): 164.8 ns
+Merlin 1.3 (release): 163.6 ns
 
 `./merlin program.me -t 10000`
 

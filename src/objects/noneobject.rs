@@ -35,7 +35,7 @@ fn none_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 pub fn generate_cache<'a>(nonetp: Trc<TypeObject<'a>>, ptr: *mut Option<Object<'a>>) {
     unsafe {
         let mut tp = create_object_from_type(nonetp.clone());
-        tp.internals = ObjectInternals::None;
+        tp.internals = ObjectInternals::No;
         std::ptr::write(ptr, Some(tp));
     }
 }

@@ -283,7 +283,7 @@ impl<'a> Interpreter<'a> {
         let exc = exc_obj
             .internals
             .get_exc()
-            .expect("Expected exc internal value");
+            .expect("Expected exc internal value").clone();
         self.raise_exc_pos(exc_obj, exc.start, exc.end);
     }
 

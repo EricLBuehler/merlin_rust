@@ -37,25 +37,30 @@ pub enum CompilerInstruction {
         a: CompilerRegister,
         b: CompilerRegister,
         result: CompilerRegister,
+        i: usize,
     },
     BinarySub {
         a: CompilerRegister,
         b: CompilerRegister,
         result: CompilerRegister,
+        i: usize,
     },
     BinaryMul {
         a: CompilerRegister,
         b: CompilerRegister,
         result: CompilerRegister,
+        i: usize,
     },
     BinaryDiv {
         a: CompilerRegister,
         b: CompilerRegister,
         result: CompilerRegister,
+        i: usize,
     },
     CopyRegister {
         from: CompilerRegister,
         to: CompilerRegister,
+        i: usize,
     },
     MakeFunction {
         nameidx: usize,
@@ -68,22 +73,27 @@ pub enum CompilerInstruction {
         callableregister: CompilerRegister,
         result: CompilerRegister,
         arg_registers: Vec<RegisterContext>,
+        i: usize,
     },
     Return {
         register: CompilerRegister,
+        i: usize,
     },
     UnaryNeg {
         a: CompilerRegister,
         result: CompilerRegister,
+        i: usize,
     },
     BuildList {
         result: CompilerRegister,
         value_registers: Vec<CompilerRegister>,
+        i: usize,
     },
     BuildDict {
         result: CompilerRegister,
         key_registers: Vec<CompilerRegister>,
         value_registers: Vec<CompilerRegister>,
+        i: usize,
     },
 }
 
@@ -253,6 +263,7 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::CopyRegister {
                     from: CompilerRegister::R((self.register_index - 1).try_into().unwrap()),
                     to: CompilerRegister::V(self.names.len() - 1),
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
                 self.register_index -= registers;
@@ -680,6 +691,7 @@ impl<'a> Compiler<'a> {
                             a: ctx.left.unwrap(),
                             b: ctx.right.unwrap(),
                             result: ctx.value,
+                            i: self.instructions.len(),
                         });
                         self.positions.push((expr.start, expr.end));
                     }
@@ -688,6 +700,7 @@ impl<'a> Compiler<'a> {
                             a: ctx.left.unwrap(),
                             b: ctx.right.unwrap(),
                             result: ctx.value,
+                            i: self.instructions.len(),
                         });
                         self.positions.push((expr.start, expr.end));
                     }
@@ -696,6 +709,7 @@ impl<'a> Compiler<'a> {
                             a: ctx.left.unwrap(),
                             b: ctx.right.unwrap(),
                             result: ctx.value,
+                            i: self.instructions.len(),
                         });
                         self.positions.push((expr.start, expr.end));
                     }
@@ -704,6 +718,7 @@ impl<'a> Compiler<'a> {
                             a: ctx.left.unwrap(),
                             b: ctx.right.unwrap(),
                             result: ctx.value,
+                            i: self.instructions.len(),
                         });
                         self.positions.push((expr.start, expr.end));
                     }
@@ -755,6 +770,7 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::CopyRegister {
                     from: ctx.left.unwrap(),
                     to: CompilerRegister::V(idx.try_into().unwrap()),
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
             }
@@ -789,6 +805,7 @@ impl<'a> Compiler<'a> {
                     callableregister: ctx.left.unwrap(),
                     result: ctx.value,
                     arg_registers: ctx.args.unwrap(),
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
             }
@@ -803,6 +820,7 @@ impl<'a> Compiler<'a> {
                 );
                 self.instructions.push(CompilerInstruction::Return {
                     register: ctx.value,
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
             }
@@ -821,6 +839,7 @@ impl<'a> Compiler<'a> {
                         self.instructions.push(CompilerInstruction::UnaryNeg {
                             a: ctx.left.unwrap(),
                             result: ctx.value,
+                            i: self.instructions.len(),
                         });
                         self.positions.push((expr.start, expr.end));
                     }
@@ -843,6 +862,7 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::BuildList {
                     result: ctx.value,
                     value_registers: ctx.args.unwrap().iter().map(|x| x.value).collect_vec(),
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
             }
@@ -876,6 +896,7 @@ impl<'a> Compiler<'a> {
                         .map(|x| x.value)
                         .collect_vec(),
                     value_registers: ctx.mapping.unwrap().1.iter().map(|x| x.value).collect_vec(),
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
             }

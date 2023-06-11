@@ -242,10 +242,10 @@ impl<'a> VM<'a> {
 }
 
 macro_rules! load_register {
-    ($this:expr, $last:expr, $namespaces:expr, $bytecode:expr, $i:expr, $register:expr) => {
+    ($this:expr, $last:expr, $last_vars:expr, $bytecode:expr, $i:expr, $register:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v].clone(),
-            CompilerRegister::V(v) => match &$namespaces.variables.last().unwrap()[v] {
+            CompilerRegister::V(v) => match &$last_vars[v] {
                 Some(v) => v.clone(),
                 None => {
                     let pos = $bytecode
@@ -270,11 +270,11 @@ macro_rules! load_register {
 }
 
 macro_rules! store_register {
-    ($last:expr, $namespaces:expr, $register:expr, $value:expr) => {
+    ($last:expr, $last_vars:expr, $register:expr, $value:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v] = $value,
             CompilerRegister::V(v) => {
-                (*$namespaces).variables.last_mut().unwrap()[v] = Some($value)
+                $last_vars[v] = Some($value)
             }
             CompilerRegister::C(_) => unreachable!("Impossible."),
         }
@@ -386,11 +386,12 @@ impl<'a> Interpreter<'a> {
     #[inline]
     pub fn run_interpreter_raw(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         let last = self.frames.last_mut().expect("No frames");
+        let last_vars = self.namespaces.variables.last_mut().unwrap();
         for (i, instruction) in bytecode.instructions.iter().enumerate() {
             match instruction {
                 //Binary operations
                 CompilerInstruction::BinaryAdd { a, b, result } => {
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let selfv = load_register!(self, last, last_vars, bytecode, i, *a);
                     if selfv.tp.add.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
@@ -406,13 +407,13 @@ impl<'a> Interpreter<'a> {
                     }
                     let res = (selfv.tp.add.expect("Method is not defined"))(
                         selfv,
-                        load_register!(self, last, self.namespaces, bytecode, i, *b),
+                        load_register!(self, last, last_vars, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
-                    store_register!(last, self.namespaces, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, res.unwrap());
                 }
                 CompilerInstruction::BinarySub { a, b, result } => {
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let selfv = load_register!(self, last, last_vars, bytecode, i, *a);
                     if selfv.tp.sub.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
@@ -428,13 +429,13 @@ impl<'a> Interpreter<'a> {
                     }
                     let res = (selfv.tp.sub.expect("Method is not defined"))(
                         selfv,
-                        load_register!(self, last, self.namespaces, bytecode, i, *b),
+                        load_register!(self, last, last_vars, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
-                    store_register!(last, self.namespaces, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryMul { a, b, result } => {
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let selfv = load_register!(self, last, last_vars, bytecode, i, *a);
                     if selfv.tp.mul.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
@@ -450,13 +451,13 @@ impl<'a> Interpreter<'a> {
                     }
                     let res = (selfv.tp.mul.expect("Method is not defined"))(
                         selfv,
-                        load_register!(self, last, self.namespaces, bytecode, i, *b),
+                        load_register!(self, last, last_vars, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
-                    store_register!(last, self.namespaces, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, res.unwrap());
                 }
                 CompilerInstruction::BinaryDiv { a, b, result } => {
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let selfv = load_register!(self, last, last_vars, bytecode, i, *a);
                     if selfv.tp.div.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
@@ -472,15 +473,15 @@ impl<'a> Interpreter<'a> {
                     }
                     let res = (selfv.tp.div.expect("Method is not defined"))(
                         selfv,
-                        load_register!(self, last, self.namespaces, bytecode, i, *b),
+                        load_register!(self, last, last_vars, bytecode, i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, i);
-                    store_register!(last, self.namespaces, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, res.unwrap());
                 }
 
                 //Unary operations
                 CompilerInstruction::UnaryNeg { a, result } => {
-                    let selfv = load_register!(self, last, self.namespaces, bytecode, i, *a);
+                    let selfv = load_register!(self, last, last_vars, bytecode, i, *a);
                     if selfv.tp.neg.is_none() {
                         let pos = bytecode.positions.get(i).expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
@@ -496,16 +497,16 @@ impl<'a> Interpreter<'a> {
                     }
                     let res = (selfv.tp.neg.expect("Method is not defined"))(selfv);
                     maybe_handle_exception!(self, res, bytecode, i);
-                    store_register!(last, self.namespaces, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, res.unwrap());
                 }
 
                 //Register manipulation
                 CompilerInstruction::CopyRegister { from, to } => {
                     store_register!(
                         last,
-                        self.namespaces,
+                        last_vars,
                         *to,
-                        load_register!(self, last, self.namespaces, bytecode, i, *from)
+                        load_register!(self, last, last_vars, bytecode, i, *from)
                     );
                 }
 
@@ -554,7 +555,7 @@ impl<'a> Interpreter<'a> {
                             .expect("Expected str internal value")
                             .clone(),
                     );
-                    store_register!(last, self.namespaces, *out, func);
+                    store_register!(last, last_vars, *out, func);
                 }
                 CompilerInstruction::Call {
                     callableregister,
@@ -562,13 +563,13 @@ impl<'a> Interpreter<'a> {
                     arg_registers,
                 } => {
                     let callable =
-                        load_register!(self, last, self.namespaces, bytecode, i, *callableregister);
+                        load_register!(self, last, last_vars, bytecode, i, *callableregister);
                     let mut args = Vec::new();
                     for register in arg_registers {
                         args.push(load_register!(
                             self,
                             last,
-                            self.namespaces,
+                            last_vars,
                             bytecode,
                             i,
                             register.value
@@ -593,12 +594,12 @@ impl<'a> Interpreter<'a> {
                         listobject::list_from(self.vm.clone(), args),
                     );
                     maybe_handle_exception!(self, value, bytecode, i);
-                    store_register!(last, self.namespaces, *result, value.unwrap());
+                    store_register!(last, last_vars, *result, value.unwrap());
                 }
 
                 //Control flow
                 CompilerInstruction::Return { register } => {
-                    let res = load_register!(self, last, self.namespaces, bytecode, i, *register);
+                    let res = load_register!(self, last, last_vars, bytecode, i, *register);
                     pop_frame!(self);
                     return res;
                 }
@@ -613,14 +614,14 @@ impl<'a> Interpreter<'a> {
                         values.push(load_register!(
                             self,
                             last,
-                            self.namespaces,
+                            last_vars,
                             bytecode,
                             i,
                             *register
                         ));
                     }
                     let list = listobject::list_from(self.vm.clone(), values);
-                    store_register!(last, self.namespaces, *result, list);
+                    store_register!(last, last_vars, *result, list);
                 }
                 CompilerInstruction::BuildDict {
                     result,
@@ -629,15 +630,15 @@ impl<'a> Interpreter<'a> {
                 } => {
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
-                        let key = load_register!(self, last, self.namespaces, bytecode, i, *key);
+                        let key = load_register!(self, last, last_vars, bytecode, i, *key);
                         let value =
-                            load_register!(self, last, self.namespaces, bytecode, i, *value);
+                            load_register!(self, last, last_vars, bytecode, i, *value);
 
                         let res = map.insert(key, value);
                         maybe_handle_exception!(self, res, bytecode, i);
                     }
                     let dict = dictobject::dict_from(self.vm.clone(), map);
-                    store_register!(last, self.namespaces, *result, dict);
+                    store_register!(last, last_vars, *result, dict);
                 }
             }
         }

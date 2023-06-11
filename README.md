@@ -46,7 +46,7 @@ a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): 81.6 ns
+Merlin 1.3 (release): 80.66 ns
 
 `./merlin program.me -t 10000`
 
@@ -54,7 +54,7 @@ Python 3.10.6: 137 ns
 
 `python3 -m timeit -c "a=1;b=2;c=3;a+b;a+b;a+b;a+b;a+b;a+b"`
 
-Merlin is: 67.89% **faster**
+Merlin is: 69.85% **faster**
 
 ## Installation
 To get started with Merlin:

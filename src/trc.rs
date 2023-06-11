@@ -31,7 +31,7 @@ struct LocalThreadTrc<T> {
 /// It impkements biased reference counting, which is based on the observation that most objects are only used by one thread.
 /// This means that two refernce counts can be created: one for thread-local use, and one atomic one (with a lock) for sharing.
 /// This implementation of biased reference counting sets the atomic reference count to the number of threads using the data.
-/// When the thread drops the object, the atomic refernce count is decremented, and the data is freed.
+/// When the last thread drops the object, the atomic refernce count is decremented, and the data is freed.
 ///
 /// For ease of developer use, `Trc` comes with [`Deref`] and [`DerefMut`] implemented to allow internal mutation.
 ///

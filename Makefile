@@ -27,3 +27,6 @@ clean:
 fmt:
 	cargo clippy --fix
 	cargo fmt
+	
+doc:
+	cargo doc --no-deps --open

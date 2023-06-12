@@ -433,9 +433,9 @@ dependencies = [
 
 [[package]]
 name = "trc"
-version = "0.1.3"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2bb20621e325090db1cd52d1f7854b5f91c9c1f07bf0901aa7c0ab736dfa8e0"
+checksum = "077e9de364d50cf058801b7b6a4c2a0e2bbd2eefd0b40dea2df240351b79b247"
 
 [[package]]
 name = "unicode-ident"

@@ -11,7 +11,7 @@ use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use trc::trc::Trc;
+use trc::Trc;
 
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {

@@ -1,5 +1,5 @@
 use crate::interpreter::VM;
-use trc::trc::Trc;
+use trc::Trc;
 
 use super::{
     boolobject, finalize_type, intobject, stringobject, MethodType, MethodValue, Object, TypeObject,

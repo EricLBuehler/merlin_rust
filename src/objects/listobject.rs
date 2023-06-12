@@ -10,7 +10,7 @@ use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use trc::trc::Trc;
+use trc::Trc;
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.types.listtp.as_ref().unwrap().clone(), vm);

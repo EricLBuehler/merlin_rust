@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::ops::Deref;
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
-use trc::trc::Trc;
+use trc::Trc;
 pub mod mhash;
 
 pub mod intobject;

@@ -4,7 +4,7 @@ use super::{
 };
 use crate::is_type_exact;
 use crate::{interpreter::VM, objects::stringobject};
-use trc::trc::Trc;
+use trc::Trc;
 
 #[macro_export]
 macro_rules! none_from {

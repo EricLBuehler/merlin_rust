@@ -4,7 +4,7 @@ use super::{
 };
 use crate::is_type_exact;
 use crate::{interpreter::VM, parser::Position};
-use trc::trc::Trc;
+use trc::Trc;
 
 fn exc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();

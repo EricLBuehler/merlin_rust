@@ -1,7 +1,7 @@
 use clap::Parser;
 use colored::Colorize;
 use std::time::Instant;
-use trc::trc::Trc;
+use trc::Trc;
 extern crate num;
 #[macro_use]
 extern crate num_derive;

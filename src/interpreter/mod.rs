@@ -14,7 +14,7 @@ use colored::Colorize;
 use std::marker::PhantomData;
 use std::ops::DerefMut;
 use std::time::Instant;
-use trc::trc::Trc;
+use trc::Trc;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Namespaces<'a> {

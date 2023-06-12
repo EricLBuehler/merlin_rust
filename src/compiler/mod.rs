@@ -15,7 +15,7 @@ use colored::Colorize;
 use hashbrown::HashMap;
 use itertools::{izip, Itertools};
 use std::marker::PhantomData;
-use trc::trc::Trc;
+use trc::Trc;
 
 pub struct Compiler<'a> {
     instructions: Vec<CompilerInstruction>,

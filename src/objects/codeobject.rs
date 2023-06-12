@@ -7,7 +7,7 @@ use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use trc::trc::Trc;
+use trc::Trc;
 
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Trc<RawObject> =

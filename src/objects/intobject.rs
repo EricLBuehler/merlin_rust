@@ -11,7 +11,7 @@ use crate::{
     parser::Position,
 };
 use std::collections::hash_map::DefaultHasher;
-use trc::trc::Trc;
+use trc::Trc;
 
 use std::hash::{Hash, Hasher};
 

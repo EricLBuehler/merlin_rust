@@ -9,7 +9,7 @@ use crate::{
     objects::{boolobject, stringobject, ObjectInternals},
 };
 use itertools::izip;
-use trc::trc::Trc;
+use trc::Trc;
 
 pub fn fn_from<'a>(
     vm: Trc<VM<'a>>,

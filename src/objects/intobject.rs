@@ -4,14 +4,14 @@ use super::{
     Object, ObjectInternals, TypeObject,
 };
 
-use crate::{is_type_exact};
-use trc::trc::Trc;
+use crate::is_type_exact;
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
     objects::exceptionobject::overflowexc_from_str,
     parser::Position,
 };
 use std::collections::hash_map::DefaultHasher;
+use trc::trc::Trc;
 
 use std::hash::{Hash, Hasher};
 

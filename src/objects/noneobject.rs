@@ -3,8 +3,8 @@ use super::{
     ObjectInternals, TypeObject,
 };
 use crate::is_type_exact;
-use trc::trc::Trc;
 use crate::{interpreter::VM, objects::stringobject};
+use trc::trc::Trc;
 
 #[macro_export]
 macro_rules! none_from {

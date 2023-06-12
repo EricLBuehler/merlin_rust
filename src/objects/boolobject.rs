@@ -1,9 +1,9 @@
 use crate::is_type_exact;
-use trc::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject},
 };
+use trc::trc::Trc;
 
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,

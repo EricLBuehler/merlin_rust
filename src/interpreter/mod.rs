@@ -3,7 +3,6 @@
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
 use crate::objects::{dictobject, mhash, noneobject, RawObject, TypeObject};
 use crate::parser::Position;
-use trc::trc::Trc;
 use crate::{
     compiler::{Bytecode, CompilerInstruction, CompilerRegister},
     fileinfo::FileInfo,
@@ -15,6 +14,7 @@ use colored::Colorize;
 use std::marker::PhantomData;
 use std::ops::DerefMut;
 use std::time::Instant;
+use trc::trc::Trc;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct Namespaces<'a> {
@@ -200,7 +200,7 @@ impl<'a> VM<'a> {
 
         for p in &mut *samples {
             let mut time = 0;
-                while time==0{
+            while time == 0 {
                 let start = Instant::now();
                 for _ in 0..5 {
                     res = (this.deref_mut().interpreters.last_mut().unwrap())
@@ -276,9 +276,7 @@ macro_rules! store_register {
     ($last:expr, $last_vars:expr, $register:expr, $value:expr) => {
         match $register {
             CompilerRegister::R(v) => $last.registers[v] = $value,
-            CompilerRegister::V(v) => {
-                $last_vars[v] = Some($value)
-            }
+            CompilerRegister::V(v) => $last_vars[v] = Some($value),
             CompilerRegister::C(_) => unreachable!("Impossible."),
         }
     };
@@ -396,7 +394,10 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryAdd { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
                     if selfv.tp.add.is_none() {
-                        let pos = bytecode.positions.get(*i).expect("Instruction out of range");
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
@@ -418,7 +419,10 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinarySub { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
                     if selfv.tp.sub.is_none() {
-                        let pos = bytecode.positions.get(*i).expect("Instruction out of range");
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
@@ -440,7 +444,10 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryMul { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
                     if selfv.tp.mul.is_none() {
-                        let pos = bytecode.positions.get(*i).expect("Instruction out of range");
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
@@ -462,7 +469,10 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BinaryDiv { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
                     if selfv.tp.div.is_none() {
-                        let pos = bytecode.positions.get(*i).expect("Instruction out of range");
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
@@ -486,7 +496,10 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::UnaryNeg { a, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
                     if selfv.tp.neg.is_none() {
-                        let pos = bytecode.positions.get(*i).expect("Instruction out of range");
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
@@ -519,7 +532,7 @@ impl<'a> Interpreter<'a> {
                     argsidx,
                     codeidx,
                     idxsidx,
-                    out
+                    out,
                 } => {
                     let code = bytecode
                         .consts
@@ -563,7 +576,8 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::Call {
                     callableregister,
                     result,
-                    arg_registers, i
+                    arg_registers,
+                    i,
                 } => {
                     let callable =
                         load_register!(self, last, last_vars, bytecode, *i, *callableregister);
@@ -579,7 +593,10 @@ impl<'a> Interpreter<'a> {
                         ));
                     }
                     if callable.tp.call.is_none() {
-                        let pos = bytecode.positions.get(*i).expect("Instruction out of range");
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
                         let exc = methodnotdefinedexc_from_str(
                             self.vm.clone(),
                             &format!(
@@ -610,17 +627,13 @@ impl<'a> Interpreter<'a> {
                 //Data structures
                 CompilerInstruction::BuildList {
                     result,
-                    value_registers, i
+                    value_registers,
+                    i,
                 } => {
                     let mut values = Vec::new();
                     for register in value_registers {
                         values.push(load_register!(
-                            self,
-                            last,
-                            last_vars,
-                            bytecode,
-                            *i,
-                            *register
+                            self, last, last_vars, bytecode, *i, *register
                         ));
                     }
                     let list = listobject::list_from(self.vm.clone(), values);
@@ -629,13 +642,13 @@ impl<'a> Interpreter<'a> {
                 CompilerInstruction::BuildDict {
                     result,
                     key_registers,
-                    value_registers, i
+                    value_registers,
+                    i,
                 } => {
                     let mut map = mhash::HashMap::new();
                     for (key, value) in std::iter::zip(key_registers, value_registers) {
                         let key = load_register!(self, last, last_vars, bytecode, *i, *key);
-                        let value =
-                            load_register!(self, last, last_vars, bytecode, *i, *value);
+                        let value = load_register!(self, last, last_vars, bytecode, *i, *value);
 
                         let res = map.insert(key, value);
                         maybe_handle_exception!(self, res, bytecode, *i);

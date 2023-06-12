@@ -1,4 +1,4 @@
-use crate::{interpreter::VM};
+use crate::interpreter::VM;
 use trc::trc::Trc;
 
 use super::{

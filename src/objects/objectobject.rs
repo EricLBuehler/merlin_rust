@@ -1,8 +1,8 @@
-use crate::{interpreter::VM};
-use trc::trc::Trc;
 use super::{
     boolobject, finalize_type, intobject, stringobject, MethodType, MethodValue, Object, TypeObject,
 };
+use crate::interpreter::VM;
+use trc::trc::Trc;
 
 fn object_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
     unimplemented!();

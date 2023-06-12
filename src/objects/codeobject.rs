@@ -2,12 +2,12 @@ use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
 use crate::is_type_exact;
-use trc::trc::Trc;
 use crate::{
     compiler::Bytecode,
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
+use trc::trc::Trc;
 
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Trc<RawObject> =

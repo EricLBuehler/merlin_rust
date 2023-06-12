@@ -6,11 +6,11 @@ use super::{
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
-use trc::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
+use trc::trc::Trc;
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(vm.types.listtp.as_ref().unwrap().clone(), vm);

@@ -7,11 +7,11 @@ use super::{
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
-use trc::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
+use trc::trc::Trc;
 
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {

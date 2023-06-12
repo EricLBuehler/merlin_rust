@@ -4,7 +4,7 @@ use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Obj
 use crate::is_type_exact;
 use crate::objects::exceptionobject::typemismatchexc_from_str;
 use crate::parser::Position;
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},

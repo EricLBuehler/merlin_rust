@@ -274,6 +274,7 @@ dependencies = [
  "num",
  "num-derive",
  "num-traits",
+ "trc",
  "unicode-segmentation",
 ]
 
@@ -429,6 +430,12 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "trc"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c06fcbc3fbef63141a09ec44b98fc4686ea40bb93b5c8c21cb942877829c52c5"
 
 [[package]]
 name = "unicode-ident"

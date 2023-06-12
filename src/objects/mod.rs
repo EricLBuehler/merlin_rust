@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::ops::Deref;
 
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
 pub mod mhash;
 

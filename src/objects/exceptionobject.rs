@@ -3,7 +3,7 @@ use super::{
     MethodType, MethodValue, Object, ObjectInternals, RawObject, TypeObject,
 };
 use crate::is_type_exact;
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{interpreter::VM, parser::Position};
 
 fn exc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {

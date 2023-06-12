@@ -7,7 +7,7 @@ use super::{
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},

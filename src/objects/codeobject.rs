@@ -2,7 +2,7 @@ use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
 use crate::is_type_exact;
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{
     compiler::Bytecode,
     interpreter::VM,

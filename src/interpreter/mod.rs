@@ -3,7 +3,7 @@
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
 use crate::objects::{dictobject, mhash, noneobject, RawObject, TypeObject};
 use crate::parser::Position;
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{
     compiler::{Bytecode, CompilerInstruction, CompilerRegister},
     fileinfo::FileInfo,

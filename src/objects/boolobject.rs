@@ -1,5 +1,5 @@
 use crate::is_type_exact;
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject},

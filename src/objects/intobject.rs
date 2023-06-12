@@ -5,7 +5,7 @@ use super::{
 };
 
 use crate::{is_type_exact};
-use crate::trc::Trc;
+use trc::trc::Trc;
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
     objects::exceptionobject::overflowexc_from_str,

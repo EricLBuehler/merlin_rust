@@ -2,6 +2,8 @@
 
 ![rustc 1.70 stable](https://img.shields.io/badge/rustc-1.70.0-brightgreen)
 [![MIT License](https://img.shields.io/badge/License-MIT-informational)](LICENSE)
+![Build status](https://github.com/EricLBuehler/merlin/actions/workflows/build.yml/badge.svg)
+![Tests status](https://github.com/EricLBuehler/merlin/actions/workflows/tests.yml/badge.svg)
 
 <h2><strong>Make your code <i>fly</i></strong></h2>
 

@@ -19,9 +19,9 @@ use std::hash::{Hash, Hasher};
 #[inline]
 pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
-        return unwrap_fast!{vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]
-            .as_ref()}
-            .clone();
+        return unwrap_fast! {vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]
+        .as_ref()}
+        .clone();
     }
     let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Int(raw);
@@ -41,8 +41,7 @@ pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
     let convert = unwrap_fast!(convert.as_ref());
     if convert >= &MIN_INT_CACHE && convert <= &MAX_INT_CACHE {
         return MethodValue::Some(
-            unwrap_fast!(vm.cache.int_cache[(convert + MIN_INT_CACHE.abs()) as usize]
-                .as_ref())
+            unwrap_fast!(vm.cache.int_cache[(convert + MIN_INT_CACHE.abs()) as usize].as_ref())
                 .clone(),
         );
     }

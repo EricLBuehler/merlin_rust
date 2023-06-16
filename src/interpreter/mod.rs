@@ -197,7 +197,7 @@ impl<'a> VM<'a> {
         bytecode: Trc<Bytecode<'a>>,
         timeit: &mut TimeitHolder,
     ) -> Object<'a> {
-        //See bench.rs, this is a verys similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
+        //See bench.rs, this is a very similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
 
         let samples = &mut [0f64; 50];
 
@@ -206,21 +206,17 @@ impl<'a> VM<'a> {
             (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
 
         for p in &mut *samples {
-            let mut time = 0;
-            while time == 0 {
-                let start = Instant::now();
-                for _ in 0..5 {
-                    res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
-                        .run_interpreter(bytecode.clone());
-                }
-                let delta = start.elapsed().as_nanos();
-                time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
-                    0
-                } else {
-                    delta / 5 - timeit.baseline
-                };
+            let start = Instant::now();
+            for _ in 0..5 {
+                res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
+                    .run_interpreter(bytecode.clone());
             }
-            *p = time as f64;
+            let delta = start.elapsed().as_nanos();
+            *p = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
+                0
+            } else {
+                delta / 5 - timeit.baseline
+            } as f64;
         }
 
         stats::winsorize(samples, 5.0);

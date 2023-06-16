@@ -17,18 +17,20 @@ With this code:
 a=1
 b=2
 a+b
+a+b
+a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): NA, check in 5 hr ns
+Merlin 1.3 (release): 20 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: NA, check in 5 hr ns 
+Python 3.10.6: 63.3 ns 
 
-`python3 -m timeit -c "a=1;b=2;a+b"`
+`python3 -m timeit -c "a=1;b=2;a+b;a+b;a+b"`
 
-Merlin is: NA, check in 5 hr x **faster**
+Merlin is: 3.165x **faster**
 
 ***
 
@@ -45,15 +47,15 @@ a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): NA, check in 5 hr ns
+Merlin 1.3 (release): 63.2 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: NA, check in 5 hr ns 
+Python 3.10.6: 103 ns 
 
 `python3 -m timeit -c "a=1;b=2;a+b;a+b;a+b;a+b;a+b;a+b"`
 
-Merlin is: NA, check in 5 hr x **faster**
+Merlin is: 1.63x **faster**
 
 ## Installation
 To get started with Merlin:

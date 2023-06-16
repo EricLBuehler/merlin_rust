@@ -39,7 +39,7 @@ pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
         return MethodValue::Error(exc);
     }
     let convert = unwrap_fast!(convert.as_ref());
-    if convert >= &MIN_INT_CACHE && convert <= &MAX_INT_CACHE {
+    if (&MIN_INT_CACHE..=&MAX_INT_CACHE).contains(&convert) {
         return MethodValue::Some(
             unwrap_fast!(vm.cache.int_cache[(convert + MIN_INT_CACHE.abs()) as usize].as_ref())
                 .clone(),

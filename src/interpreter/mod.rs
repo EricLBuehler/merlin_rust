@@ -206,17 +206,27 @@ impl<'a> VM<'a> {
             (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
 
         for p in &mut *samples {
-            let start = Instant::now();
-            for _ in 0..5 {
-                res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
-                    .run_interpreter(bytecode.clone());
+            let mut time = 0;
+            let mut i = 0;
+            while time == 0 && i < 10 {
+                let start = Instant::now();
+                for _ in 0..5 {
+                    res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
+                        .run_interpreter(bytecode.clone());
+                }
+                let delta = start.elapsed().as_nanos();
+                time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
+                    0
+                } else {
+                    delta / 5 - timeit.baseline
+                };
+                i += 1;
             }
-            let delta = start.elapsed().as_nanos();
-            *p = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
-                0
+            if time > 0 {
+                *p = time as f64;
             } else {
-                delta / 5 - timeit.baseline
-            } as f64;
+                *p = 0.001;
+            }
         }
 
         stats::winsorize(samples, 5.0);

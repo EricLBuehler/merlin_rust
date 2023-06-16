@@ -25,7 +25,7 @@ clean:
 	rm merlin
 
 fmt:
-	cargo clippy --fix
+	cargo clippy --fix --allow-dirty
 	cargo fmt
 	
 doc:

@@ -5,6 +5,7 @@ use super::{
 };
 
 use crate::is_type_exact;
+use crate::unwrap_fast;
 use crate::{
     interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
     objects::exceptionobject::overflowexc_from_str,
@@ -18,12 +19,11 @@ use std::hash::{Hash, Hasher};
 #[inline]
 pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
-        return vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]
-            .as_ref()
-            .unwrap()
+        return unwrap_fast!{vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]
+            .as_ref()}
             .clone();
     }
-    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Int(raw);
     tp
 }
@@ -38,16 +38,16 @@ pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
         );
         return MethodValue::Error(exc);
     }
-    if convert.as_ref().unwrap() >= &MIN_INT_CACHE && convert.as_ref().unwrap() <= &MAX_INT_CACHE {
+    let convert = unwrap_fast!(convert.as_ref());
+    if convert >= &MIN_INT_CACHE && convert <= &MAX_INT_CACHE {
         return MethodValue::Some(
-            vm.cache.int_cache[(convert.unwrap() + MIN_INT_CACHE.abs()) as usize]
-                .as_ref()
-                .unwrap()
+            unwrap_fast!(vm.cache.int_cache[(convert + MIN_INT_CACHE.abs()) as usize]
+                .as_ref())
                 .clone(),
         );
     }
-    let mut tp = create_object_from_type(vm.types.inttp.as_ref().unwrap().clone(), vm);
-    tp.internals = ObjectInternals::Int(convert.unwrap());
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm);
+    tp.internals = ObjectInternals::Int(*convert);
     MethodValue::Some(tp)
 }
 
@@ -81,7 +81,7 @@ fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
@@ -117,7 +117,7 @@ fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
@@ -150,7 +150,7 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
@@ -183,7 +183,7 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
@@ -216,7 +216,7 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
@@ -258,7 +258,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
@@ -301,7 +301,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    MethodValue::Some(int_from(selfv.vm.clone(), res.unwrap()))
+    MethodValue::Some(int_from(selfv.vm.clone(), unwrap_fast!(res)))
 }
 fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
     let mut hasher = DefaultHasher::new();
@@ -346,7 +346,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("int"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

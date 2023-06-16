@@ -109,6 +109,13 @@ macro_rules! add_frame {
     }};
 }
 
+#[macro_export]
+macro_rules! unwrap_fast {
+    ($expr:expr) => {
+        unsafe { $expr.unwrap_unchecked() }
+    };
+}
+
 impl<'a> VM<'a> {
     pub fn new(info: FileInfo<'a>) -> VM<'a> {
         let singleton = SingletonCache {
@@ -203,7 +210,7 @@ impl<'a> VM<'a> {
             while time == 0 {
                 let start = Instant::now();
                 for _ in 0..5 {
-                    res = (this.deref_mut().interpreters.last_mut().unwrap())
+                    res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
                         .run_interpreter(bytecode.clone());
                 }
                 let delta = start.elapsed().as_nanos();
@@ -267,7 +274,7 @@ macro_rules! load_register {
                     $this.raise_exc_pos(exc, pos.0, pos.1);
                 }
             },
-            CompilerRegister::C(v) => $bytecode.consts.get(v).unwrap().clone(),
+            CompilerRegister::C(v) => unwrap_fast!($bytecode.consts.get(v)).clone(),
         }
     };
 }
@@ -387,7 +394,7 @@ impl<'a> Interpreter<'a> {
     #[inline]
     pub fn run_interpreter_raw(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
         let last = self.frames.last_mut().expect("No frames");
-        let last_vars = self.namespaces.variables.last_mut().unwrap();
+        let last_vars = unwrap_fast!(self.namespaces.variables.last_mut());
         for instruction in bytecode.instructions.iter() {
             match instruction {
                 //Binary operations
@@ -414,7 +421,7 @@ impl<'a> Interpreter<'a> {
                         load_register!(self, last, last_vars, bytecode, *i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, *i);
-                    store_register!(last, last_vars, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, unwrap_fast!(res));
                 }
                 CompilerInstruction::BinarySub { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
@@ -439,7 +446,7 @@ impl<'a> Interpreter<'a> {
                         load_register!(self, last, last_vars, bytecode, *i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, *i);
-                    store_register!(last, last_vars, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, unwrap_fast!(res));
                 }
                 CompilerInstruction::BinaryMul { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
@@ -464,7 +471,7 @@ impl<'a> Interpreter<'a> {
                         load_register!(self, last, last_vars, bytecode, *i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, *i);
-                    store_register!(last, last_vars, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, unwrap_fast!(res));
                 }
                 CompilerInstruction::BinaryDiv { a, b, result, i } => {
                     let selfv = load_register!(self, last, last_vars, bytecode, *i, *a);
@@ -489,7 +496,7 @@ impl<'a> Interpreter<'a> {
                         load_register!(self, last, last_vars, bytecode, *i, *b),
                     );
                     maybe_handle_exception!(self, res, bytecode, *i);
-                    store_register!(last, last_vars, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, unwrap_fast!(res));
                 }
 
                 //Unary operations
@@ -513,7 +520,7 @@ impl<'a> Interpreter<'a> {
                     }
                     let res = (selfv.tp.neg.expect("Method is not defined"))(selfv);
                     maybe_handle_exception!(self, res, bytecode, *i);
-                    store_register!(last, last_vars, *result, res.unwrap());
+                    store_register!(last, last_vars, *result, unwrap_fast!(res));
                 }
 
                 //Register manipulation
@@ -614,7 +621,7 @@ impl<'a> Interpreter<'a> {
                         listobject::list_from(self.vm.clone(), args),
                     );
                     maybe_handle_exception!(self, value, bytecode, *i);
-                    store_register!(last, last_vars, *result, value.unwrap());
+                    store_register!(last, last_vars, *result, unwrap_fast!(value));
                 }
 
                 //Control flow

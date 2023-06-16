@@ -351,6 +351,15 @@ pub enum MethodValue<T, E> {
 
 #[allow(dead_code)]
 impl<T: Clone, E: Clone> MethodValue<T, E> {
+    pub unsafe fn unwrap_unchecked(&self) -> T {
+        debug_assert!(self.is_some());
+        match self {
+            MethodValue::Some(v) => v.clone(),
+            // SAFETY: the safety contract must be upheld by the caller.
+            _ => unsafe { core::hint::unreachable_unchecked() },
+        }
+    }
+
     pub fn unwrap(&self) -> T {
         match self {
             MethodValue::Some(v) => v.clone(),

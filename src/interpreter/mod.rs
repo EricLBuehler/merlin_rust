@@ -209,10 +209,10 @@ impl<'a> VM<'a> {
             let mut time = 0;
             let mut i = 0;
             while time == 0 && i < 10 {
+                let last = unwrap_fast!(this.deref_mut().interpreters.last_mut());
                 let start = Instant::now();
                 for _ in 0..5 {
-                    res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
-                        .run_interpreter(bytecode);
+                    res = last.run_interpreter(bytecode);
                 }
                 let delta = start.elapsed().as_nanos();
                 time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {

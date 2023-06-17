@@ -11,7 +11,7 @@ dev:
 
 test:
 	cargo test merlin_tests --verbose
-	cargo test trc_test --verbose -- --nocapture
+	cargo test merlin_tests --verbose --release
 
 install:
 	make release	

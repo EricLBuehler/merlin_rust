@@ -184,7 +184,7 @@ impl<'a> VM<'a> {
         );
     }
 
-    pub fn execute(mut this: Trc<Self>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
+    pub fn execute(mut this: Trc<Self>, bytecode: &Bytecode<'a>) -> Object<'a> {
         let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
 
         this.interpreters.push(Trc::new(interpreter));
@@ -194,7 +194,7 @@ impl<'a> VM<'a> {
 
     pub fn execute_timeit(
         mut this: Trc<Self>,
-        bytecode: Trc<Bytecode<'a>>,
+        bytecode: &Bytecode<'a>,
         timeit: &mut TimeitHolder,
     ) -> Object<'a> {
         //See bench.rs, this is a very similar implementation (pub fn iter<T, F>(inner: &mut F) -> stats::Summary)
@@ -203,7 +203,7 @@ impl<'a> VM<'a> {
 
         //Get initial result
         let mut res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
-            .run_interpreter(bytecode.clone());
+            .run_interpreter(bytecode);
 
         for p in &mut *samples {
             let mut time = 0;
@@ -212,7 +212,7 @@ impl<'a> VM<'a> {
                 let start = Instant::now();
                 for _ in 0..5 {
                     res = unwrap_fast!(this.deref_mut().interpreters.last_mut())
-                        .run_interpreter(bytecode.clone());
+                        .run_interpreter(bytecode);
                 }
                 let delta = start.elapsed().as_nanos();
                 time = if (delta as i128 / 5_i128) - (timeit.baseline as i128) < 0 {
@@ -240,14 +240,14 @@ impl<'a> VM<'a> {
 
     pub fn execute_vars(
         mut this: Trc<Self>,
-        bytecode: Trc<Bytecode<'a>>,
+        bytecode: &Bytecode<'a>,
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
         this.interpreters.push(Trc::new(interpreter));
 
         let res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
-            .run_interpreter_vars(bytecode, vars);
+            .run_interpreter_vars(&bytecode, vars);
         res
     }
 
@@ -360,7 +360,7 @@ impl<'a> Interpreter<'a> {
 
     pub fn run_interpreter_vars(
         &mut self,
-        bytecode: Trc<Bytecode<'a>>,
+        bytecode: &Bytecode<'a>,
         vars: hashbrown::HashMap<&i128, Object<'a>>,
     ) -> Object<'a> {
         add_frame!(
@@ -381,7 +381,7 @@ impl<'a> Interpreter<'a> {
         self.run_interpreter_raw(bytecode)
     }
 
-    pub fn run_interpreter(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
+    pub fn run_interpreter(&mut self, bytecode: &Bytecode<'a>) -> Object<'a> {
         if !bytecode.instructions.is_empty() {
             add_frame!(
                 self,
@@ -394,7 +394,7 @@ impl<'a> Interpreter<'a> {
     }
 
     #[inline]
-    pub fn run_interpreter_raw(&mut self, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
+    pub fn run_interpreter_raw(&mut self, bytecode: &Bytecode<'a>) -> Object<'a> {
         let last = self.frames.last_mut().expect("No frames");
         let last_vars = unwrap_fast!(self.namespaces.variables.last_mut());
         for instruction in bytecode.instructions.iter() {

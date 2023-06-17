@@ -137,7 +137,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         .expect("Expected Bytecode internal value");
     MethodValue::Some(VM::execute_vars(
         selfv.vm.clone(),
-        Trc::new(code.clone()),
+        code,
         map,
     ))
 }

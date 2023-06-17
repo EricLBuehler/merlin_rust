@@ -109,7 +109,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         let mut means = Vec::new();
         for _ in 0..n_exec {
             let mut holder = TimeitHolder { baseline, time: 0. };
-            interpreter::VM::execute_timeit(vm.clone(), bytecode.clone(), &mut holder);
+            interpreter::VM::execute_timeit(vm.clone(), &bytecode, &mut holder);
             let time = holder.time;
             if time < min && time >= 0. {
                 min = time;
@@ -133,7 +133,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         println!("Mean execution time: {:.3} µs.", mean / 1000.0);
         println!("Mean execution time: {:.3} ms.", mean / 1000000.0);
     } else {
-        interpreter::VM::execute(vm, bytecode);
+        interpreter::VM::execute(vm, &bytecode);
     }
     if cfg!(debug_assertions) {
         println!("\n===== Done with interpreter =====");

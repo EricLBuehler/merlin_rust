@@ -113,7 +113,6 @@ impl From<CompilerRegister> for usize {
         }
     }
 }
-
 #[derive(Clone, PartialEq, Eq)]
 pub struct Bytecode<'a> {
     pub instructions: Vec<CompilerInstruction>,

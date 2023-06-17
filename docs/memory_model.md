@@ -4,7 +4,7 @@
 The Merlin programming language uses reference counting. It does **not** use a garbage collector! It uses reference counted, heap allocated objects to maintain memory safety. By leveraging Rust's memory safety, it is possible to safely ignore issues such as race conditions, memory corruption and leaks, and segmentation faults.
 
 ## Internal `Trc`
-Internally a `Trc` is used to store data. Because a `.clone()` only creates a new data structure and does not copy the actual object data, this is a suitable option. The key to why `Trc` does not cause problems like memory leaks is because it is reference counted.
+Internally a `Trc` is used to store data. Because a `.clone()` only creates a new data structure and does not copy the actual object data, this is a suitable option. The key to why `Trc` does not cause problems like memory leaks is because it is reference counted. See the [crates.io page](https://crates.io/crates/trc) for `Trc`,
 
 ## Benefits of `Trc` and comparison to `CPython`
 `Trc` is a powerful data type. Besides it's atomic automatic memory management, it allows Merlin to be multithreaded! This is because the reference count is atomic. This is a contrast to `CPython`, which requires a `GIL` to provide a semblance of multithreading. The `Trc` data type gives Merlin inherent multithreading abilities. 

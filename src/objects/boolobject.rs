@@ -1,4 +1,5 @@
 use crate::is_type_exact;
+use crate::unwrap_fast;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject},
@@ -79,7 +80,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("bool"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

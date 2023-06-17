@@ -7,6 +7,7 @@ use super::{
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
+use crate::unwrap_fast;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
@@ -15,7 +16,7 @@ use trc::Trc;
 
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.dicttp.as_ref().unwrap().clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.dicttp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Map(raw);
     tp
 }
@@ -34,15 +35,15 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
     for (key, value) in map.into_iter() {
         let repr = RawObject::object_repr_safe(key);
         if !repr.is_some() {
-            return MethodValue::NotImplemented;
+            return MethodValue::Error(repr.unwrap_err());
         }
-        res += &repr.unwrap();
+        res += &unwrap_fast!(repr);
         res += ": ";
         let repr = RawObject::object_repr_safe(value);
         if !repr.is_some() {
-            return MethodValue::NotImplemented;
+            return MethodValue::Error(repr.unwrap_err());
         }
-        res += &repr.unwrap();
+        res += &unwrap_fast!(repr);
         res += ", ";
     }
     if res.len() > 1 {
@@ -74,7 +75,7 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if out.is_error() {
         return MethodValue::Error(out.unwrap_err());
     }
-    MethodValue::Some(out.unwrap().clone())
+    MethodValue::Some(unwrap_fast!(out).clone())
 }
 
 #[inline]
@@ -102,7 +103,7 @@ fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
         .len()
         .try_into();
 
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), unwrap_fast!(convert)))
 }
 
 fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -167,8 +168,8 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return res;
         }
         if !is_type_exact!(
-            &res.unwrap(),
-            selfv.vm.types.booltp.as_ref().unwrap().clone()
+            &unwrap_fast!(res),
+            unwrap_fast!(selfv.vm.types.booltp.as_ref()).clone()
         ) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
@@ -179,8 +180,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        if *res
-            .unwrap()
+        if *unwrap_fast!(res)
             .internals
             .get_bool()
             .expect("Expected bool internal value")
@@ -193,8 +193,8 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return res;
         }
         if !is_type_exact!(
-            &res.unwrap(),
-            selfv.vm.types.booltp.as_ref().unwrap().clone()
+            &unwrap_fast!(res),
+            unwrap_fast!(selfv.vm.types.booltp.as_ref()).clone()
         ) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
@@ -205,8 +205,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        if *res
-            .unwrap()
+        if *unwrap_fast!(res)
             .internals
             .get_bool()
             .expect("Expected bool internal value")
@@ -221,7 +220,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("dict"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

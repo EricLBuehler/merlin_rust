@@ -6,6 +6,7 @@ use super::{
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
 use crate::parser::Position;
+use crate::unwrap_fast;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
@@ -13,7 +14,7 @@ use crate::{
 use trc::Trc;
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.listtp.as_ref().unwrap().clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.listtp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Arr(raw);
     tp
 }
@@ -30,9 +31,9 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
     {
         let repr = RawObject::object_repr_safe(item.clone());
         if !repr.is_some() {
-            return MethodValue::NotImplemented;
+            return MethodValue::Error(repr.unwrap_err());
         }
-        res += &repr.unwrap();
+        res += &unwrap_fast!(repr);
         res += ", ";
     }
     if res.len() > 1 {
@@ -44,7 +45,7 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&other, selfv.vm.types.inttp.as_ref().unwrap().clone()) {
+    if !is_type_exact!(&other, unwrap_fast!(selfv.vm.types.inttp.as_ref()).clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.tp.typename),
@@ -88,10 +89,10 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         );
         return MethodValue::Error(exc);
     }
-    MethodValue::Some(out.unwrap().clone())
+    MethodValue::Some(unwrap_fast!(out).clone())
 }
 fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
-    if is_type_exact!(&other, selfv.vm.types.inttp.as_ref().unwrap().clone()) {
+    if is_type_exact!(&other, unwrap_fast!(selfv.vm.types.inttp.as_ref()).clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.tp.typename),
@@ -156,7 +157,7 @@ fn list_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected arr internal value")
         .len()
         .try_into();
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), unwrap_fast!(convert)))
 }
 
 fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -183,15 +184,14 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .expect("Expected arr internal value")
         .len()
     {
-        if selfv
+        if unwrap_fast!(selfv
             .internals
             .get_arr()
             .expect("Expected arr internal value")
-            .get(idx)
-            .unwrap()
-            .tp
-            .eq
-            .is_none()
+            .get(idx))
+        .tp
+        .eq
+        .is_none()
         {
             let exc = methodnotdefinedexc_from_str(
                 selfv.vm.clone(),
@@ -201,28 +201,26 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             );
             return MethodValue::Error(exc);
         }
-        let v = selfv
+        let v = unwrap_fast!(selfv
             .internals
             .get_arr()
             .expect("Expected arr internal value")
-            .get(idx)
-            .unwrap();
+            .get(idx));
         let res = (v.tp.eq.expect("Method is not defined"))(
             v.clone(),
-            other
+            unwrap_fast!(other
                 .internals
                 .get_arr()
                 .expect("Expected arr internal value")
-                .get(idx)
-                .unwrap()
-                .clone(),
+                .get(idx))
+            .clone(),
         );
         if res.is_error() {
             return res;
         }
         if !is_type_exact!(
-            &res.unwrap(),
-            selfv.vm.types.booltp.as_ref().unwrap().clone()
+            &unwrap_fast!(res),
+            unwrap_fast!(selfv.vm.types.booltp.as_ref()).clone()
         ) {
             let exc = typemismatchexc_from_str(
                 selfv.vm.clone(),
@@ -233,8 +231,7 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        if *res
-            .unwrap()
+        if *unwrap_fast!(res)
             .internals
             .get_bool()
             .expect("Expected bool internal value")
@@ -249,7 +246,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("list"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

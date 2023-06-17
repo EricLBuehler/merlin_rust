@@ -2,6 +2,7 @@ use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
 use crate::is_type_exact;
+use crate::unwrap_fast;
 use crate::{
     compiler::Bytecode,
     interpreter::VM,
@@ -11,7 +12,7 @@ use trc::Trc;
 
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Trc<RawObject> =
-        create_object_from_type(vm.types.codetp.as_ref().unwrap().clone(), vm);
+        create_object_from_type(unwrap_fast!(vm.types.codetp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Code(bytecode);
     tp
 }
@@ -47,7 +48,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("code"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

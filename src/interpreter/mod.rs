@@ -188,7 +188,7 @@ impl<'a> VM<'a> {
         let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
 
         this.interpreters.push(Trc::new(interpreter));
-        let last = this.deref_mut().interpreters.last_mut().unwrap();
+        let last = unwrap_fast!(this.deref_mut().interpreters.last_mut());
         return last.run_interpreter(bytecode);
     }
 
@@ -202,8 +202,8 @@ impl<'a> VM<'a> {
         let samples = &mut [0f64; 50];
 
         //Get initial result
-        let mut res =
-            (this.deref_mut().interpreters.last_mut().unwrap()).run_interpreter(bytecode.clone());
+        let mut res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
+            .run_interpreter(bytecode.clone());
 
         for p in &mut *samples {
             let mut time = 0;
@@ -246,7 +246,7 @@ impl<'a> VM<'a> {
         let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
         this.interpreters.push(Trc::new(interpreter));
 
-        let res = (this.deref_mut().interpreters.last_mut().unwrap())
+        let res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
             .run_interpreter_vars(bytecode, vars);
         res
     }
@@ -369,16 +369,12 @@ impl<'a> Interpreter<'a> {
             bytecode.n_variables as usize
         );
 
-        for (i, var) in self
-            .namespaces
-            .variables
-            .last_mut()
-            .unwrap()
+        for (i, var) in unwrap_fast!(self.namespaces.variables.last_mut())
             .iter_mut()
             .enumerate()
         {
             if vars.get(&(i as i128)).is_some() {
-                *var = Some(vars.get(&(i as i128)).unwrap().clone());
+                *var = Some(unwrap_fast!(vars.get(&(i as i128))).clone());
             }
         }
 

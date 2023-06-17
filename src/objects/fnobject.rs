@@ -4,6 +4,7 @@ use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Obj
 use crate::is_type_exact;
 use crate::objects::exceptionobject::typemismatchexc_from_str;
 use crate::parser::Position;
+use crate::unwrap_fast;
 use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
@@ -18,7 +19,7 @@ pub fn fn_from<'a>(
     indices: Vec<Object<'a>>,
     name: String,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(vm.types.fntp.as_ref().unwrap().clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.fntp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Fn(super::FnData {
         code,
         args,
@@ -64,7 +65,7 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&args, selfv.vm.types.listtp.as_ref().unwrap().clone()) {
+    if !is_type_exact!(&args, unwrap_fast!(selfv.vm.types.listtp.as_ref()).clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             "Expected args to be a 'list'",
@@ -145,7 +146,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("fn"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

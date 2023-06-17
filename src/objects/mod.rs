@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::ops::Deref;
 
-use crate::{compiler::Bytecode, interpreter::VM, parser::Position};
+use crate::{compiler::Bytecode, interpreter::VM, parser::Position, unwrap_fast};
 use trc::Trc;
 pub mod mhash;
 
@@ -30,7 +30,7 @@ impl<'a> Deref for ObjectBase<'a> {
     fn deref(&self) -> &Self::Target {
         match self {
             ObjectBase::Other(v) => v,
-            ObjectBase::Object(vm) => vm.types.objecttp.as_ref().unwrap(),
+            ObjectBase::Object(vm) => unwrap_fast!(vm.types.objecttp.as_ref()),
         }
     }
 }
@@ -114,7 +114,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        let reprv = (repr.unwrap())(object.clone());
+        let reprv = (unwrap_fast!(repr))(object.clone());
 
         if reprv.is_error() {
             return MethodValue::Error(reprv.unwrap_err());
@@ -127,7 +127,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        if !reprv.unwrap().internals.is_str() {
+        if !unwrap_fast!(reprv).internals.is_str() {
             return MethodValue::Error(stringobject::string_from(
                 object.vm.clone(),
                 String::from("__repr__ returned non-string."),
@@ -135,8 +135,7 @@ impl<'a> RawObject<'a> {
         }
 
         return MethodValue::Some(
-            reprv
-                .unwrap()
+            unwrap_fast!(reprv)
                 .internals
                 .get_str()
                 .expect("Expected str internal value")
@@ -163,7 +162,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        let strv = (str.unwrap())(object.clone());
+        let strv = (unwrap_fast!(str))(object.clone());
 
         if strv.is_error() {
             return MethodValue::Error(strv.unwrap_err());
@@ -176,7 +175,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        if !strv.unwrap().internals.is_str() {
+        if !unwrap_fast!(strv).internals.is_str() {
             return MethodValue::Error(stringobject::string_from(
                 object.vm.clone(),
                 String::from("__repr__ returned non-string."),
@@ -184,7 +183,7 @@ impl<'a> RawObject<'a> {
         }
 
         return MethodValue::Some(
-            strv.unwrap()
+            unwrap_fast!(strv)
                 .internals
                 .get_str()
                 .expect("Expected str internal value")

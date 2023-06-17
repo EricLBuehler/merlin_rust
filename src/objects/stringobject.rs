@@ -7,6 +7,7 @@ use crate::is_type_exact;
 use crate::objects::exceptionobject::valueexc_from_str;
 use crate::objects::{boolobject, intobject};
 use crate::parser::Position;
+use crate::unwrap_fast;
 use trc::Trc;
 
 use super::exceptionobject::typemismatchexc_from_str;
@@ -18,7 +19,7 @@ use super::{
 const MFBH_MAX_LEN: usize = 256;
 
 pub fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
-    let mut tp = create_object_from_type(vm.types.strtp.as_ref().unwrap().clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.strtp.as_ref()).clone(), vm);
     tp.internals = ObjectInternals::Str(raw);
     tp
 }
@@ -66,7 +67,7 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 
 fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&other, selfv.vm.types.inttp.as_ref().unwrap().clone()) {
+    if !is_type_exact!(&other, unwrap_fast!(selfv.vm.types.inttp.as_ref()).clone()) {
         let exc = typemismatchexc_from_str(
             selfv.vm.clone(),
             &format!("Expected 'int' index, got '{}'", other.tp.typename),
@@ -114,7 +115,7 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         );
         return MethodValue::Error(exc);
     }
-    MethodValue::Some(string_from(selfv.vm.clone(), out.unwrap().to_string()))
+    MethodValue::Some(string_from(selfv.vm.clone(), unwrap_fast!(out).to_string()))
 }
 fn string_len(selfv: Object<'_>) -> MethodType<'_> {
     let convert: Result<i128, _> = selfv
@@ -123,7 +124,7 @@ fn string_len(selfv: Object<'_>) -> MethodType<'_> {
         .expect("Expected str internal value")
         .len()
         .try_into();
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), convert.unwrap()))
+    MethodValue::Some(intobject::int_from(selfv.vm.clone(), unwrap_fast!(convert)))
 }
 
 #[inline]
@@ -167,7 +168,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("str"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

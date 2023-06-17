@@ -5,6 +5,7 @@ use crate::{
         MethodValue,
     },
     parser::Position,
+    unwrap_fast,
 };
 
 use super::{exceptionobject::keynotfoundexc_from_str, MethodType, Object, RawObject};
@@ -39,14 +40,17 @@ impl<'a> HashMap<'a> {
                 Position::default(),
                 Position::default(),
             );
-            key.vm.interpreters.last().unwrap().raise_exc(exc);
+            unwrap_fast!(key.vm.interpreters.last()).raise_exc(exc);
         }
         let res = (key.tp.hash_fn.expect("Hash function not found"))(key.clone());
         if res.is_error() {
             return MethodValue::Error(res.unwrap_err());
         }
 
-        if !is_type_exact!(&res.unwrap(), key.vm.types.inttp.as_ref().unwrap().clone()) {
+        if !is_type_exact!(
+            &unwrap_fast!(res),
+            unwrap_fast!(key.vm.types.inttp.as_ref()).clone()
+        ) {
             let exc = typemismatchexc_from_str(
                 key.vm.clone(),
                 "Method 'hash' did not return 'int'",
@@ -57,7 +61,7 @@ impl<'a> HashMap<'a> {
         }
 
         MethodValue::Some(
-            *res.unwrap()
+            *unwrap_fast!(res)
                 .internals
                 .get_int()
                 .expect("Expected int internal value"),
@@ -70,7 +74,7 @@ impl<'a> HashMap<'a> {
         if keyv.is_error() {
             return MethodValue::Error(keyv.unwrap_err());
         }
-        self.values.insert(keyv.unwrap(), (key, value));
+        self.values.insert(unwrap_fast!(keyv), (key, value));
         MethodValue::Some(())
     }
 
@@ -79,7 +83,7 @@ impl<'a> HashMap<'a> {
         if keyv.is_error() {
             return MethodValue::Error(keyv.unwrap_err());
         }
-        let res = self.values.get(&keyv.unwrap());
+        let res = self.values.get(&unwrap_fast!(keyv));
         if res.is_none() {
             let str = RawObject::object_str_safe(key.clone());
             if str.is_error() {
@@ -87,13 +91,13 @@ impl<'a> HashMap<'a> {
             }
             let exc = keynotfoundexc_from_str(
                 key.vm.clone(),
-                &format!("Key '{}' not found", str.unwrap()),
+                &format!("Key '{}' not found", unwrap_fast!(str)),
                 Position::default(),
                 Position::default(),
             );
             return MethodValue::Error(exc);
         }
-        MethodValue::Some(res.unwrap().1.clone())
+        MethodValue::Some(unwrap_fast!(res).1.clone())
     }
 
     pub fn len(&self) -> usize {
@@ -111,9 +115,8 @@ impl<'a> Iterator for HMapIter<'a> {
     type Item = (Object<'a>, Object<'a>);
 
     fn next(&mut self) -> Option<Self::Item> {
-        let key = self.keys.get(self.i);
-        key?;
-        let get = self.values.get(key.unwrap()).unwrap();
+        let key = self.keys.get(self.i)?;
+        let get = unwrap_fast!(self.values.get(key));
         self.i += 1;
         Some((get.0.clone(), get.1.clone()))
     }

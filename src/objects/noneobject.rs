@@ -2,14 +2,14 @@ use super::{
     boolobject, create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
     ObjectInternals, TypeObject,
 };
-use crate::is_type_exact;
 use crate::{interpreter::VM, objects::stringobject};
+use crate::{is_type_exact, unwrap_fast};
 use trc::Trc;
 
 #[macro_export]
 macro_rules! none_from {
     ($vm:expr) => {
-        $vm.cache.none_singleton.as_ref().unwrap().clone()
+        unwrap_fast!($vm.cache.none_singleton.as_ref()).clone()
     };
 }
 
@@ -48,7 +48,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     let tp = Trc::new(TypeObject {
         typename: String::from("NoneType"),
         bases: vec![super::ObjectBase::Other(
-            vm.types.objecttp.as_ref().unwrap().clone(),
+            unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
 

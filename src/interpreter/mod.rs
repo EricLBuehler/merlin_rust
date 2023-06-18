@@ -203,8 +203,8 @@ impl<'a> VM<'a> {
         let samples = &mut [0f64; 50];
 
         //Get initial result
-        let mut res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
-            .run_interpreter(bytecode);
+        let mut res =
+            (unwrap_fast!(this.deref_mut().interpreters.last_mut())).run_interpreter(bytecode);
 
         for p in &mut *samples {
             let mut time = 0;
@@ -248,7 +248,7 @@ impl<'a> VM<'a> {
         this.interpreters.push(Trc::new(interpreter));
 
         let res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
-            .run_interpreter_vars(&bytecode, vars);
+            .run_interpreter_vars(bytecode, vars);
         res
     }
 

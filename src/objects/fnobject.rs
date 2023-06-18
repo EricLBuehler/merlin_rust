@@ -135,11 +135,7 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         .internals
         .get_code()
         .expect("Expected Bytecode internal value");
-    MethodValue::Some(VM::execute_vars(
-        selfv.vm.clone(),
-        code,
-        map,
-    ))
+    MethodValue::Some(VM::execute_vars(selfv.vm.clone(), code, map))
 }
 
 pub fn init(mut vm: Trc<VM<'_>>) {

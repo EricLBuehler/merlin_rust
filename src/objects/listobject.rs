@@ -65,7 +65,7 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
                 .internals
                 .get_int()
                 .expect("Expected int internal value"))
-            .unsigned_abs() as usize,
+            .unsigned_abs(),
         );
 
     if out.is_none() {
@@ -103,11 +103,11 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
     }
 
     //NEGATIVE INDEX IS CONVERTED TO +
-    if ((*other
+    if (*other
         .internals
         .get_int()
         .expect("Expected int internal value"))
-    .unsigned_abs() as usize)
+    .unsigned_abs()
         >= selfv
             .internals
             .get_arr()
@@ -144,7 +144,7 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
         .internals
         .get_int()
         .expect("Expected int internal value"))
-    .unsigned_abs() as usize] = value;
+    .unsigned_abs()] = value;
 
     selfv.internals = ObjectInternals::Arr(arr.to_vec());
 

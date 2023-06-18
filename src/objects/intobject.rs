@@ -7,7 +7,7 @@ use super::{
 use crate::is_type_exact;
 use crate::unwrap_fast;
 use crate::{
-    interpreter::{INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, INT_CACHE_OFFSET, VM},
+    interpreter::{INT_CACHE_OFFSET, INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
     objects::exceptionobject::overflowexc_from_str,
     parser::Position,
 };
@@ -18,7 +18,7 @@ use std::hash::{Hash, Hasher};
 
 #[inline]
 pub fn int_from(vm: Trc<VM<'_>>, raw: isize) -> Object<'_> {
-    if raw>=MIN_INT_CACHE || raw <= MAX_INT_CACHE {
+    if raw >= MIN_INT_CACHE || raw <= MAX_INT_CACHE {
         return unwrap_fast! {vm.cache.int_cache[(raw + INT_CACHE_OFFSET) as usize]
         .as_ref()}
         .clone();

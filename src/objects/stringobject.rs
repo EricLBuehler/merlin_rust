@@ -91,7 +91,7 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             .internals
             .get_int()
             .expect("Expected int internal value"))
-        .unsigned_abs() as usize,
+        .unsigned_abs(),
     );
 
     if out.is_none() {

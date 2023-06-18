@@ -22,9 +22,9 @@ pub struct Namespaces<'a> {
     _marker: PhantomData<&'a ()>,
 }
 
-pub const MIN_INT_CACHE: i128 = -5;
-pub const MAX_INT_CACHE: i128 = 256;
-pub const INT_CACHE_SIZE: i128 = MAX_INT_CACHE - MIN_INT_CACHE;
+pub const MIN_INT_CACHE: isize = -5;
+pub const MAX_INT_CACHE: isize = 256;
+pub const INT_CACHE_SIZE: isize = MAX_INT_CACHE - MIN_INT_CACHE;
 
 #[derive(Clone)]
 pub struct SingletonCache<'a> {
@@ -241,7 +241,7 @@ impl<'a> VM<'a> {
     pub fn execute_vars(
         mut this: Trc<Self>,
         bytecode: &Bytecode<'a>,
-        vars: hashbrown::HashMap<&i128, Object<'a>>,
+        vars: hashbrown::HashMap<&isize, Object<'a>>,
     ) -> Object<'a> {
         let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
         this.interpreters.push(Trc::new(interpreter));
@@ -361,7 +361,7 @@ impl<'a> Interpreter<'a> {
     pub fn run_interpreter_vars(
         &mut self,
         bytecode: &Bytecode<'a>,
-        vars: hashbrown::HashMap<&i128, Object<'a>>,
+        vars: hashbrown::HashMap<&isize, Object<'a>>,
     ) -> Object<'a> {
         add_frame!(
             self,
@@ -373,8 +373,8 @@ impl<'a> Interpreter<'a> {
             .iter_mut()
             .enumerate()
         {
-            if vars.get(&(i as i128)).is_some() {
-                *var = Some(unwrap_fast!(vars.get(&(i as i128))).clone());
+            if vars.get(&(i as isize)).is_some() {
+                *var = Some(unwrap_fast!(vars.get(&(i as isize))).clone());
             }
         }
 
@@ -395,7 +395,7 @@ impl<'a> Interpreter<'a> {
 
     #[inline]
     pub fn run_interpreter_raw(&mut self, bytecode: &Bytecode<'a>) -> Object<'a> {
-        let last = self.frames.last_mut().expect("No frames");
+        let last = unwrap_fast!(self.frames.last_mut());
         let last_vars = unwrap_fast!(self.namespaces.variables.last_mut());
         for instruction in bytecode.instructions.iter() {
             match instruction {

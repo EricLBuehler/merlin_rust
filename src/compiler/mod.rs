@@ -221,7 +221,7 @@ impl<'a> Compiler<'a> {
                     .enumerate()
                 {
                     args.push(stringobject::string_from(self.vm.clone(), arg.clone()));
-                    indices.push(intobject::int_from(self.vm.clone(), i as i128));
+                    indices.push(intobject::int_from(self.vm.clone(), i as isize));
 
                     names.insert(arg.to_string(), self.names.len() as i32);
                 }

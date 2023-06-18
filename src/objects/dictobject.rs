@@ -96,7 +96,7 @@ fn dict_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
     MethodValue::Some(none_from!(selfv.vm))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert: Result<i128, _> = selfv
+    let convert = selfv
         .internals
         .get_map()
         .expect("Expected map internal value")

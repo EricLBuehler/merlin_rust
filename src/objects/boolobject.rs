@@ -54,7 +54,7 @@ fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
         *selfv
             .internals
             .get_bool()
-            .expect("Expected bool internal value") as i128,
+            .expect("Expected bool internal value") as isize,
     ))
 }
 

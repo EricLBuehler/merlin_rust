@@ -12,7 +12,7 @@ use super::{exceptionobject::keynotfoundexc_from_str, MethodType, Object, RawObj
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct HashMap<'a> {
-    values: hashbrown::HashMap<i128, (Object<'a>, Object<'a>)>,
+    values: hashbrown::HashMap<isize, (Object<'a>, Object<'a>)>,
 }
 
 impl<'a> Default for HashMap<'a> {
@@ -29,7 +29,7 @@ impl<'a> HashMap<'a> {
     }
 
     #[inline]
-    fn hash(key: Object<'a>) -> MethodValue<i128, Object<'a>> {
+    fn hash(key: Object<'a>) -> MethodValue<isize, Object<'a>> {
         if key.tp.hash_fn.is_none() {
             let exc = methodnotdefinedexc_from_str(
                 key.vm.clone(),
@@ -106,8 +106,8 @@ impl<'a> HashMap<'a> {
 }
 
 pub struct HMapIter<'a> {
-    keys: Vec<i128>,
-    values: hashbrown::HashMap<i128, (Object<'a>, Object<'a>)>,
+    keys: Vec<isize>,
+    values: hashbrown::HashMap<isize, (Object<'a>, Object<'a>)>,
     i: usize,
 }
 

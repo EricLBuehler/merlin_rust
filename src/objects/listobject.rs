@@ -151,7 +151,7 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
     MethodValue::Some(none_from!(selfv.vm.clone()))
 }
 fn list_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert: Result<i128, _> = selfv
+    let convert = selfv
         .internals
         .get_arr()
         .expect("Expected arr internal value")

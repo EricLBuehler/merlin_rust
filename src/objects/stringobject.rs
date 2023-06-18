@@ -118,7 +118,7 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(string_from(selfv.vm.clone(), unwrap_fast!(out).to_string()))
 }
 fn string_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert: Result<i128, _> = selfv
+    let convert = selfv
         .internals
         .get_str()
         .expect("Expected str internal value")
@@ -148,18 +148,18 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
             .hash(&mut hasher);
         return MethodValue::Some(intobject::int_from(
             selfv.vm.clone(),
-            hasher.finish() as i128,
+            hasher.finish() as isize,
         ));
     }
 
-    let len = bytes.len() as i128;
+    let len = bytes.len() as isize;
     if len == 0 {
         return MethodValue::Some(intobject::int_from(selfv.vm.clone(), 0));
     } else if len == 1 {
-        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), bytes[0] as i128));
+        return MethodValue::Some(intobject::int_from(selfv.vm.clone(), bytes[0] as isize));
     }
 
-    let res = bytes[0] as i128 + bytes[bytes.len() - 1] as i128;
+    let res = bytes[0] as isize + bytes[bytes.len() - 1] as isize;
 
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), res + len))
 }

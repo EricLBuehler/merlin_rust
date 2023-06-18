@@ -17,7 +17,7 @@ use trc::Trc;
 use std::hash::{Hash, Hasher};
 
 #[inline]
-pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
+pub fn int_from(vm: Trc<VM<'_>>, raw: isize) -> Object<'_> {
     if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
         return unwrap_fast! {vm.cache.int_cache[(raw + MIN_INT_CACHE.abs()) as usize]
         .as_ref()}
@@ -28,7 +28,7 @@ pub fn int_from(vm: Trc<VM<'_>>, raw: i128) -> Object<'_> {
     tp
 }
 pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
-    let convert = raw.parse::<i128>();
+    let convert = raw.parse::<isize>();
     if matches!(convert, Result::Err(_)) {
         let exc = overflowexc_from_str(
             vm.clone(),
@@ -275,7 +275,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         .get_int()
         .expect("Expected int internal value");
 
-    if otherv >= std::u32::MAX as i128 {
+    if otherv >= std::u32::MAX as isize {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
             "Power is too large",
@@ -309,7 +309,7 @@ fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
         .get_int()
         .expect("Expected int internal value")
         .hash(&mut hasher);
-    return MethodValue::Some(int_from(selfv.vm.clone(), hasher.finish() as i128));
+    return MethodValue::Some(int_from(selfv.vm.clone(), hasher.finish() as isize));
 }
 
 pub fn init_cache<'a>() -> [Option<Object<'a>>; INT_CACHE_SIZE as usize] {

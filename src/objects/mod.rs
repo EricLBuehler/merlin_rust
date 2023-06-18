@@ -216,7 +216,7 @@ pub enum ObjectInternals<'a> {
     #[default]
     No,
     Bool(bool),
-    Int(i128),
+    Int(isize),
     Str(String),
     Arr(Vec<Object<'a>>),
     Map(mhash::HashMap<'a>),
@@ -250,7 +250,7 @@ impl<'a> ObjectInternals<'a> {
         matches!(self, ObjectInternals::Int(_))
     }
     #[inline]
-    pub fn get_int(&self) -> Option<&i128> {
+    pub fn get_int(&self) -> Option<&isize> {
         match self {
             ObjectInternals::Int(ref v) => Some(v),
             _ => None,

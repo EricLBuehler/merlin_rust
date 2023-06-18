@@ -25,6 +25,7 @@ pub struct Namespaces<'a> {
 pub const MIN_INT_CACHE: isize = -5;
 pub const MAX_INT_CACHE: isize = 256;
 pub const INT_CACHE_SIZE: isize = MAX_INT_CACHE - MIN_INT_CACHE;
+pub const INT_CACHE_OFFSET: isize = MIN_INT_CACHE.abs();
 
 #[derive(Clone)]
 pub struct SingletonCache<'a> {

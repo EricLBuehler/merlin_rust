@@ -38,16 +38,7 @@ pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
         );
         return MethodValue::Error(exc);
     }
-    let convert = unwrap_fast!(convert.as_ref());
-    if (&MIN_INT_CACHE..=&MAX_INT_CACHE).contains(&convert) {
-        return MethodValue::Some(
-            unwrap_fast!(vm.cache.int_cache[(convert + MIN_INT_CACHE.abs()) as usize].as_ref())
-                .clone(),
-        );
-    }
-    let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Int(*convert);
-    MethodValue::Some(tp)
+    MethodValue::Some(int_from(vm, *unwrap_fast!(convert.as_ref())))
 }
 
 fn int_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {

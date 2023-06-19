@@ -62,6 +62,7 @@ Merlin is: 1.92x **faster**
 ***
 
 Merlin 1.3: 2.66x slower for 2x more.
+Python 3.10.6: 1.8x slower for 2x more.
 
 ## Installation
 To get started with Merlin:

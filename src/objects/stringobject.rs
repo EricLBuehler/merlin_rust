@@ -132,6 +132,7 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     //Use DefaultHasher for long data:
     //https://www.reddit.com/r/rust/comments/hsbai0/default_hasher_for_u8_unexpectedly_expensive/
     //jschievink: ...DefaultHasher is an implementation of SipHash...   ...pretty fast on long data, for short data this hash tends to be very slow ...
+    //Use bytes[0] + bytes[len-1] + len for len > 1, bytes[0] for len==1, 0 for len==0
 
     let bytes = selfv
         .internals

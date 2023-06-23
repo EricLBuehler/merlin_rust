@@ -474,8 +474,7 @@ macro_rules! maybe_handle_exception {
                 .expect("Instruction out of range");
             let exc = $res.unwrap_err();
             $self.raise_exc_pos(exc, pos.0, pos.1);
-        }
-        else if $res.is_not_implemented() {
+        } else if $res.is_not_implemented() {
             todo!();
         }
     };

@@ -4,7 +4,7 @@ use super::{
     Object, ObjectInternals, TypeObject,
 };
 
-use crate::is_type_exact;
+use crate::{is_type_exact};
 use crate::unwrap_fast;
 use crate::{
     interpreter::{INT_CACHE_OFFSET, INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},

@@ -1,4 +1,4 @@
 /target
 merlin
-/src/objects/fast_bytes_hasher/*
+/src/objects/fast_bytes_hasher/
 .vscode

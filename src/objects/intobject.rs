@@ -120,15 +120,13 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let otherv = *other
+    let otherv = *unwrap_fast!(other
         .internals
-        .get_int()
-        .expect("Expected int internal value");
+        .get_int());
 
-    let res = selfv
+    let res = unwrap_fast!(selfv
         .internals
-        .get_int()
-        .expect("Expected int internal value")
+        .get_int())
         .checked_add(otherv);
     if res.is_none() {
         let exc = overflowexc_from_str(

@@ -350,6 +350,7 @@ pub enum MethodValue<T, E> {
 
 #[allow(dead_code)]
 impl<T: Clone, E: Clone> MethodValue<T, E> {
+    #[inline]
     pub unsafe fn unwrap_unchecked(&self) -> T {
         debug_assert!(self.is_some());
         match self {
@@ -359,6 +360,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
         }
     }
 
+    #[inline]
     pub fn unwrap(&self) -> T {
         match self {
             MethodValue::Some(v) => v.clone(),
@@ -373,6 +375,7 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
         }
     }
 
+    #[inline]
     pub fn unwrap_err(&self) -> E {
         match self {
             MethodValue::Some(_) => {
@@ -385,14 +388,17 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
         }
     }
 
+    #[inline]
     pub fn is_not_implemented(&self) -> bool {
         matches!(self, MethodValue::NotImplemented)
     }
 
+    #[inline]
     pub fn is_error(&self) -> bool {
         matches!(self, MethodValue::Error(_))
     }
 
+    #[inline]
     pub fn is_some(&self) -> bool {
         matches!(self, MethodValue::Some(_))
     }

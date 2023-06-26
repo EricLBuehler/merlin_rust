@@ -185,7 +185,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(dict_new),
-        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.map) }}),
+        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.map) }),
 
         repr: Some(dict_repr),
         str: Some(dict_repr),

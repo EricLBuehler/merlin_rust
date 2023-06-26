@@ -180,19 +180,17 @@ impl<'a> Compiler<'a> {
 
     fn compile_statement(&mut self, expr: &Node) {
         match expr.tp {
-            NodeType::Decimal => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::Binary => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::Identifier => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::StoreNode => {
+            NodeType::Decimal |
+            NodeType::Binary |
+            NodeType::Identifier |
+            NodeType::StoreNode |
+            NodeType::Call |
+            NodeType::Return |
+            NodeType::Unary |
+            NodeType::String |
+            NodeType::List |
+            NodeType::Dict |
+            NodeType::Class => {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
@@ -267,30 +265,6 @@ impl<'a> Compiler<'a> {
                 self.positions.push((expr.start, expr.end));
                 self.register_index -= registers;
             }
-            NodeType::Call => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::Return => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::Unary => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::String => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::List => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
-            NodeType::Dict => {
-                let ctx = self.compile_expr_values(expr);
-                self.compile_expr_operation(expr, ctx);
-            }
         }
     }
 
@@ -338,6 +312,9 @@ impl<'a> Compiler<'a> {
         VM::terminate(self.vm.clone());
     }
 
+    //Compile the values of the node - load them all.
+    //Only increment the register_idx if new data is being added.
+    //That is - the node is atomic and does not need any other nodes.
     fn compile_expr_values(&mut self, expr: &Node) -> RegisterContext {
         match expr.tp {
             NodeType::Decimal => {
@@ -657,12 +634,15 @@ impl<'a> Compiler<'a> {
                     registers: 0,
                 }
             }
-            _ => {
-                unreachable!();
+            NodeType::Class => {
+                unimplemented!("value compilation.");
             }
+            NodeType::Function => {unreachable!()}
         }
     }
 
+    //Generate the actual instructions that use the RegisterContexts from the value compilation.
+    //Do not increment the register number here!
     fn compile_expr_operation(&mut self, expr: &Node, ctx: RegisterContext) {
         match expr.tp {
             NodeType::Decimal => {}
@@ -898,6 +878,9 @@ impl<'a> Compiler<'a> {
                     i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
+            }
+            NodeType::Class => {
+                unimplemented!("Operation compilation");
             }
         }
 

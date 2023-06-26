@@ -102,7 +102,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(fn_new),
-        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.fun) }}),
+        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.fun) }),
 
         repr: Some(fn_repr),
         str: Some(fn_repr),

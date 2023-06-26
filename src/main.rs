@@ -49,7 +49,11 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
         name,
     };
 
-    let keywords = vec![String::from("fn"), String::from("return")];
+    let keywords = vec![
+        String::from("fn"),
+        String::from("return"),
+        String::from("class"),
+    ];
     let lexer = lexer::new(file_data_bytes, &file_info, keywords);
 
     if cfg!(debug_assertions) {

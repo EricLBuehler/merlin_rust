@@ -121,11 +121,7 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
     for idx in 0..unsafe { &selfv.internals.arr }.len() {
-        if unwrap_fast!(&selfv.internals.arr.get(idx))
-            .tp
-            .eq
-            .is_none()
-        {
+        if unwrap_fast!(&selfv.internals.arr.get(idx)).tp.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
                 selfv.vm.clone(),
                 "Method 'eq' is not defined for value",
@@ -171,7 +167,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(list_new),
-        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.arr) }}),
+        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.arr) }),
 
         repr: Some(list_repr),
         str: Some(list_repr),

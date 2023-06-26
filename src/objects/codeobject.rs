@@ -50,7 +50,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(code_new),
-        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.code) }}),
+        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.code) }),
 
         repr: Some(code_repr),
         str: Some(code_repr),

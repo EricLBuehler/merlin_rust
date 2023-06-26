@@ -1,5 +1,5 @@
+use std::mem::ManuallyDrop;
 use std::ops::Deref;
-use std::{mem::ManuallyDrop};
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position, unwrap_fast};
 use trc::Trc;
@@ -57,7 +57,7 @@ pub struct TypeObject<'a> {
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
-    pub del: Option<fn(Object<'a>)>,             //self
+    pub del: Option<fn(Object<'a>)>,                                           //self
 
     //unary
     pub repr: Option<fn(Object<'a>) -> MethodType<'a>>, //self

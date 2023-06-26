@@ -170,17 +170,42 @@ impl<'a> Parser<'a> {
         }
     }
 
+    fn expect_and<F>(&mut self, typ: TokenType, fun: F)
+    where
+        F: FnOnce(&Token) -> bool,
+    {
+        if !self.current_is_type(typ.clone()) && !fun(&self.current) {
+            self.raise_error(
+                format!(
+                    "Invalid or unexpected token (expected '{}', got '{}').",
+                    typ, self.current.tp
+                )
+                .as_str(),
+                ErrorType::UnexpectedToken,
+            )
+        }
+    }
+
     // ===========================================
     // ===========================================
 
     pub fn generate_ast(&mut self) -> Vec<Node> {
-        self.block()
+        self.block(None)
     }
 
-    fn block(&mut self) -> Vec<Node> {
+    fn block(&mut self, allowed: Option<(&dyn Fn(&Token) -> bool, Vec<&str>)>) -> Vec<Node> {
         let mut nodes = Vec::new();
 
         while !self.current_is_type(TokenType::Eof) && !self.current_is_type(TokenType::RCurly) {
+            if allowed.is_some() && !allowed.as_ref().unwrap().0(&self.current) {
+                self.raise_error(
+                    &format!(
+                        "Invalid or unexpected token (expected one of {}).",
+                        allowed_to_vec!(allowed.unwrap().1)
+                    ),
+                    ErrorType::UnexpectedToken,
+                );
+            }
             nodes.push(self.parse_statement());
             self.skip_newlines();
         }
@@ -222,6 +247,8 @@ impl<'a> Parser<'a> {
             self.parse_fn()
         } else if self.current.data == "return" {
             self.parse_return()
+        } else if self.current.data == "class" {
+            self.parse_class()
         } else {
             self.raise_error("Unknown keyword.", ErrorType::UnknownKeyword);
         }
@@ -304,17 +331,14 @@ impl<'a> Parser<'a> {
     }
 
     fn generate_identifier(&mut self) -> Node {
+        let starttok = self.current.clone();
         let name: String = self.current.data.clone();
         if self.next_is_type(TokenType::Equals) {
             self.advance();
             self.advance();
             let expr = self.expr(Precedence::Lowest);
             return nodes::Node::new(
-                Position::create_from_parts(
-                    self.current.startcol,
-                    self.current.endcol,
-                    self.current.line,
-                ),
+                Position::create_from_parts(starttok.startcol, starttok.endcol, starttok.line),
                 Position::create_from_parts(
                     self.current.startcol,
                     self.current.endcol,
@@ -354,11 +378,7 @@ impl<'a> Parser<'a> {
         self.reverse();
 
         nodes::Node::new(
-            Position::create_from_parts(
-                self.current.startcol,
-                self.current.endcol,
-                self.current.line,
-            ),
+            expr.start,
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,
@@ -510,11 +530,7 @@ impl<'a> Parser<'a> {
         }
 
         nodes::Node::new(
-            Position::create_from_parts(
-                self.current.startcol,
-                self.current.endcol,
-                self.current.line,
-            ),
+            left.start,
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,
@@ -528,6 +544,7 @@ impl<'a> Parser<'a> {
     // ============ Expr ==============
 
     fn parse_fn(&mut self) -> Node {
+        let starttok = self.current.clone();
         self.advance();
         self.ensure_not_eof(vec!["identifier"]);
         let name = self.current.data.clone();
@@ -550,17 +567,13 @@ impl<'a> Parser<'a> {
         self.expect(TokenType::LCurly);
         self.advance();
         self.skip_newlines();
-        let code = self.block();
+        let code = self.block(None);
         self.skip_newlines();
         self.expect(TokenType::RCurly);
         self.advance();
 
         nodes::Node::new(
-            Position::create_from_parts(
-                self.current.startcol,
-                self.current.endcol,
-                self.current.line,
-            ),
+            Position::create_from_parts(starttok.startcol, starttok.endcol, starttok.line),
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,
@@ -577,11 +590,7 @@ impl<'a> Parser<'a> {
         let expr = self.expr(Precedence::Lowest);
 
         nodes::Node::new(
-            Position::create_from_parts(
-                self.current.startcol,
-                self.current.endcol,
-                self.current.line,
-            ),
+            expr.start,
             Position::create_from_parts(
                 self.current.startcol,
                 self.current.endcol,
@@ -589,6 +598,49 @@ impl<'a> Parser<'a> {
             ),
             nodes::NodeType::Return,
             Box::new(nodes::ReturnNode { expr }),
+        )
+    }
+
+    fn parse_class(&mut self) -> Node {
+        let starttok = self.current.clone();
+        self.advance();
+        self.ensure_not_eof(vec!["identifier"]);
+        let name = self.current.data.clone();
+        self.advance();
+
+        self.expect(TokenType::LCurly);
+        self.advance();
+        self.skip_newlines();
+        let mut classvars = Vec::new();
+        while self.current_is_type(TokenType::Identifier) && self.next_is_type(TokenType::Equals) {
+            classvars.push(self.generate_identifier());
+            self.skip_newlines();
+            self.ensure_not_eof(vec!["identifier", "keyword"]);
+        }
+        self.skip_newlines();
+
+        self.expect_and(TokenType::Keyword, |tok| tok.data == "fn");
+        let code = self.block(Some((
+            &|tok| tok.tp == TokenType::Keyword && tok.data == "fn",
+            vec!["fn"],
+        )));
+        self.skip_newlines();
+        self.expect(TokenType::RCurly);
+        self.advance();
+
+        nodes::Node::new(
+            Position::create_from_parts(starttok.startcol, starttok.endcol, starttok.line),
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::Class,
+            Box::new(nodes::ClassNode {
+                name,
+                methods: code,
+                classvars,
+            }),
         )
     }
 }

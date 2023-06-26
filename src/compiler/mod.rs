@@ -180,17 +180,17 @@ impl<'a> Compiler<'a> {
 
     fn compile_statement(&mut self, expr: &Node) {
         match expr.tp {
-            NodeType::Decimal |
-            NodeType::Binary |
-            NodeType::Identifier |
-            NodeType::StoreNode |
-            NodeType::Call |
-            NodeType::Return |
-            NodeType::Unary |
-            NodeType::String |
-            NodeType::List |
-            NodeType::Dict |
-            NodeType::Class => {
+            NodeType::Decimal
+            | NodeType::Binary
+            | NodeType::Identifier
+            | NodeType::StoreNode
+            | NodeType::Call
+            | NodeType::Return
+            | NodeType::Unary
+            | NodeType::String
+            | NodeType::List
+            | NodeType::Dict
+            | NodeType::Class => {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
@@ -637,7 +637,9 @@ impl<'a> Compiler<'a> {
             NodeType::Class => {
                 unimplemented!("value compilation.");
             }
-            NodeType::Function => {unreachable!()}
+            NodeType::Function => {
+                unreachable!()
+            }
         }
     }
 

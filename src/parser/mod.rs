@@ -192,7 +192,8 @@ impl<'a> Parser<'a> {
     pub fn generate_ast(&mut self) -> Vec<Node> {
         self.block(None)
     }
-
+    
+    #[allow(clippy::type_complexity)]
     fn block(&mut self, allowed: Option<(&dyn Fn(&Token) -> bool, Vec<&str>)>) -> Vec<Node> {
         let mut nodes = Vec::new();
 

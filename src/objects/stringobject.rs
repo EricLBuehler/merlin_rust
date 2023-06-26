@@ -33,7 +33,7 @@ fn string_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(
         selfv.vm.clone(),
-        "\"".to_owned() + &unsafe { &selfv.internals.str } + "\"",
+        "\"".to_owned() + unsafe { &selfv.internals.str } + "\"",
     ))
 }
 fn string_str(selfv: Object<'_>) -> MethodType<'_> {

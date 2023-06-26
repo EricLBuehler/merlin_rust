@@ -660,7 +660,7 @@ fn valueexc_repr(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(unsafe { &&selfv.internals.exc }.obj.clone())
+    MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))

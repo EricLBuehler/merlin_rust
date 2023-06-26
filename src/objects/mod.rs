@@ -99,13 +99,13 @@ impl<'a> PartialEq for TypeObject<'a> {
 
 impl<'a> RawObject<'a> {
     pub fn object_repr(object: &Object<'_>) -> String {
-        return unsafe {
+        unsafe {
             &(object.clone().tp.repr.expect("Method is not defined"))(object.clone())
                 .unwrap()
                 .internals
                 .str
         }
-        .to_string();
+        .to_string()
     }
 
     #[allow(unused_unsafe)]
@@ -141,18 +141,18 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        return MethodValue::Some(unsafe { &unwrap_fast!(reprv).internals.str }.to_string());
+        MethodValue::Some(unsafe { &unwrap_fast!(reprv).internals.str }.to_string())
     }
 
     #[allow(dead_code)]
     pub fn object_str(object: &Object<'_>) -> String {
-        return unsafe {
+        unsafe {
             &(object.clone().tp.str.expect("Method is not defined"))(object.clone())
                 .unwrap()
                 .internals
                 .str
         }
-        .to_string();
+        .to_string()
     }
 
     #[allow(unused_unsafe)]
@@ -188,7 +188,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        return MethodValue::Some(unsafe { &unwrap_fast!(strv).internals.str }.to_string());
+        MethodValue::Some(unsafe { &unwrap_fast!(strv).internals.str }.to_string())
     }
 }
 

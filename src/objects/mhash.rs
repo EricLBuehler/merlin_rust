@@ -28,6 +28,7 @@ impl<'a> HashMap<'a> {
         }
     }
 
+    #[allow(unused_unsafe)]
     #[inline]
     fn hash(key: Object<'a>) -> MethodValue<isize, Object<'a>> {
         if key.tp.hash_fn.is_none() {
@@ -60,12 +61,7 @@ impl<'a> HashMap<'a> {
             return MethodValue::Error(exc);
         }
 
-        MethodValue::Some(
-            *unwrap_fast!(res)
-                .internals
-                .get_int()
-                .expect("Expected int internal value"),
-        )
+        MethodValue::Some(unsafe { unwrap_fast!(res).internals.int })
     }
 
     #[inline]

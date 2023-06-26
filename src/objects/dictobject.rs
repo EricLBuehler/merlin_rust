@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use super::mhash::HashMap;
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object, RawObject,
@@ -17,7 +19,9 @@ use trc::Trc;
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
     let mut tp = create_object_from_type(unwrap_fast!(vm.types.dicttp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Map(raw);
+    tp.internals = ObjectInternals {
+        map: ManuallyDrop::new(raw),
+    };
     tp
 }
 
@@ -27,11 +31,7 @@ fn dict_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
     let mut res = String::from("{");
     let sf = selfv.clone();
-    let map = sf
-        .internals
-        .get_map()
-        .expect("Expected map internal value")
-        .clone();
+    let map = unsafe { &sf.internals.map }.clone();
     for (key, value) in map.into_iter() {
         let repr = RawObject::object_repr_safe(key);
         if !repr.is_some() {
@@ -66,11 +66,7 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = selfv
-        .internals
-        .get_map()
-        .expect("Expected map internal value")
-        .get(other);
+    let out = unsafe { &selfv.internals.map }.get(other);
 
     if out.is_error() {
         return MethodValue::Error(out.unwrap_err());
@@ -81,62 +77,34 @@ fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 #[inline]
 fn dict_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> MethodType<'a> {
     //TODO check for hash here!
-    let mut map = selfv
-        .internals
-        .get_map()
-        .expect("Expected map internal value")
-        .clone();
+    let mut map = unsafe { &selfv.internals.map }.clone();
     let res = map.insert(other, value);
     if res.is_error() {
         return MethodValue::Error(res.unwrap_err());
     }
 
-    selfv.internals = ObjectInternals::Map(map);
+    selfv.internals = ObjectInternals { map };
 
     MethodValue::Some(none_from!(selfv.vm))
 }
 fn dict_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert = selfv
-        .internals
-        .get_map()
-        .expect("Expected map internal value")
-        .len()
-        .try_into();
+    let convert = unsafe { &selfv.internals.map }.len().try_into();
 
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), unwrap_fast!(convert)))
 }
 
+#[allow(unused_unsafe)]
 fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
 
-    if selfv
-        .internals
-        .get_map()
-        .expect("Expected map internal value")
-        .len()
-        != other
-            .internals
-            .get_map()
-            .expect("Expected map internal value")
-            .len()
-    {
+    if unsafe { &selfv.internals.map }.len() != unsafe { &other.internals.map }.len() {
         return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
     for ((key1, value1), (key2, value2)) in std::iter::zip(
-        selfv
-            .internals
-            .get_map()
-            .expect("Expected map internal value")
-            .clone()
-            .into_iter(),
-        other
-            .internals
-            .get_map()
-            .expect("Expected map internal value")
-            .clone()
-            .into_iter(),
+        unsafe { &selfv.internals.map }.into_iter(),
+        unsafe { &other.internals.map }.into_iter(),
     ) {
         if key1.tp.eq.is_none() {
             let exc = methodnotdefinedexc_from_str(
@@ -180,11 +148,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        if *unwrap_fast!(res)
-            .internals
-            .get_bool()
-            .expect("Expected bool internal value")
-        {
+        if unsafe { unwrap_fast!(res).internals.bool } {
             return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
 
@@ -205,11 +169,7 @@ fn dict_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        if *unwrap_fast!(res)
-            .internals
-            .get_bool()
-            .expect("Expected bool internal value")
-        {
+        if unsafe { unwrap_fast!(res).internals.bool } {
             return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
     }
@@ -225,6 +185,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(dict_new),
+        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.map) }}),
 
         repr: Some(dict_repr),
         str: Some(dict_repr),

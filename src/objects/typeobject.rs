@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use crate::interpreter::VM;
 use trc::Trc;
 
@@ -32,6 +34,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         typeid: vm.types.n_types,
 
         new: Some(type_new),
+        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.typ) }}),
 
         repr: Some(type_repr),
         str: Some(type_repr),

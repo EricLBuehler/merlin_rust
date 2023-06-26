@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
@@ -13,7 +15,9 @@ use trc::Trc;
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Trc<RawObject> =
         create_object_from_type(unwrap_fast!(vm.types.codetp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Code(bytecode);
+    tp.internals = ObjectInternals {
+        code: ManuallyDrop::new(bytecode),
+    };
     tp
 }
 
@@ -33,14 +37,7 @@ fn code_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_code()
-            .expect("Expected Bytecode internal value")
-            == other
-                .internals
-                .get_code()
-                .expect("Expected Bytecode internal value"),
+        unsafe { &selfv.internals.code } == unsafe { &other.internals.code },
     ))
 }
 
@@ -53,6 +50,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(code_new),
+        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.code) }}),
 
         repr: Some(code_repr),
         str: Some(code_repr),

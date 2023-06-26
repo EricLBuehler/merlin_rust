@@ -30,6 +30,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(object_new),
+        del: Some(|_| {}),
 
         repr: Some(object_repr),
         str: Some(object_repr),

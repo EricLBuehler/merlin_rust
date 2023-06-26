@@ -1,5 +1,6 @@
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
+use std::mem::ManuallyDrop;
 use unicode_segmentation::UnicodeSegmentation;
 
 use crate::interpreter::VM;
@@ -20,7 +21,9 @@ const MFBH_MAX_LEN: usize = 256;
 
 pub fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
     let mut tp = create_object_from_type(unwrap_fast!(vm.types.strtp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Str(raw);
+    tp.internals = ObjectInternals {
+        str: ManuallyDrop::new(raw),
+    };
     tp
 }
 
@@ -30,22 +33,13 @@ fn string_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 fn string_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(
         selfv.vm.clone(),
-        "\"".to_owned()
-            + selfv
-                .internals
-                .get_str()
-                .expect("Expected str internal value")
-            + "\"",
+        "\"".to_owned() + &unsafe { &selfv.internals.str } + "\"",
     ))
 }
 fn string_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(string_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_str()
-            .expect("Expected str internal value")
-            .to_string(),
+        unsafe { &selfv.internals.str }.to_string(),
     ))
 }
 fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -55,14 +49,7 @@ fn string_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_str()
-            .expect("Expected str internal value")
-            == other
-                .internals
-                .get_str()
-                .expect("Expected str internal value"),
+        unsafe { &selfv.internals.str } == unsafe { &other.internals.str },
     ))
 }
 
@@ -78,37 +65,16 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = UnicodeSegmentation::graphemes(
-        selfv
-            .internals
-            .get_str()
-            .expect("Expected str internal value")
-            .as_str(),
-        true,
-    )
-    .nth(
-        (*other
-            .internals
-            .get_int()
-            .expect("Expected int internal value"))
-        .unsigned_abs(),
-    );
+    let out = UnicodeSegmentation::graphemes(unsafe { &selfv.internals.str }.as_str(), true)
+        .nth(unsafe { other.internals.int }.unsigned_abs());
 
     if out.is_none() {
         let exc = valueexc_from_str(
             selfv.vm.clone(),
             &format!(
                 "Index out of range: maximum index is '{}', but got '{}'",
-                selfv
-                    .internals
-                    .get_str()
-                    .expect("Expected str internal value")
-                    .len(),
-                (*other
-                    .internals
-                    .get_int()
-                    .expect("Expected int internal value"))
-                .unsigned_abs()
+                unsafe { &selfv.internals.str }.len(),
+                unsafe { &other.internals.int }.unsigned_abs()
             ),
             Position::default(),
             Position::default(),
@@ -118,12 +84,7 @@ fn string_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(string_from(selfv.vm.clone(), unwrap_fast!(out).to_string()))
 }
 fn string_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert = selfv
-        .internals
-        .get_str()
-        .expect("Expected str internal value")
-        .len()
-        .try_into();
+    let convert = unsafe { &selfv.internals.str }.len().try_into();
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), unwrap_fast!(convert)))
 }
 
@@ -134,19 +95,11 @@ fn string_hash(selfv: Object<'_>) -> MethodType<'_> {
     //jschievink: ...DefaultHasher is an implementation of SipHash...   ...pretty fast on long data, for short data this hash tends to be very slow ...
     //Use bytes[0] + bytes[len-1] + len for len > 1, bytes[0] for len==1, 0 for len==0
 
-    let bytes = selfv
-        .internals
-        .get_str()
-        .expect("Expected str internal value")[..]
-        .as_bytes();
+    let bytes = unsafe { &selfv.internals.str }[..].as_bytes();
 
     if bytes.len() > MFBH_MAX_LEN {
         let mut hasher = DefaultHasher::new();
-        selfv
-            .internals
-            .get_str()
-            .expect("Expected str internal value")
-            .hash(&mut hasher);
+        unsafe { &selfv.internals.str }.hash(&mut hasher);
         return MethodValue::Some(intobject::int_from(
             selfv.vm.clone(),
             hasher.finish() as isize,
@@ -174,6 +127,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(string_new),
+        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.str) }}),
 
         repr: Some(string_repr),
         str: Some(string_str),

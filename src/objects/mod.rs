@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use std::ops::Deref;
+use std::{mem::ManuallyDrop};
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position, unwrap_fast};
 use trc::Trc;
@@ -35,11 +35,18 @@ impl<'a> Deref for ObjectBase<'a> {
     }
 }
 
-#[derive(Clone)]
+//#[derive(Clone)]
 pub struct RawObject<'a> {
     pub tp: Trc<TypeObject<'a>>,
     pub internals: ObjectInternals<'a>,
     pub vm: Trc<VM<'a>>,
+}
+
+#[macro_export]
+macro_rules! is_type_exact {
+    ($self:expr, $other:expr) => {
+        $self.tp.typeid == $other.typeid
+    };
 }
 
 #[derive(Clone, Eq)]
@@ -50,6 +57,7 @@ pub struct TypeObject<'a> {
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
+    pub del: Option<fn(Object<'a>)>,             //self
 
     //unary
     pub repr: Option<fn(Object<'a>) -> MethodType<'a>>, //self
@@ -79,7 +87,7 @@ impl<'a> Eq for RawObject<'a> {}
 
 impl<'a> PartialEq for RawObject<'a> {
     fn eq(&self, other: &Self) -> bool {
-        self.tp == other.tp && self.internals == other.internals
+        self.tp == other.tp
     }
 }
 
@@ -89,22 +97,18 @@ impl<'a> PartialEq for TypeObject<'a> {
     }
 }
 
-impl<'a> Debug for RawObject<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Self::object_repr(&Trc::new(self.clone())))
-    }
-}
-
 impl<'a> RawObject<'a> {
     pub fn object_repr(object: &Object<'_>) -> String {
-        return (object.clone().tp.repr.expect("Method is not defined"))(object.clone())
-            .unwrap()
-            .internals
-            .get_str()
-            .expect("Expected str internal value")
-            .clone();
+        return unsafe {
+            &(object.clone().tp.repr.expect("Method is not defined"))(object.clone())
+                .unwrap()
+                .internals
+                .str
+        }
+        .to_string();
     }
 
+    #[allow(unused_unsafe)]
     pub fn object_repr_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
         let repr = object.clone().tp.repr;
         if repr.is_none() {
@@ -127,32 +131,31 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        if !unwrap_fast!(reprv).internals.is_str() {
+        if is_type_exact!(
+            &unwrap_fast!(reprv),
+            unwrap_fast!(object.vm.types.strtp.as_ref()).clone()
+        ) {
             return MethodValue::Error(stringobject::string_from(
                 object.vm.clone(),
                 String::from("__repr__ returned non-string."),
             ));
         }
 
-        return MethodValue::Some(
-            unwrap_fast!(reprv)
-                .internals
-                .get_str()
-                .expect("Expected str internal value")
-                .to_owned(),
-        );
+        return MethodValue::Some(unsafe { &unwrap_fast!(reprv).internals.str }.to_string());
     }
 
     #[allow(dead_code)]
     pub fn object_str(object: &Object<'_>) -> String {
-        return (object.clone().tp.str.expect("Method is not defined"))(object.clone())
-            .unwrap()
-            .internals
-            .get_str()
-            .expect("Expected str internal value")
-            .clone();
+        return unsafe {
+            &(object.clone().tp.str.expect("Method is not defined"))(object.clone())
+                .unwrap()
+                .internals
+                .str
+        }
+        .to_string();
     }
 
+    #[allow(unused_unsafe)]
     pub fn object_str_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
         let str = object.clone().tp.str;
         if str.is_none() {
@@ -175,20 +178,17 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        if !unwrap_fast!(strv).internals.is_str() {
+        if is_type_exact!(
+            &unwrap_fast!(strv),
+            unwrap_fast!(object.vm.types.strtp.as_ref()).clone()
+        ) {
             return MethodValue::Error(stringobject::string_from(
                 object.vm.clone(),
                 String::from("__repr__ returned non-string."),
             ));
         }
 
-        return MethodValue::Some(
-            unwrap_fast!(strv)
-                .internals
-                .get_str()
-                .expect("Expected str internal value")
-                .to_owned(),
-        );
+        return MethodValue::Some(unsafe { &unwrap_fast!(strv).internals.str }.to_string());
     }
 }
 
@@ -210,136 +210,17 @@ pub struct ExcData<'a> {
     pub end: Position,
 }
 
-#[derive(Clone, Default, PartialEq, Eq)]
-#[allow(dead_code)]
-pub enum ObjectInternals<'a> {
-    #[default]
-    No,
-    Bool(bool),
-    Int(isize),
-    Str(String),
-    Arr(Vec<Object<'a>>),
-    Map(mhash::HashMap<'a>),
-    Code(Trc<Bytecode<'a>>),
-    Fn(FnData<'a>),
-    Exc(ExcData<'a>),
-    Type(TypeObject<'a>),
-}
-
-#[allow(dead_code)]
-impl<'a> ObjectInternals<'a> {
-    #[inline]
-    pub fn is_no(&self) -> bool {
-        matches!(self, ObjectInternals::No)
-    }
-
-    #[inline]
-    pub fn is_bool(&self) -> bool {
-        matches!(self, ObjectInternals::Bool(_))
-    }
-    #[inline]
-    pub fn get_bool(&self) -> Option<&bool> {
-        match self {
-            ObjectInternals::Bool(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_int(&self) -> bool {
-        matches!(self, ObjectInternals::Int(_))
-    }
-    #[inline]
-    pub fn get_int(&self) -> Option<&isize> {
-        match self {
-            ObjectInternals::Int(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_str(&self) -> bool {
-        matches!(self, ObjectInternals::Str(_))
-    }
-    #[inline]
-    pub fn get_str(&self) -> Option<&String> {
-        match self {
-            ObjectInternals::Str(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_arr(&self) -> bool {
-        matches!(self, ObjectInternals::Arr(_))
-    }
-    #[inline]
-    pub fn get_arr(&self) -> Option<&Vec<Object<'a>>> {
-        match self {
-            ObjectInternals::Arr(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_map(&self) -> bool {
-        matches!(self, ObjectInternals::Map(_))
-    }
-    #[inline]
-    pub fn get_map(&self) -> Option<&mhash::HashMap<'a>> {
-        match self {
-            ObjectInternals::Map(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_code(&self) -> bool {
-        matches!(self, ObjectInternals::Code(_))
-    }
-    #[inline]
-    pub fn get_code(&self) -> Option<&Bytecode<'a>> {
-        match self {
-            ObjectInternals::Code(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_fn(&self) -> bool {
-        matches!(self, ObjectInternals::Fn(_))
-    }
-    #[inline]
-    pub fn get_fn(&self) -> Option<&FnData<'a>> {
-        match self {
-            ObjectInternals::Fn(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_exc(&self) -> bool {
-        matches!(self, ObjectInternals::Exc(_))
-    }
-    #[inline]
-    pub fn get_exc(&self) -> Option<&ExcData<'a>> {
-        match self {
-            ObjectInternals::Exc(ref v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_type(&self) -> bool {
-        matches!(self, ObjectInternals::Type(_))
-    }
-    #[inline]
-    pub fn get_type(&self) -> Option<&TypeObject<'a>> {
-        match self {
-            ObjectInternals::Type(ref v) => Some(v),
-            _ => None,
-        }
-    }
+pub union ObjectInternals<'a> {
+    pub none: (),
+    pub bool: bool,
+    pub int: isize,
+    pub str: ManuallyDrop<String>,
+    pub arr: ManuallyDrop<Vec<Object<'a>>>,
+    pub map: ManuallyDrop<mhash::HashMap<'a>>,
+    pub code: ManuallyDrop<Trc<Bytecode<'a>>>,
+    pub fun: ManuallyDrop<FnData<'a>>,
+    pub exc: ManuallyDrop<ExcData<'a>>,
+    pub typ: ManuallyDrop<TypeObject<'a>>,
 }
 
 pub enum MethodValue<T, E> {
@@ -409,16 +290,9 @@ fn create_object_from_type<'a>(tp: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>) -> Obje
     let raw = RawObject {
         vm: vm.clone(),
         tp,
-        internals: ObjectInternals::No,
+        internals: ObjectInternals { none: () },
     };
     Trc::new(raw)
-}
-
-#[macro_export]
-macro_rules! is_type_exact {
-    ($self:expr, $other:expr) => {
-        $self.tp.typeid == $other.typeid
-    };
 }
 
 fn inherit_slots<'a>(mut tp: Trc<TypeObject<'a>>, basetp: TypeObject<'a>) {

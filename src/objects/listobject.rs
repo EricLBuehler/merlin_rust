@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use super::exceptionobject::valueexc_from_str;
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object, RawObject,
@@ -15,7 +17,9 @@ use trc::Trc;
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
     let mut tp = create_object_from_type(unwrap_fast!(vm.types.listtp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Arr(raw);
+    tp.internals = ObjectInternals {
+        arr: ManuallyDrop::new(raw),
+    };
     tp
 }
 
@@ -24,11 +28,7 @@ fn list_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 }
 fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
     let mut res = String::from("[");
-    for item in selfv
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-    {
+    for item in unsafe { &selfv.internals.arr }.iter() {
         let repr = RawObject::object_repr_safe(item.clone());
         if !repr.is_some() {
             return MethodValue::Error(repr.unwrap_err());
@@ -56,33 +56,15 @@ fn list_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     }
 
     //NEGATIVE INDEX IS CONVERTED TO +
-    let out = selfv
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-        .get(
-            (*other
-                .internals
-                .get_int()
-                .expect("Expected int internal value"))
-            .unsigned_abs(),
-        );
+    let out = unsafe { &selfv.internals.arr }.get((unsafe { other.internals.int }).unsigned_abs());
 
     if out.is_none() {
         let exc = valueexc_from_str(
             selfv.vm.clone(),
             &format!(
                 "Index out of range: maximum index is '{}', but got '{}'",
-                selfv
-                    .internals
-                    .get_arr()
-                    .expect("Expected arr internal value")
-                    .len(),
-                (*other
-                    .internals
-                    .get_int()
-                    .expect("Expected int internal value"))
-                .unsigned_abs()
+                unsafe { &selfv.internals.arr }.len(),
+                unsafe { &other.internals.int }.unsigned_abs()
             ),
             Position::default(),
             Position::default(),
@@ -103,31 +85,13 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
     }
 
     //NEGATIVE INDEX IS CONVERTED TO +
-    if (*other
-        .internals
-        .get_int()
-        .expect("Expected int internal value"))
-    .unsigned_abs()
-        >= selfv
-            .internals
-            .get_arr()
-            .expect("Expected arr internal value")
-            .len()
-    {
+    if unsafe { other.internals.int }.unsigned_abs() >= unsafe { &selfv.internals.arr }.len() {
         let exc = valueexc_from_str(
             selfv.vm.clone(),
             &format!(
                 "Index out of range: maximum index is '{}', but got '{}'",
-                selfv
-                    .internals
-                    .get_arr()
-                    .expect("Expected arr internal value")
-                    .len(),
-                (*other
-                    .internals
-                    .get_int()
-                    .expect("Expected int internal value"))
-                .unsigned_abs()
+                unsafe { &selfv.internals.arr }.len(),
+                unsafe { &other.internals.int }.unsigned_abs()
             ),
             Position::default(),
             Position::default(),
@@ -135,63 +99,32 @@ fn list_set<'a>(mut selfv: Object<'a>, other: Object<'a>, value: Object<'a>) -> 
         return MethodValue::Error(exc);
     }
 
-    let mut arr = selfv
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-        .clone();
-    arr[(*other
-        .internals
-        .get_int()
-        .expect("Expected int internal value"))
-    .unsigned_abs()] = value;
+    let mut arr = unsafe { &selfv.internals.arr }.clone();
+    arr[unsafe { other.internals.int }.unsigned_abs()] = value;
 
-    selfv.internals = ObjectInternals::Arr(arr.to_vec());
+    selfv.internals = ObjectInternals { arr };
 
     MethodValue::Some(none_from!(selfv.vm.clone()))
 }
 fn list_len(selfv: Object<'_>) -> MethodType<'_> {
-    let convert = selfv
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-        .len()
-        .try_into();
+    let convert = unsafe { &selfv.internals.arr }.len().try_into();
     MethodValue::Some(intobject::int_from(selfv.vm.clone(), unwrap_fast!(convert)))
 }
 
+#[allow(unused_unsafe)]
 fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if !is_type_exact!(&selfv, other.tp) {
         return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
 
-    if selfv
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-        .len()
-        != other
-            .internals
-            .get_arr()
-            .expect("Expected arr internal value")
-            .len()
-    {
+    if unsafe { &selfv.internals.arr }.len() != unsafe { &other.internals.arr }.len() {
         return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
     }
-    for idx in 0..selfv
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-        .len()
-    {
-        if unwrap_fast!(selfv
-            .internals
-            .get_arr()
-            .expect("Expected arr internal value")
-            .get(idx))
-        .tp
-        .eq
-        .is_none()
+    for idx in 0..unsafe { &selfv.internals.arr }.len() {
+        if unwrap_fast!(&selfv.internals.arr.get(idx))
+            .tp
+            .eq
+            .is_none()
         {
             let exc = methodnotdefinedexc_from_str(
                 selfv.vm.clone(),
@@ -201,19 +134,10 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             );
             return MethodValue::Error(exc);
         }
-        let v = unwrap_fast!(selfv
-            .internals
-            .get_arr()
-            .expect("Expected arr internal value")
-            .get(idx));
+        let v = unwrap_fast!(&selfv.internals.arr.get(idx));
         let res = (v.tp.eq.expect("Method is not defined"))(
             v.clone(),
-            unwrap_fast!(other
-                .internals
-                .get_arr()
-                .expect("Expected arr internal value")
-                .get(idx))
-            .clone(),
+            unwrap_fast!(&other.internals.arr.get(idx)).clone(),
         );
         if res.is_error() {
             return res;
@@ -231,11 +155,7 @@ fn list_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
             return MethodValue::Error(exc);
         }
 
-        if *unwrap_fast!(res)
-            .internals
-            .get_bool()
-            .expect("Expected bool internal value")
-        {
+        if unsafe { unwrap_fast!(res).internals.bool } {
             return MethodValue::Some(boolobject::bool_from(selfv.vm.clone(), false));
         }
     }
@@ -251,6 +171,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(list_new),
+        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.arr) }}),
 
         repr: Some(list_repr),
         str: Some(list_repr),

@@ -1,3 +1,5 @@
+use std::mem::ManuallyDrop;
+
 use super::exceptionobject::valueexc_from_str;
 use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, TypeObject};
 
@@ -20,12 +22,14 @@ pub fn fn_from<'a>(
     name: String,
 ) -> Object<'a> {
     let mut tp = create_object_from_type(unwrap_fast!(vm.types.fntp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Fn(super::FnData {
-        code,
-        args,
-        name,
-        indices,
-    });
+    tp.internals = ObjectInternals {
+        fun: ManuallyDrop::new(super::FnData {
+            code,
+            args,
+            name,
+            indices,
+        }),
+    };
     tp
 }
 
@@ -37,11 +41,7 @@ fn fn_repr(selfv: Object<'_>) -> MethodType<'_> {
         selfv.vm.clone(),
         format!(
             "<fn '{}' @ 0x{:x}>",
-            selfv
-                .internals
-                .get_fn()
-                .expect("Expected Fn internal value")
-                .name,
+            unsafe { &selfv.internals.fun }.name,
             Trc::as_ptr(&selfv) as usize
         ),
     ))
@@ -53,14 +53,7 @@ fn fn_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_fn()
-            .expect("Expected Fn internal value")
-            == other
-                .internals
-                .get_fn()
-                .expect("Expected Fn internal value"),
+        unsafe { &selfv.internals.fun } == unsafe { &other.internals.fun },
     ))
 }
 
@@ -75,32 +68,13 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    if args
-        .internals
-        .get_arr()
-        .expect("Expected arr internal value")
-        .len()
-        != selfv
-            .internals
-            .get_fn()
-            .expect("Expected Fn internal value")
-            .args
-            .len()
-    {
+    if unsafe { &args.internals.arr }.len() != unsafe { &selfv.internals.fun }.args.len() {
         let exc = valueexc_from_str(
             selfv.vm.clone(),
             &format!(
                 "Expected {} arguments, got {}",
-                args.internals
-                    .get_arr()
-                    .expect("Expected arr internal value")
-                    .len(),
-                selfv
-                    .internals
-                    .get_fn()
-                    .expect("Expected Fn internal value")
-                    .args
-                    .len()
+                unsafe { &args.internals.arr }.len(),
+                unsafe { &selfv.internals.fun }.args.len()
             ),
             Position::default(),
             Position::default(),
@@ -109,32 +83,13 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     }
     let mut map = hashbrown::HashMap::new();
     for (value, index) in izip!(
-        args.internals
-            .get_arr()
-            .expect("Expected arr internal value"),
-        &selfv
-            .internals
-            .get_fn()
-            .expect("Expected Fn internal value")
-            .indices,
+        unsafe { &args.internals.arr }.iter(),
+        unsafe { &selfv.internals.fun }.indices.iter(),
     ) {
-        map.insert(
-            index
-                .internals
-                .get_int()
-                .expect("Expected int internal value"),
-            value.clone(),
-        );
+        map.insert(unsafe { &index.internals.int }, value.clone());
     }
 
-    let code = selfv
-        .internals
-        .get_fn()
-        .expect("Expected Fn internal value")
-        .code
-        .internals
-        .get_code()
-        .expect("Expected Bytecode internal value");
+    let code = &unsafe { &selfv.internals.fun.code.internals.code };
     MethodValue::Some(VM::execute_vars(selfv.vm.clone(), code, map))
 }
 
@@ -147,6 +102,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(fn_new),
+        del: Some(|mut selfv| {unsafe { ManuallyDrop::drop(&mut selfv.internals.fun) }}),
 
         repr: Some(fn_repr),
         str: Some(fn_repr),

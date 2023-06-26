@@ -39,7 +39,7 @@ pub fn generate_cache<'a>(
 ) {
     unsafe {
         let mut tp = create_object_from_type(nonetp.clone(), vm);
-        tp.internals = ObjectInternals::No;
+        tp.internals = ObjectInternals { none: () };
         std::ptr::write(ptr, Some(tp));
     }
 }
@@ -53,7 +53,8 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(none_new),
-
+        del: Some(|_| {}),
+        
         repr: Some(none_repr),
         str: Some(none_repr),
         abs: None,

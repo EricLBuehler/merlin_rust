@@ -307,11 +307,7 @@ impl<'a> Interpreter<'a> {
 
     #[allow(dead_code)]
     pub fn raise_exc(&self, exc_obj: Object<'a>) -> ! {
-        let exc = exc_obj
-            .internals
-            .get_exc()
-            .expect("Expected exc internal value")
-            .clone();
+        let exc = unsafe { &exc_obj.internals.exc }.clone();
         self.raise_exc_pos(exc_obj, exc.start, exc.end);
     }
 
@@ -567,19 +563,9 @@ impl<'a> Interpreter<'a> {
                     let func = fnobject::fn_from(
                         self.vm.clone(),
                         code,
-                        args.internals
-                            .get_arr()
-                            .expect("Expected arr internal value")
-                            .clone(),
-                        indices
-                            .internals
-                            .get_arr()
-                            .expect("Expected arr internal value")
-                            .clone(),
-                        name.internals
-                            .get_str()
-                            .expect("Expected str internal value")
-                            .clone(),
+                        unsafe { &args.internals.arr }.to_vec(),
+                        unsafe { &indices.internals.arr }.to_vec(),
+                        unsafe { &name.internals.str }.to_string(),
                     );
                     store_register!(last, last_vars, *out, func);
                 }

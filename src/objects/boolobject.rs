@@ -24,11 +24,7 @@ fn bool_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 fn bool_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_bool()
-            .expect("Expected bool internal value")
-            .to_string(),
+        unsafe { selfv.internals.bool }.to_string(),
     ))
 }
 fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -38,23 +34,13 @@ fn bool_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_bool()
-            .expect("Expected bool internal value")
-            == other
-                .internals
-                .get_bool()
-                .expect("Expected bool internal value"),
+        unsafe { selfv.internals.bool } == unsafe { other.internals.bool },
     ))
 }
 fn bool_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        *selfv
-            .internals
-            .get_bool()
-            .expect("Expected bool internal value") as isize,
+        unsafe { selfv.internals.bool } as isize,
     ))
 }
 
@@ -65,12 +51,12 @@ pub fn generate_cache<'a>(
 ) {
     unsafe {
         let mut tp = create_object_from_type(booltp.clone(), vm.clone());
-        tp.internals = ObjectInternals::Bool(false);
+        tp.internals = ObjectInternals { bool: false };
         let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
 
         let mut tp = create_object_from_type(booltp.clone(), vm);
-        tp.internals = ObjectInternals::Bool(true);
+        tp.internals = ObjectInternals { bool: true };
         let ptr = &(*tup).1 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
     }
@@ -85,6 +71,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(bool_new),
+        del: Some(|_| {}),
 
         repr: Some(bool_repr),
         str: Some(bool_repr),

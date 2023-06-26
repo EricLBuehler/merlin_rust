@@ -354,12 +354,12 @@ impl<'a> Compiler<'a> {
                 maybe_handle_exception_pos!(self, int, expr.start, expr.end);
                 let mut idx = usize::MAX;
                 for (i, var) in self.consts.iter().enumerate() {
-                    if *(var.tp.eq.unwrap())(var.clone(), int.unwrap())
-                        .unwrap()
-                        .internals
-                        .get_bool()
-                        .expect("Expected bool internal value")
-                    {
+                    if unsafe {
+                        (var.tp.eq.unwrap())(var.clone(), int.unwrap())
+                            .unwrap()
+                            .internals
+                            .bool
+                    } {
                         idx = i;
                         break;
                     }
@@ -570,12 +570,12 @@ impl<'a> Compiler<'a> {
 
                 let mut idx = usize::MAX;
                 for (i, var) in self.consts.iter().enumerate() {
-                    if *(var.tp.eq.unwrap())(var.clone(), str.clone())
-                        .unwrap()
-                        .internals
-                        .get_bool()
-                        .expect("Expected bool internal value")
-                    {
+                    if unsafe {
+                        (var.tp.eq.unwrap())(var.clone(), str.clone())
+                            .unwrap()
+                            .internals
+                            .bool
+                    } {
                         idx = i;
                         break;
                     }

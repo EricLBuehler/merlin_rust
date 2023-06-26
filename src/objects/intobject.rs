@@ -4,7 +4,7 @@ use super::{
     Object, ObjectInternals, TypeObject,
 };
 
-use crate::{is_type_exact};
+use crate::is_type_exact;
 use crate::unwrap_fast;
 use crate::{
     interpreter::{INT_CACHE_OFFSET, INT_CACHE_SIZE, MAX_INT_CACHE, MIN_INT_CACHE, VM},
@@ -24,7 +24,7 @@ pub fn int_from(vm: Trc<VM<'_>>, raw: isize) -> Object<'_> {
         .clone();
     }
     let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm);
-    tp.internals = ObjectInternals::Int(raw);
+    tp.internals = ObjectInternals { int: raw };
     tp
 }
 pub fn int_from_str(vm: Trc<VM<'_>>, raw: String) -> MethodType<'_> {
@@ -48,19 +48,11 @@ fn int_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> Me
 fn int_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_int()
-            .expect("Expected int internal value")
-            .to_string(),
+        unsafe { selfv.internals.int }.to_string(),
     ))
 }
 fn int_abs(selfv: Object<'_>) -> MethodType<'_> {
-    let res = selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .checked_abs();
+    let res = unsafe { selfv.internals.int }.checked_abs();
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -80,23 +72,12 @@ fn int_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 
     MethodValue::Some(boolobject::bool_from(
         selfv.vm.clone(),
-        selfv
-            .internals
-            .get_int()
-            .expect("Expected int internal value")
-            == other
-                .internals
-                .get_int()
-                .expect("Expected int internal value"),
+        unsafe { selfv.internals.int } == unsafe { other.internals.int },
     ))
 }
 
 fn int_neg(selfv: Object<'_>) -> MethodType<'_> {
-    let res = selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .checked_neg();
+    let res = unsafe { selfv.internals.int }.checked_neg();
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -120,14 +101,9 @@ fn int_add<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let otherv = *unwrap_fast!(other
-        .internals
-        .get_int());
+    let otherv = unsafe { other.internals.int };
 
-    let res = unwrap_fast!(selfv
-        .internals
-        .get_int())
-        .checked_add(otherv);
+    let res = unsafe { selfv.internals.int }.checked_add(otherv);
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -151,16 +127,9 @@ fn int_sub<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let otherv = *other
-        .internals
-        .get_int()
-        .expect("Expected int internal value");
+    let otherv = unsafe { other.internals.int };
 
-    let res = selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .checked_sub(otherv);
+    let res = unsafe { selfv.internals.int }.checked_sub(otherv);
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -184,16 +153,9 @@ fn int_mul<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let otherv = *other
-        .internals
-        .get_int()
-        .expect("Expected int internal value");
+    let otherv = unsafe { other.internals.int };
 
-    let res = selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .checked_mul(otherv);
+    let res = unsafe { selfv.internals.int }.checked_mul(otherv);
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -217,10 +179,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let otherv = *other
-        .internals
-        .get_int()
-        .expect("Expected int internal value");
+    let otherv = unsafe { other.internals.int };
     if otherv == 0 {
         let exc = zerodivexc_from_str(
             selfv.vm.clone(),
@@ -231,11 +190,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let res = selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .checked_div(otherv);
+    let res = unsafe { selfv.internals.int }.checked_div(otherv);
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -259,10 +214,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let otherv = *other
-        .internals
-        .get_int()
-        .expect("Expected int internal value");
+    let otherv = unsafe { other.internals.int };
 
     if otherv >= std::u32::MAX as isize {
         let exc = overflowexc_from_str(
@@ -274,11 +226,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
 
-    let res = selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .checked_pow(otherv as u32);
+    let res = unsafe { selfv.internals.int }.checked_pow(otherv as u32);
     if res.is_none() {
         let exc = overflowexc_from_str(
             selfv.vm.clone(),
@@ -293,11 +241,7 @@ fn int_pow<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
 }
 fn int_hash(selfv: Object<'_>) -> MethodType<'_> {
     let mut hasher = DefaultHasher::new();
-    selfv
-        .internals
-        .get_int()
-        .expect("Expected int internal value")
-        .hash(&mut hasher);
+    unsafe { selfv.internals.int }.hash(&mut hasher);
     return MethodValue::Some(int_from(selfv.vm.clone(), hasher.finish() as isize));
 }
 
@@ -323,7 +267,7 @@ pub fn generate_cache<'a>(
         let mut i = MIN_INT_CACHE;
         for item in &mut (*arr)[..] {
             let mut tp = create_object_from_type(int.clone(), vm.clone());
-            tp.internals = ObjectInternals::Int(i);
+            tp.internals = ObjectInternals { int: i };
             std::ptr::write(item, Some(tp));
             i += 1;
         }
@@ -339,6 +283,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typeid: vm.types.n_types,
 
         new: Some(int_new),
+        del: Some(|_| {}),
 
         repr: Some(int_repr),
         str: Some(int_repr),

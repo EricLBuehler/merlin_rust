@@ -1,6 +1,6 @@
 use super::{
     boolobject, finalize_type, finalize_type_dict, intobject, stringobject, MethodType,
-    MethodValue, Object, TypeObject,
+    MethodValue, Object, RawObject, TypeObject,
 };
 use crate::interpreter::VM;
 use trc::Trc;
@@ -11,7 +11,7 @@ fn object_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 fn object_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        "object".to_string(),
+        format!("<'{}' object @ {:x}>", &selfv.tp.typename, Trc::as_ptr(&selfv) as usize),
     ))
 }
 fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -53,6 +53,8 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: Some(|selfv, attr| RawObject::generic_getattr(selfv, attr)),
+        setattr: None,
         descrget: None,
         descrset: None,
     });

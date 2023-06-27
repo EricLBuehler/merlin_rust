@@ -142,6 +142,7 @@ impl<'a> Parser<'a> {
             TokenType::Plus | TokenType::Hyphen => Precedence::Sum,
             TokenType::Asterisk | TokenType::Slash => Precedence::Product,
             TokenType::Period => Precedence::Attr,
+            TokenType::LParen => Precedence::Call,
             _ => Precedence::Lowest,
         }
     }
@@ -432,12 +433,12 @@ impl<'a> Parser<'a> {
         while !self.current_is_type(TokenType::RSquare) && !self.current_is_type(TokenType::Eof) {
             values.push(self.expr(Precedence::Lowest));
             if self.current_is_type(TokenType::RSquare) {
-                self.advance();
                 break;
             }
             self.expect(TokenType::Comma);
             self.advance();
         }
+        
         let end = Position::create_from_parts(
             self.current.startcol,
             self.current.endcol,
@@ -468,7 +469,6 @@ impl<'a> Parser<'a> {
             values.push((key, value));
 
             if self.current_is_type(TokenType::RCurly) {
-                self.advance();
                 break;
             }
             self.expect(TokenType::Comma);
@@ -521,7 +521,6 @@ impl<'a> Parser<'a> {
 
     fn generate_call(&mut self, left: Node) -> Node {
         self.advance();
-        self.advance();
 
         let mut args = Vec::new();
         while !self.current_is_type(TokenType::RParen) && !self.current_is_type(TokenType::Eof) {
@@ -531,6 +530,9 @@ impl<'a> Parser<'a> {
                 break;
             }
             self.expect(TokenType::Comma);
+            self.advance();
+        }
+        if self.current_is_type(TokenType::RParen) {
             self.advance();
         }
 

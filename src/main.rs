@@ -85,7 +85,7 @@ fn run_data(file_data: String, name: String, time: Option<i32>) {
             println!(
                 "{} = 0x{:x}",
                 objects::RawObject::object_repr(c),
-                Trc::as_ptr(c) as u64
+                Trc::as_ptr(c) as usize
             );
         }
         println!("===== Done with compiler =====");

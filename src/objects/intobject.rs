@@ -18,7 +18,7 @@ use std::hash::{Hash, Hasher};
 
 #[inline]
 pub fn int_from(vm: Trc<VM<'_>>, raw: isize) -> Object<'_> {
-    if raw >= MIN_INT_CACHE || raw <= MAX_INT_CACHE {
+    if raw >= MIN_INT_CACHE && raw <= MAX_INT_CACHE {
         return unwrap_fast! {vm.cache.int_cache[(raw + INT_CACHE_OFFSET) as usize]
         .as_ref()}
         .clone();
@@ -305,6 +305,8 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });

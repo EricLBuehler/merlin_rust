@@ -4,6 +4,8 @@ use std::ops::Deref;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position, unwrap_fast};
 use trc::Trc;
 
+use self::exceptionobject::attrexc_from_str;
+
 pub mod mhash;
 
 pub mod intobject;
@@ -12,7 +14,7 @@ pub mod typeobject;
 #[macro_use]
 pub mod noneobject;
 pub mod boolobject;
-pub mod classobject;
+pub mod classtype;
 pub mod codeobject;
 pub mod dictobject;
 pub mod exceptionobject;
@@ -86,7 +88,9 @@ pub struct TypeObject<'a> {
     //interaction
     pub call: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args
 
-    //descriptor
+    //attributes
+    pub getattr: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, attr
+    pub setattr: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, attr
     pub descrget: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self (the object), instance (None if the type of instance is not the owner, that is - the owner is the i), owner (the owning type)
     pub descrset: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, instance
 }
@@ -198,6 +202,53 @@ impl<'a> RawObject<'a> {
 
         MethodValue::Some(unsafe { &unwrap_fast!(strv).internals.str }.to_string())
     }
+
+    #[inline]
+    fn generic_getattr(selfv: Object<'a>, attr: Object<'a>) -> MethodType<'a> {
+        if selfv.dict.is_none() {
+            let repr = RawObject::object_str_safe(attr);
+            if repr.is_error() {
+                return MethodValue::Error(repr.unwrap_err());
+            }
+            return MethodValue::Error(attrexc_from_str(
+                selfv.vm.clone(),
+                &format!(
+                    "Object of type '{}' has no attribute '{}'",
+                    selfv.tp.typename,
+                    repr.unwrap(),
+                ),
+                Position::default(),
+                Position::default(),
+            ));
+        } else {
+            let res = selfv.dict.as_ref().unwrap().clone().tp.get.unwrap()(
+                selfv.dict.as_ref().unwrap().clone(),
+                attr.clone(),
+            );
+            if res.is_error()
+                && is_type_exact!(
+                    res.unwrap_err(),
+                    selfv.vm.types.keyntfndexctp.as_ref().unwrap()
+                )
+            {
+                let repr = RawObject::object_str_safe(attr);
+                if repr.is_error() {
+                    return MethodValue::Error(repr.unwrap_err());
+                }
+                return MethodValue::Error(attrexc_from_str(
+                    selfv.vm.clone(),
+                    &format!(
+                        "Object of type '{}' has no attribute '{}'",
+                        selfv.tp.typename,
+                        repr.unwrap(),
+                    ),
+                    Position::default(),
+                    Position::default(),
+                ));
+            }
+            return res;
+        }
+    }
 }
 
 pub type Object<'a> = Trc<RawObject<'a>>;
@@ -308,10 +359,10 @@ fn create_object_from_type<'a>(
 }
 
 #[inline]
-fn create_object_from_typeobject<'a>(tp: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>) -> Object<'a> {
+fn create_object_from_typeobject<'a>(typobj: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>, tp: Trc<TypeObject<'a>>) -> Object<'a> {
     let raw = RawObject {
         vm: vm.clone(),
-        tp: tp.clone(),
+        tp: typobj.clone(),
         dict: tp.dict.clone(),
         internals: ObjectInternals {
             typ: ManuallyDrop::new((*tp).clone()),
@@ -321,22 +372,101 @@ fn create_object_from_typeobject<'a>(tp: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>) -
 }
 
 fn inherit_slots<'a>(mut tp: Trc<TypeObject<'a>>, basetp: TypeObject<'a>) {
-    tp.new = basetp.new;
+    tp.new = if basetp.new.is_some() {
+        basetp.new
+    } else {
+        tp.new
+    };
 
-    tp.repr = basetp.repr;
-    tp.abs = basetp.abs;
-    tp.neg = basetp.neg;
+    tp.repr = if basetp.repr.is_some() {
+        basetp.repr
+    } else {
+        tp.repr
+    };
+    tp.abs = if basetp.abs.is_some() {
+        basetp.abs
+    } else {
+        tp.abs
+    };
+    tp.neg = if basetp.neg.is_some() {
+        basetp.neg
+    } else {
+        tp.neg
+    };
 
-    tp.eq = basetp.eq;
-    tp.add = basetp.add;
-    tp.sub = basetp.sub;
-    tp.mul = basetp.mul;
-    tp.div = basetp.div;
-    tp.pow = basetp.pow;
+    tp.eq = if basetp.eq.is_some() {
+        basetp.eq
+    } else {
+        tp.eq
+    };
+    tp.add = if basetp.add.is_some() {
+        basetp.add
+    } else {
+        tp.add
+    };
+    tp.sub = if basetp.sub.is_some() {
+        basetp.sub
+    } else {
+        tp.sub
+    };
+    tp.mul = if basetp.mul.is_some() {
+        basetp.mul
+    } else {
+        tp.mul
+    };
+    tp.div = if basetp.div.is_some() {
+        basetp.div
+    } else {
+        tp.div
+    };
+    tp.pow = if basetp.pow.is_some() {
+        basetp.pow
+    } else {
+        tp.pow
+    };
 
-    tp.get = basetp.get;
-    tp.set = basetp.set;
-    tp.len = basetp.len;
+    tp.get = if basetp.get.is_some() {
+        basetp.get
+    } else {
+        tp.get
+    };
+    tp.set = if basetp.set.is_some() {
+        basetp.set
+    } else {
+        tp.set
+    };
+    tp.len = if basetp.len.is_some() {
+        basetp.len
+    } else {
+        tp.len
+    };
+
+    tp.call = if basetp.call.is_some() {
+        basetp.call
+    } else {
+        tp.call
+    };
+
+    tp.getattr = if basetp.getattr.is_some() {
+        basetp.getattr
+    } else {
+        tp.getattr
+    };
+    tp.setattr = if basetp.setattr.is_some() {
+        basetp.setattr
+    } else {
+        tp.setattr
+    };
+    tp.descrget = if basetp.descrget.is_some() {
+        basetp.descrget
+    } else {
+        tp.descrget
+    };
+    tp.descrset = if basetp.descrset.is_some() {
+        basetp.descrset
+    } else {
+        tp.descrset
+    };
 }
 
 fn finalize_type_dict(_tp: Trc<TypeObject<'_>>) {
@@ -372,6 +502,7 @@ pub fn init_types(vm: Trc<VM<'_>>) {
     exceptionobject::init_keynotfoundexc(vm.clone());
     exceptionobject::init_valueexc(vm.clone());
     exceptionobject::init_zerodivexc(vm.clone());
+    exceptionobject::init_attrexc(vm.clone());
 }
 
 macro_rules! maybe_handle_exception {

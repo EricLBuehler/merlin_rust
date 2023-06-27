@@ -104,6 +104,8 @@ pub enum CompilerInstruction<'a> {
     AttrLoad {
         left: CompilerRegister,
         attridx: CompilerRegister,
+        result: CompilerRegister,
+        i: usize,
     },
 }
 
@@ -1039,6 +1041,8 @@ impl<'a> Compiler<'a> {
                 self.instructions.push(CompilerInstruction::AttrLoad {
                     left: ctx.left.unwrap(),
                     attridx: CompilerRegister::C(idx),
+                    result: ctx.value,
+                    i: self.instructions.len(),
                 });
                 self.positions.push((expr.start, expr.end));
             }

@@ -81,16 +81,6 @@ fn dict_str(selfv: Object<'_>) -> MethodType<'_> {
 }
 
 fn dict_get<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
-    if !is_type_exact!(&selfv, other.tp) {
-        let exc = typemismatchexc_from_str(
-            selfv.vm.clone(),
-            "Types do not match",
-            Position::default(),
-            Position::default(),
-        );
-        return MethodValue::Error(exc);
-    }
-
     //NEGATIVE INDEX IS CONVERTED TO +
     let out = unsafe { &selfv.internals.map }.get(other);
 
@@ -233,6 +223,8 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });

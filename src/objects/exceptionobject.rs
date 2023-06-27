@@ -19,7 +19,10 @@ fn exc_repr(selfv: Object<'_>) -> MethodType<'_> {
     ))
 }
 fn exc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -59,6 +62,8 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -128,7 +133,10 @@ fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -169,6 +177,8 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -243,7 +253,10 @@ fn overflowexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -284,6 +297,8 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -358,7 +373,10 @@ fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -399,6 +417,8 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -473,7 +493,10 @@ fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -514,6 +537,8 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -588,7 +613,10 @@ fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -629,6 +657,8 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -699,7 +729,10 @@ fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -740,6 +773,8 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -814,7 +849,10 @@ fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
 }
 fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {
-    MethodValue::Some(intobject::int_from(selfv.vm.clone(), -2))
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
 }
 fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     MethodValue::Some(boolobject::bool_from(
@@ -855,11 +893,129 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });
 
     vm.types.divzeroexctp = Some(tp.clone());
+    vm.types.n_types += 1;
+
+    finalize_type(tp);
+}
+
+// =====================
+
+#[allow(dead_code)]
+pub fn attrexc_from_obj<'a>(
+    vm: Trc<VM<'a>>,
+    obj: Object<'a>,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let mut tp = create_object_from_type(
+        unwrap_fast!(vm.types.attrexctp.as_ref()).clone(),
+        vm.clone(),
+        None,
+    );
+    tp.internals = ObjectInternals {
+        exc: ManuallyDrop::new(ExcData { obj, start, end }),
+    };
+
+    tp
+}
+pub fn attrexc_from_str<'a>(
+    vm: Trc<VM<'a>>,
+    raw: &str,
+    start: Position,
+    end: Position,
+) -> Object<'a> {
+    let mut tp = create_object_from_type(
+        unwrap_fast!(vm.types.attrexctp.as_ref()).clone(),
+        vm.clone(),
+        None,
+    );
+
+    tp.internals = ObjectInternals {
+        exc: ManuallyDrop::new(ExcData {
+            obj: stringobject::string_from(vm.clone(), raw.to_string()),
+            start,
+            end,
+        }),
+    };
+    tp
+}
+
+fn attrexc_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
+    unimplemented!();
+}
+fn attrexc_repr(selfv: Object<'_>) -> MethodType<'_> {
+    let repr = RawObject::object_str_safe(unsafe { &selfv.internals.exc }.obj.clone());
+
+    if repr.is_error() {
+        return MethodValue::Error(repr.unwrap_err());
+    }
+    MethodValue::Some(stringobject::string_from(
+        selfv.vm.clone(),
+        format!("AttributeExc: \"{}\"", unwrap_fast!(repr)),
+    ))
+}
+fn attrexc_str(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(unsafe { &selfv.internals.exc }.obj.clone())
+}
+fn attrexc_hash(selfv: Object<'_>) -> MethodType<'_> {
+    MethodValue::Some(intobject::int_from(
+        selfv.vm.clone(),
+        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+    ))
+}
+fn attrexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
+    MethodValue::Some(boolobject::bool_from(
+        selfv.vm.clone(),
+        is_type_exact!(&selfv, other.tp),
+    ))
+}
+
+pub fn init_attrexc(mut vm: Trc<VM<'_>>) {
+    let tp = Trc::new(TypeObject {
+        typename: String::from("AttributeExc"),
+        bases: vec![
+            super::ObjectBase::Other(unwrap_fast!(vm.types.exctp.as_ref()).clone()),
+            super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
+        ],
+        typeid: vm.types.n_types,
+        dict: None,
+
+        new: Some(attrexc_new),
+        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
+
+        repr: Some(attrexc_repr),
+        str: Some(attrexc_str),
+        abs: None,
+        neg: None,
+        hash_fn: Some(attrexc_hash),
+
+        eq: Some(attrexc_eq),
+        add: None,
+        sub: None,
+        mul: None,
+        div: None,
+        pow: None,
+
+        get: None,
+        set: None,
+        len: None,
+
+        call: None,
+
+        getattr: None,
+        setattr: None,
+        descrget: None,
+        descrset: None,
+    });
+
+    vm.types.attrexctp = Some(tp.clone());
     vm.types.n_types += 1;
 
     finalize_type(tp);

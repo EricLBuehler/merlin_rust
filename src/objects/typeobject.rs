@@ -58,6 +58,8 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });

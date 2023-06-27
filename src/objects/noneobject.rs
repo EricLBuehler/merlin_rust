@@ -75,6 +75,8 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });

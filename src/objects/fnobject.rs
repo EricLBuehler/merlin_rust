@@ -63,7 +63,6 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         );
         return MethodValue::Error(exc);
     }
-
     if unsafe { &args.internals.arr }.len() != unsafe { &selfv.internals.fun }.args.len() {
         let exc = valueexc_from_str(
             selfv.vm.clone(),
@@ -116,6 +115,8 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         call: Some(fn_call),
 
+        getattr: None,
+        setattr: None,
         descrget: None,
         descrset: None,
     });

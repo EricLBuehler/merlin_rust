@@ -1,13 +1,12 @@
 #![allow(unused_unsafe)]
-use std::mem::ManuallyDrop;
-
 use trc::Trc;
 
 use crate::{interpreter::VM, parser::Position, unwrap_fast};
 
 use super::{
     create_object_from_typeobject, exceptionobject::methodnotdefinedexc_from_str, finalize_type,
-    listobject, stringobject, MethodType, MethodValue, Object, ObjectInternals, TypeObject,
+    listobject, stringobject, MethodType, MethodValue, Object, RawObject,
+    TypeObject,
 };
 
 //unary
@@ -466,7 +465,7 @@ fn class_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
             ));
         }
         let mut selfv_vec = vec![selfv.clone()];
-        selfv_vec.extend(unsafe { &args.internals.arr }.iter().map(|arg| arg.clone()));
+        selfv_vec.extend(unsafe { &args.internals.arr }.iter().cloned());
         let args = listobject::list_from(selfv.vm.clone(), selfv_vec);
         return (unwrap_fast!(call_fn))(unwrap_fast!(call), args);
     }
@@ -481,6 +480,32 @@ fn class_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
     ))
 }
 
+//attribute
+fn class_getattr<'a>(selfv: Object<'a>, attr: Object<'a>) -> MethodType<'a> {
+    let getattr = unsafe { &unwrap_fast!(selfv.tp.dict.as_ref()).internals.map }.get(
+        stringobject::string_from(selfv.vm.clone(), "getattr".to_string()),
+    );
+    if getattr.is_some() {
+        let call_fn = unwrap_fast!(getattr).tp.call;
+        if call_fn.is_none() {
+            return MethodValue::Error(methodnotdefinedexc_from_str(
+                selfv.vm.clone(),
+                &format!(
+                    "Method 'call' is not defined for '{}' type",
+                    unwrap_fast!(getattr).tp.typename
+                ),
+                Position::default(),
+                Position::default(),
+            ));
+        }
+        let selfv_vec = vec![selfv.clone(), attr];
+        let args = listobject::list_from(selfv.vm.clone(), selfv_vec);
+        return (unwrap_fast!(call_fn))(unwrap_fast!(getattr), args);
+    }
+
+    RawObject::generic_getattr(selfv, attr)
+}
+
 pub fn create_class<'a>(mut vm: Trc<VM<'a>>, name: String, dict: Object<'a>) -> Object<'a> {
     let tp = Trc::new(TypeObject {
         typename: name,
@@ -488,30 +513,176 @@ pub fn create_class<'a>(mut vm: Trc<VM<'a>>, name: String, dict: Object<'a>) -> 
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
-        dict: Some(dict),
+        dict: Some(dict.clone()),
 
         new: None,
         del: Some(|_| {}),
 
-        repr: Some(class_repr),
-        str: Some(class_str),
-        abs: Some(class_abs),
-        neg: Some(class_neg),
-        hash_fn: Some(class_hash),
+        repr: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("repr")),
+        )
+        .is_some()
+        {
+            Some(class_repr)
+        } else {
+            None
+        },
+        str: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("str")),
+        )
+        .is_some()
+        {
+            Some(class_str)
+        } else {
+            None
+        },
+        abs: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("abs")),
+        )
+        .is_some()
+        {
+            Some(class_abs)
+        } else {
+            None
+        },
+        neg: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("neg")),
+        )
+        .is_some()
+        {
+            Some(class_neg)
+        } else {
+            None
+        },
+        hash_fn: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("hash")),
+        )
+        .is_some()
+        {
+            Some(class_hash)
+        } else {
+            None
+        },
 
-        eq: Some(class_eq),
-        add: Some(class_add),
-        sub: Some(class_sub),
-        mul: Some(class_mul),
-        div: Some(class_div),
-        pow: Some(class_pow),
+        eq: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("eq")),
+        )
+        .is_some()
+        {
+            Some(class_eq)
+        } else {
+            None
+        },
+        add: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("add")),
+        )
+        .is_some()
+        {
+            Some(class_add)
+        } else {
+            None
+        },
+        sub: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("sub")),
+        )
+        .is_some()
+        {
+            Some(class_sub)
+        } else {
+            None
+        },
+        mul: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("mul")),
+        )
+        .is_some()
+        {
+            Some(class_mul)
+        } else {
+            None
+        },
+        div: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("div")),
+        )
+        .is_some()
+        {
+            Some(class_div)
+        } else {
+            None
+        },
+        pow: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("pow")),
+        )
+        .is_some()
+        {
+            Some(class_pow)
+        } else {
+            None
+        },
 
-        get: Some(class_get),
-        set: Some(class_set),
-        len: Some(class_len),
+        get: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("get")),
+        )
+        .is_some()
+        {
+            Some(class_get)
+        } else {
+            None
+        },
+        set: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("set")),
+        )
+        .is_some()
+        {
+            Some(class_set)
+        } else {
+            None
+        },
+        len: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("len")),
+        )
+        .is_some()
+        {
+            Some(class_len)
+        } else {
+            None
+        },
 
-        call: Some(class_call),
+        call: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("call")),
+        )
+        .is_some()
+        {
+            Some(class_call)
+        } else {
+            None
+        },
 
+        getattr: if dict.tp.get.unwrap()(
+            dict.clone(),
+            stringobject::string_from(vm.clone(), String::from("getattr")),
+        )
+        .is_some()
+        {
+            Some(class_getattr)
+        } else {
+            None
+        },
+        setattr: None,
         descrget: None,
         descrset: None,
     });
@@ -520,9 +691,5 @@ pub fn create_class<'a>(mut vm: Trc<VM<'a>>, name: String, dict: Object<'a>) -> 
 
     finalize_type(tp.clone());
 
-    let mut typobj = create_object_from_typeobject(vm.types.typetp.clone().unwrap(), vm);
-    typobj.internals = ObjectInternals {
-        typ: ManuallyDrop::new((*tp).clone()),
-    };
-    typobj
+    create_object_from_typeobject(vm.types.typetp.as_ref().unwrap().clone(), vm, tp)
 }

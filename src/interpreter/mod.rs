@@ -2,7 +2,7 @@
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
 use crate::objects::{
-    classobject, dictobject, mhash, noneobject, stringobject, RawObject, TypeObject,
+    classtype, dictobject, mhash, noneobject, stringobject, RawObject, TypeObject,
 };
 use crate::parser::Position;
 use crate::{
@@ -58,6 +58,8 @@ pub struct Types<'a> {
     pub nonetp: Option<Trc<TypeObject<'a>>>,
     pub strtp: Option<Trc<TypeObject<'a>>>,
     pub classtp: Option<Trc<TypeObject<'a>>>,
+    pub attrexctp: Option<Trc<TypeObject<'a>>>,
+
     pub n_types: u32,
 }
 
@@ -149,6 +151,7 @@ impl<'a> VM<'a> {
                 nonetp: None,
                 strtp: None,
                 classtp: None,
+                attrexctp: None,
                 n_types: 0,
             }),
             interpreters: Vec::new(),
@@ -572,7 +575,36 @@ impl<'a> Interpreter<'a> {
                         load_register!(self, last, last_vars, bytecode, *i, *from)
                     );
                 }
-                CompilerInstruction::AttrLoad { left, attridx } => {}
+                CompilerInstruction::AttrLoad {
+                    left,
+                    attridx,
+                    result,
+                    i,
+                } => {
+                    let attr = load_register!(self, last, last_vars, bytecode, *i, *attridx);
+                    let selfv = load_register!(self, last, last_vars, bytecode, *i, *left);
+
+                    if selfv.tp.getattr.is_none() {
+                        let pos = bytecode
+                            .positions
+                            .get(*i)
+                            .expect("Instruction out of range");
+                        let exc = methodnotdefinedexc_from_str(
+                            self.vm.clone(),
+                            &format!(
+                                "Method 'getattr' is not defined for '{}' type",
+                                selfv.tp.typename
+                            ),
+                            pos.0,
+                            pos.1,
+                        );
+                        self.raise_exc(exc);
+                    }
+
+                    let res = unwrap_fast!(selfv.tp.getattr)(selfv, attr);
+                    maybe_handle_exception!(self, res, bytecode, *i);
+                    store_register!(last, last_vars, *result, unwrap_fast!(res));
+                }
 
                 //Functions, arguments
                 CompilerInstruction::MakeFunction {
@@ -712,11 +744,9 @@ impl<'a> Interpreter<'a> {
                     }
 
                     let method_dict = dictobject::dict_from(self.vm.clone(), method_map);
-                    println!("{}", RawObject::object_repr(&method_dict));
-
+                    
                     let new_class =
-                        classobject::create_class(self.vm.clone(), name.clone(), method_dict);
-                    println!("{}", RawObject::object_repr(&new_class));
+                        classtype::create_class(self.vm.clone(), name.clone(), method_dict);
 
                     store_register!(last, last_vars, *out, new_class);
                 }

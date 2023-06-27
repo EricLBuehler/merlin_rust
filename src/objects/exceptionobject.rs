@@ -58,6 +58,9 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.exctp = Some(tp.clone());
@@ -165,6 +168,9 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.nameexctp = Some(tp.clone());
@@ -277,6 +283,9 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.overflwexctp = Some(tp.clone());
@@ -389,6 +398,9 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.mthntfndexctp = Some(tp.clone());
@@ -501,6 +513,9 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.tpmisexctp = Some(tp.clone());
@@ -613,6 +628,9 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.keyntfndexctp = Some(tp.clone());
@@ -721,6 +739,9 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.valueexctp = Some(tp.clone());
@@ -833,6 +854,9 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.divzeroexctp = Some(tp.clone());

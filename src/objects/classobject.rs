@@ -511,6 +511,9 @@ pub fn create_class<'a>(mut vm: Trc<VM<'a>>, name: String, dict: Object<'a>) -> 
         len: Some(class_len),
 
         call: Some(class_call),
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.n_types += 1;

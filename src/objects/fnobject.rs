@@ -115,6 +115,9 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: Some(fn_call),
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.fntp = Some(tp.clone());

@@ -232,6 +232,9 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         len: Some(dict_len),
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.dicttp = Some(tp.clone());

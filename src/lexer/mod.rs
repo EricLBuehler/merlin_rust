@@ -22,6 +22,7 @@ pub enum TokenType {
     LSquare,
     RSquare,
     Colon,
+    Period,
 }
 
 impl std::fmt::Display for TokenType {
@@ -47,6 +48,7 @@ impl std::fmt::Display for TokenType {
             Self::LSquare => write!(f, "l-square"),
             Self::RSquare => write!(f, "r-square"),
             Self::Colon => write!(f, "colon"),
+            Self::Period => write!(f, "period"),
         }
     }
 }
@@ -114,6 +116,8 @@ impl<'a> Iterator for Lexer<'a> {
             Some(add_char_token(self, cur, TokenType::RSquare))
         } else if cur == ':' {
             Some(add_char_token(self, cur, TokenType::Colon))
+        } else if cur == '.' {
+            Some(add_char_token(self, cur, TokenType::Period))
         } else if cur == '\0' {
             if self.len == 0 {
                 self.len = 1;
@@ -233,16 +237,11 @@ fn make_identifier(lexer: &mut Lexer) -> Token {
 
     let mut end = lexer.col;
     let mut line = lexer.line;
-
     while (lexer.current as char).is_alphanumeric() || lexer.current == b'_' {
         data.push(lexer.current as char);
         end = lexer.col;
         line = lexer.line;
         advance(lexer);
-        if lexer.current == b'.' {
-            data.push(lexer.current as char);
-            advance(lexer);
-        }
     }
 
     if lexer.kwds.contains(&data) {

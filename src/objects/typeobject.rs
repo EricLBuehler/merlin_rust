@@ -57,6 +57,9 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.typetp = Some(tp.clone());

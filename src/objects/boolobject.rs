@@ -93,6 +93,9 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         len: None,
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.booltp = Some(tp.clone());

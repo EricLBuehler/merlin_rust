@@ -204,6 +204,9 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         len: Some(list_len),
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.listtp = Some(tp.clone());

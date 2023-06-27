@@ -34,6 +34,7 @@ pub enum NodeType {
     List,
     Dict,
     Class,
+    AttrLoad,
 }
 
 #[derive(Debug)]
@@ -272,6 +273,23 @@ impl NodeData for ClassNode {
         let mut value = NodeValue::new();
         value.raw.insert(String::from("name"), self.name.clone());
         value.nodearr = Some(&self.methods);
+
+        value
+    }
+}
+
+// ========================
+
+pub struct AttrLoadNode {
+    pub left: Node,
+    pub attr: String,
+}
+
+impl NodeData for AttrLoadNode {
+    fn get_data(&self) -> NodeValue {
+        let mut value = NodeValue::new();
+        value.raw.insert(String::from("attr"), self.attr.clone());
+        value.nodes.insert(String::from("left"), &self.left);
 
         value
     }

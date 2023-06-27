@@ -148,6 +148,9 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         len: Some(string_len),
 
         call: None,
+
+        descrget: None,
+        descrset: None,
     });
 
     vm.types.strtp = Some(tp.clone());

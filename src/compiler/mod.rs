@@ -101,6 +101,10 @@ pub enum CompilerInstruction<'a> {
         out: CompilerRegister,
         bytecode: Trc<Bytecode<'a>>,
     },
+    AttrLoad {
+        left: CompilerRegister,
+        attridx: CompilerRegister,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -201,7 +205,8 @@ impl<'a> Compiler<'a> {
             | NodeType::Unary
             | NodeType::String
             | NodeType::List
-            | NodeType::Dict => {
+            | NodeType::Dict
+            | NodeType::AttrLoad => {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
@@ -721,6 +726,28 @@ impl<'a> Compiler<'a> {
                     registers: 0,
                 }
             }
+            NodeType::AttrLoad => {
+                let old = self.register_index;
+
+                let left = self.compile_expr_values(
+                    expr.data
+                        .get_data()
+                        .nodes
+                        .get("left")
+                        .expect("Node.nodes.left not found"),
+                );
+
+                RegisterContext {
+                    value: CompilerRegister::R(old.try_into().unwrap()),
+                    left: Some(left.value),
+                    leftctx: Some(Box::new(left)),
+                    right: None,
+                    rightctx: None,
+                    args: None,
+                    mapping: None,
+                    registers: 0,
+                }
+            }
             NodeType::Class | NodeType::Function => {
                 unreachable!()
             }
@@ -972,6 +999,48 @@ impl<'a> Compiler<'a> {
                     &expr.start,
                     self.info,
                 );
+            }
+            NodeType::AttrLoad => {
+                self.compile_expr_operation(
+                    expr.data
+                        .get_data()
+                        .nodes
+                        .get("left")
+                        .expect("Node.nodes.left not found"),
+                    *ctx.leftctx.unwrap(),
+                );
+
+                let attr = stringobject::string_from(
+                    self.vm.clone(),
+                    expr.data
+                        .get_data()
+                        .raw
+                        .get("attr")
+                        .expect("Node.raw.attr not found")
+                        .to_string(),
+                );
+                let mut idx = usize::MAX;
+                for (i, var) in self.consts.iter().enumerate() {
+                    if unsafe {
+                        (var.tp.eq.unwrap())(var.clone(), attr.clone())
+                            .unwrap()
+                            .internals
+                            .bool
+                    } {
+                        idx = i;
+                        break;
+                    }
+                }
+                if idx == usize::MAX {
+                    self.consts.push(attr);
+                    idx = self.consts.len() - 1;
+                }
+
+                self.instructions.push(CompilerInstruction::AttrLoad {
+                    left: ctx.left.unwrap(),
+                    attridx: CompilerRegister::C(idx),
+                });
+                self.positions.push((expr.start, expr.end));
             }
         }
 

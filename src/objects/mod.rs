@@ -85,6 +85,10 @@ pub struct TypeObject<'a> {
 
     //interaction
     pub call: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args
+
+    //descriptor
+    pub descrget: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self (the object), instance (None if the type of instance is not the owner, that is - the owner is the i), owner (the owning type)
+    pub descrset: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, instance
 }
 
 impl<'a> Eq for RawObject<'a> {}

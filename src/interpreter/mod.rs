@@ -572,6 +572,7 @@ impl<'a> Interpreter<'a> {
                         load_register!(self, last, last_vars, bytecode, *i, *from)
                     );
                 }
+                CompilerInstruction::AttrLoad { left, attridx } => {}
 
                 //Functions, arguments
                 CompilerInstruction::MakeFunction {

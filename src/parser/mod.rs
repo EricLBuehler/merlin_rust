@@ -141,6 +141,7 @@ impl<'a> Parser<'a> {
         match self.current.tp {
             TokenType::Plus | TokenType::Hyphen => Precedence::Sum,
             TokenType::Asterisk | TokenType::Slash => Precedence::Product,
+            TokenType::Period => Precedence::Attr,
             _ => Precedence::Lowest,
         }
     }
@@ -287,6 +288,9 @@ impl<'a> Parser<'a> {
                 }
                 TokenType::LParen => {
                     left = self.generate_call(left);
+                }
+                TokenType::Period => {
+                    left = self.generate_attr(left);
                 }
                 _ => {
                     return left;
@@ -542,7 +546,26 @@ impl<'a> Parser<'a> {
         )
     }
 
-    // ============ Expr ==============
+    fn generate_attr(&mut self, left: Node) -> Node {
+        self.advance();
+
+        self.expect(TokenType::Identifier);
+        let attr = self.current.data.clone();
+        self.advance();
+
+        nodes::Node::new(
+            left.start,
+            Position::create_from_parts(
+                self.current.startcol,
+                self.current.endcol,
+                self.current.line,
+            ),
+            nodes::NodeType::AttrLoad,
+            Box::new(nodes::AttrLoadNode { left, attr }),
+        )
+    }
+
+    // ============ Keyword ==============
 
     fn parse_fn(&mut self) -> Node {
         let starttok = self.current.clone();

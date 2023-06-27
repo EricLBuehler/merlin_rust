@@ -1,7 +1,10 @@
 use std::mem::ManuallyDrop;
 
 use super::exceptionobject::valueexc_from_str;
-use super::{create_object_from_type, finalize_type, MethodType, MethodValue, Object, TypeObject};
+use super::{
+    create_object_from_type, finalize_type, finalize_type_dict, MethodType, MethodValue, Object,
+    TypeObject,
+};
 
 use crate::is_type_exact;
 use crate::objects::exceptionobject::typemismatchexc_from_str;
@@ -11,24 +14,17 @@ use crate::{
     interpreter::VM,
     objects::{boolobject, stringobject, ObjectInternals},
 };
-use itertools::izip;
 use trc::Trc;
 
 pub fn fn_from<'a>(
     vm: Trc<VM<'a>>,
     code: Object<'a>,
     args: Vec<Object<'a>>,
-    indices: Vec<Object<'a>>,
     name: String,
 ) -> Object<'a> {
-    let mut tp = create_object_from_type(unwrap_fast!(vm.types.fntp.as_ref()).clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.fntp.as_ref()).clone(), vm, None);
     tp.internals = ObjectInternals {
-        fun: ManuallyDrop::new(super::FnData {
-            code,
-            args,
-            name,
-            indices,
-        }),
+        fun: ManuallyDrop::new(super::FnData { code, args, name }),
     };
     tp
 }
@@ -82,11 +78,8 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         return MethodValue::Error(exc);
     }
     let mut map = hashbrown::HashMap::new();
-    for (value, index) in izip!(
-        unsafe { &args.internals.arr }.iter(),
-        unsafe { &selfv.internals.fun }.indices.iter(),
-    ) {
-        map.insert(unsafe { &index.internals.int }, value.clone());
+    for (value, index) in unsafe { &args.internals.arr }.iter().enumerate() {
+        map.insert(value as isize, index.clone());
     }
 
     let code = &unsafe { &selfv.internals.fun.code.internals.code };
@@ -100,6 +93,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(fn_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.fun) }),
@@ -126,5 +120,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.fntp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

@@ -192,7 +192,7 @@ impl<'a> Parser<'a> {
     pub fn generate_ast(&mut self) -> Vec<Node> {
         self.block(None)
     }
-    
+
     #[allow(clippy::type_complexity)]
     fn block(&mut self, allowed: Option<(&dyn Fn(&Token) -> bool, Vec<&str>)>) -> Vec<Node> {
         let mut nodes = Vec::new();
@@ -612,13 +612,6 @@ impl<'a> Parser<'a> {
         self.expect(TokenType::LCurly);
         self.advance();
         self.skip_newlines();
-        let mut classvars = Vec::new();
-        while self.current_is_type(TokenType::Identifier) && self.next_is_type(TokenType::Equals) {
-            classvars.push(self.generate_identifier());
-            self.skip_newlines();
-            self.ensure_not_eof(vec!["identifier", "keyword"]);
-        }
-        self.skip_newlines();
 
         self.expect_and(TokenType::Keyword, |tok| tok.data == "fn");
         let code = self.block(Some((
@@ -640,7 +633,6 @@ impl<'a> Parser<'a> {
             Box::new(nodes::ClassNode {
                 name,
                 methods: code,
-                classvars,
             }),
         )
     }

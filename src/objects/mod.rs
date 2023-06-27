@@ -3,6 +3,7 @@ use std::ops::Deref;
 
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position, unwrap_fast};
 use trc::Trc;
+
 pub mod mhash;
 
 pub mod intobject;
@@ -11,6 +12,7 @@ pub mod typeobject;
 #[macro_use]
 pub mod noneobject;
 pub mod boolobject;
+pub mod classobject;
 pub mod codeobject;
 pub mod dictobject;
 pub mod exceptionobject;
@@ -39,6 +41,7 @@ impl<'a> Deref for ObjectBase<'a> {
 pub struct RawObject<'a> {
     pub tp: Trc<TypeObject<'a>>,
     pub internals: ObjectInternals<'a>,
+    pub dict: Option<Object<'a>>,
     pub vm: Trc<VM<'a>>,
 }
 
@@ -54,6 +57,7 @@ pub struct TypeObject<'a> {
     pub typename: String,
     pub bases: Vec<ObjectBase<'a>>,
     pub typeid: u32,
+    pub dict: Option<Object<'a>>,
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
@@ -131,7 +135,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        if is_type_exact!(
+        if !is_type_exact!(
             &unwrap_fast!(reprv),
             unwrap_fast!(object.vm.types.strtp.as_ref()).clone()
         ) {
@@ -178,7 +182,7 @@ impl<'a> RawObject<'a> {
             ));
         }
 
-        if is_type_exact!(
+        if !is_type_exact!(
             &unwrap_fast!(strv),
             unwrap_fast!(object.vm.types.strtp.as_ref()).clone()
         ) {
@@ -200,7 +204,6 @@ pub struct FnData<'a> {
     code: Object<'a>,
     args: Vec<Object<'a>>,
     name: String,
-    indices: Vec<Object<'a>>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -286,11 +289,29 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
 }
 
 #[inline]
-fn create_object_from_type<'a>(tp: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>) -> Object<'a> {
+fn create_object_from_type<'a>(
+    tp: Trc<TypeObject<'a>>,
+    vm: Trc<VM<'a>>,
+    dict: Option<Object<'a>>,
+) -> Object<'a> {
     let raw = RawObject {
         vm: vm.clone(),
         tp,
+        dict,
         internals: ObjectInternals { none: () },
+    };
+    Trc::new(raw)
+}
+
+#[inline]
+fn create_object_from_typeobject<'a>(tp: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>) -> Object<'a> {
+    let raw = RawObject {
+        vm: vm.clone(),
+        tp: tp.clone(),
+        dict: tp.dict.clone(),
+        internals: ObjectInternals {
+            typ: ManuallyDrop::new((*tp).clone()),
+        },
     };
     Trc::new(raw)
 }
@@ -312,6 +333,10 @@ fn inherit_slots<'a>(mut tp: Trc<TypeObject<'a>>, basetp: TypeObject<'a>) {
     tp.get = basetp.get;
     tp.set = basetp.set;
     tp.len = basetp.len;
+}
+
+fn finalize_type_dict(_tp: Trc<TypeObject<'_>>) {
+    //TODO!
 }
 
 fn finalize_type(tp: Trc<TypeObject<'_>>) {

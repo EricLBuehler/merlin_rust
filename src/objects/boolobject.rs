@@ -6,6 +6,7 @@ use crate::{
 };
 use trc::Trc;
 
+use super::finalize_type_dict;
 use super::{
     create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object,
     ObjectInternals, TypeObject,
@@ -50,12 +51,12 @@ pub fn generate_cache<'a>(
     tup: *mut (Option<Object<'a>>, Option<Object<'a>>),
 ) {
     unsafe {
-        let mut tp = create_object_from_type(booltp.clone(), vm.clone());
+        let mut tp = create_object_from_type(booltp.clone(), vm.clone(), None);
         tp.internals = ObjectInternals { bool: false };
         let ptr = &(*tup).0 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
 
-        let mut tp = create_object_from_type(booltp.clone(), vm);
+        let mut tp = create_object_from_type(booltp.clone(), vm, None);
         tp.internals = ObjectInternals { bool: true };
         let ptr = &(*tup).1 as *const Option<Object> as *mut Option<Object>;
         std::ptr::write(ptr, Some(tp));
@@ -69,6 +70,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(bool_new),
         del: Some(|_| {}),
@@ -96,5 +98,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.booltp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

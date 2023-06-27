@@ -2,8 +2,8 @@ use std::mem::ManuallyDrop;
 
 use super::mhash::HashMap;
 use super::{
-    create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object, RawObject,
-    TypeObject,
+    create_object_from_type, finalize_type, finalize_type_dict, intobject, MethodType, MethodValue,
+    Object, RawObject, TypeObject,
 };
 
 use crate::is_type_exact;
@@ -18,7 +18,7 @@ use trc::Trc;
 
 #[allow(dead_code)]
 pub fn dict_from<'a>(vm: Trc<VM<'a>>, raw: HashMap<'a>) -> Object<'a> {
-    let mut tp = create_object_from_type(unwrap_fast!(vm.types.dicttp.as_ref()).clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.dicttp.as_ref()).clone(), vm, None);
     tp.internals = ObjectInternals {
         map: ManuallyDrop::new(raw),
     };
@@ -34,12 +34,38 @@ fn dict_repr(selfv: Object<'_>) -> MethodType<'_> {
     let map = unsafe { &sf.internals.map }.clone();
     for (key, value) in map.into_iter() {
         let repr = RawObject::object_repr_safe(key);
-        if !repr.is_some() {
+        if repr.is_error() {
             return MethodValue::Error(repr.unwrap_err());
         }
         res += &unwrap_fast!(repr);
         res += ": ";
         let repr = RawObject::object_repr_safe(value);
+        if !repr.is_some() {
+            return MethodValue::Error(repr.unwrap_err());
+        }
+        res += &unwrap_fast!(repr);
+        res += ", ";
+    }
+    if res.len() > 1 {
+        res.pop();
+        res.pop();
+    }
+    res += "}";
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
+}
+
+fn dict_str(selfv: Object<'_>) -> MethodType<'_> {
+    let mut res = String::from("{");
+    let sf = selfv.clone();
+    let map = unsafe { &sf.internals.map }.clone();
+    for (key, value) in map.into_iter() {
+        let repr = RawObject::object_str_safe(key);
+        if repr.is_error() {
+            return MethodValue::Error(repr.unwrap_err());
+        }
+        res += &unwrap_fast!(repr);
+        res += ": ";
+        let repr = RawObject::object_str_safe(value);
         if !repr.is_some() {
             return MethodValue::Error(repr.unwrap_err());
         }
@@ -183,12 +209,13 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(dict_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.map) }),
 
         repr: Some(dict_repr),
-        str: Some(dict_repr),
+        str: Some(dict_str),
         abs: None,
         neg: None,
         hash_fn: None,
@@ -210,5 +237,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.dicttp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

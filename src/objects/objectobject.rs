@@ -1,5 +1,6 @@
 use super::{
-    boolobject, finalize_type, intobject, stringobject, MethodType, MethodValue, Object, TypeObject,
+    boolobject, finalize_type, finalize_type_dict, intobject, stringobject, MethodType,
+    MethodValue, Object, TypeObject,
 };
 use crate::interpreter::VM;
 use trc::Trc;
@@ -28,6 +29,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         typename: String::from("object"),
         bases: vec![super::ObjectBase::Object(vm.clone())],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(object_new),
         del: Some(|_| {}),
@@ -55,5 +57,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.objecttp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

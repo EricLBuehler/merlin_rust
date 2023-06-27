@@ -1,7 +1,9 @@
 // Interpret bytecode
 
 use crate::objects::exceptionobject::{self, methodnotdefinedexc_from_str};
-use crate::objects::{dictobject, mhash, noneobject, RawObject, TypeObject};
+use crate::objects::{
+    classobject, dictobject, mhash, noneobject, stringobject, RawObject, TypeObject,
+};
 use crate::parser::Position;
 use crate::{
     compiler::{Bytecode, CompilerInstruction, CompilerRegister},
@@ -55,6 +57,7 @@ pub struct Types<'a> {
     pub listtp: Option<Trc<TypeObject<'a>>>,
     pub nonetp: Option<Trc<TypeObject<'a>>>,
     pub strtp: Option<Trc<TypeObject<'a>>>,
+    pub classtp: Option<Trc<TypeObject<'a>>>,
     pub n_types: u32,
 }
 
@@ -145,6 +148,7 @@ impl<'a> VM<'a> {
                 listtp: None,
                 nonetp: None,
                 strtp: None,
+                classtp: None,
                 n_types: 0,
             }),
             interpreters: Vec::new(),
@@ -242,13 +246,27 @@ impl<'a> VM<'a> {
     pub fn execute_vars(
         mut this: Trc<Self>,
         bytecode: &Bytecode<'a>,
-        vars: hashbrown::HashMap<&isize, Object<'a>>,
+        vars: hashbrown::HashMap<isize, Object<'a>>,
     ) -> Object<'a> {
         let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
         this.interpreters.push(Trc::new(interpreter));
 
         let res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
             .run_interpreter_vars(bytecode, vars);
+        this.interpreters.pop();
+        res
+    }
+
+    pub fn execute_extract_namespace(
+        mut this: Trc<Self>,
+        bytecode: &Bytecode<'a>,
+    ) -> Vec<Option<Trc<RawObject<'a>>>> {
+        let interpreter = Interpreter::new(this.namespaces.clone(), this.clone());
+        this.interpreters.push(Trc::new(interpreter));
+
+        let res = (unwrap_fast!(this.deref_mut().interpreters.last_mut()))
+            .run_interpreter_extract_namespace(bytecode);
+        this.interpreters.pop();
         res
     }
 
@@ -358,7 +376,7 @@ impl<'a> Interpreter<'a> {
     pub fn run_interpreter_vars(
         &mut self,
         bytecode: &Bytecode<'a>,
-        vars: hashbrown::HashMap<&isize, Object<'a>>,
+        vars: hashbrown::HashMap<isize, Object<'a>>,
     ) -> Object<'a> {
         add_frame!(
             self,
@@ -375,7 +393,9 @@ impl<'a> Interpreter<'a> {
             }
         }
 
-        self.run_interpreter_raw(bytecode)
+        let res = self.run_interpreter_raw(bytecode);
+        pop_frame!(self);
+        res
     }
 
     pub fn run_interpreter(&mut self, bytecode: &Bytecode<'a>) -> Object<'a> {
@@ -385,9 +405,30 @@ impl<'a> Interpreter<'a> {
                 bytecode.n_registers as usize,
                 bytecode.n_variables as usize
             );
-            return self.run_interpreter_raw(bytecode);
+            let res = self.run_interpreter_raw(bytecode);
+            pop_frame!(self);
+            return res;
         }
         none_from!(self.vm)
+    }
+
+    pub fn run_interpreter_extract_namespace(
+        &mut self,
+        bytecode: &Bytecode<'a>,
+    ) -> Vec<Option<Trc<RawObject<'a>>>> {
+        add_frame!(
+            self,
+            bytecode.n_registers as usize,
+            bytecode.n_variables as usize
+        );
+
+        if !bytecode.instructions.is_empty() {
+            self.run_interpreter_raw(bytecode);
+        }
+
+        let last = self.namespaces.variables.last().unwrap().clone();
+        pop_frame!(self);
+        last
     }
 
     #[inline]
@@ -537,7 +578,6 @@ impl<'a> Interpreter<'a> {
                     nameidx,
                     argsidx,
                     codeidx,
-                    idxsidx,
                     out,
                 } => {
                     let code = bytecode
@@ -555,16 +595,10 @@ impl<'a> Interpreter<'a> {
                         .get(*nameidx)
                         .expect("Bytecode names index out of range")
                         .clone();
-                    let indices = bytecode
-                        .consts
-                        .get(*idxsidx)
-                        .expect("Bytecode names index out of range")
-                        .clone();
                     let func = fnobject::fn_from(
                         self.vm.clone(),
                         code,
                         unsafe { &args.internals.arr }.to_vec(),
-                        unsafe { &indices.internals.arr }.to_vec(),
                         unsafe { &name.internals.str }.to_string(),
                     );
                     store_register!(last, last_vars, *out, func);
@@ -652,10 +686,41 @@ impl<'a> Interpreter<'a> {
                     let dict = dictobject::dict_from(self.vm.clone(), map);
                     store_register!(last, last_vars, *result, dict);
                 }
+
+                //Class
+                CompilerInstruction::MakeClass {
+                    name,
+                    methods,
+                    bytecode: class_body,
+                    out,
+                } => {
+                    let mut method_map = mhash::HashMap::new();
+
+                    let namespace =
+                        VM::<'a>::execute_extract_namespace(self.vm.clone(), class_body);
+                    for i in 0..namespace.len() {
+                        let var = namespace.get(i).unwrap();
+                        debug_assert!(var.is_some());
+                        method_map.insert(
+                            stringobject::string_from(
+                                self.vm.clone(),
+                                methods.get(&(i as i32)).unwrap().to_string(),
+                            ),
+                            var.as_ref().unwrap().clone(),
+                        );
+                    }
+
+                    let method_dict = dictobject::dict_from(self.vm.clone(), method_map);
+                    println!("{}", RawObject::object_repr(&method_dict));
+
+                    let new_class =
+                        classobject::create_class(self.vm.clone(), name.clone(), method_dict);
+                    println!("{}", RawObject::object_repr(&new_class));
+
+                    store_register!(last, last_vars, *out, new_class);
+                }
             }
         }
-
-        pop_frame!(self);
 
         none_from!(self.vm)
     }

@@ -4,8 +4,8 @@ use crate::interpreter::VM;
 use trc::Trc;
 
 use super::{
-    boolobject, finalize_type, intobject, stringobject, unwrap_fast, MethodType, MethodValue,
-    Object, TypeObject,
+    boolobject, finalize_type, finalize_type_dict, intobject, stringobject, unwrap_fast,
+    MethodType, MethodValue, Object, TypeObject,
 };
 
 fn type_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> MethodType<'a> {
@@ -15,7 +15,7 @@ fn type_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) -> M
 fn type_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        format!("<class '{}'>", selfv.tp.typename),
+        format!("<class '{}'>", unsafe { &selfv.internals.typ }.typename),
     ))
 }
 fn type_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -32,6 +32,7 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(type_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.typ) }),
@@ -61,5 +62,6 @@ pub fn init<'a>(mut vm: Trc<VM<'a>>) {
     vm.types.typetp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

@@ -14,11 +14,12 @@ use crate::{
 use colored::Colorize;
 use hashbrown::HashMap;
 use itertools::{izip, Itertools};
+use std::fmt::Debug;
 use std::marker::PhantomData;
 use trc::Trc;
 
 pub struct Compiler<'a> {
-    instructions: Vec<CompilerInstruction>,
+    instructions: Vec<CompilerInstruction<'a>>,
     consts: Vec<Object<'a>>,
     names: HashMap<String, i32>,
     info: &'a FileInfo<'a>,
@@ -32,7 +33,7 @@ pub struct Compiler<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum CompilerInstruction {
+pub enum CompilerInstruction<'a> {
     BinaryAdd {
         a: CompilerRegister,
         b: CompilerRegister,
@@ -66,7 +67,6 @@ pub enum CompilerInstruction {
         nameidx: usize,
         argsidx: usize,
         codeidx: usize,
-        idxsidx: usize,
         out: CompilerRegister,
     }, //All are in consts
     Call {
@@ -95,6 +95,12 @@ pub enum CompilerInstruction {
         value_registers: Vec<CompilerRegister>,
         i: usize,
     },
+    MakeClass {
+        name: String,
+        methods: HashMap<i32, String>,
+        out: CompilerRegister,
+        bytecode: Trc<Bytecode<'a>>,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -115,13 +121,19 @@ impl From<CompilerRegister> for usize {
 }
 #[derive(Clone, PartialEq, Eq)]
 pub struct Bytecode<'a> {
-    pub instructions: Vec<CompilerInstruction>,
+    pub instructions: Vec<CompilerInstruction<'a>>,
     pub consts: Vec<Object<'a>>,
     pub names: HashMap<i32, String>,
     pub positions: Vec<(Position, Position)>,
     pub n_registers: i32,
     pub n_variables: i32,
     _marker: PhantomData<&'a ()>,
+}
+
+impl Debug for Bytecode<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.instructions)
+    }
 }
 
 type Node = parser::nodes::Node;
@@ -189,12 +201,11 @@ impl<'a> Compiler<'a> {
             | NodeType::Unary
             | NodeType::String
             | NodeType::List
-            | NodeType::Dict
-            | NodeType::Class => {
+            | NodeType::Dict => {
                 let ctx = self.compile_expr_values(expr);
                 self.compile_expr_operation(expr, ctx);
             }
-            NodeType::Function => {
+            NodeType::Class => {
                 let mut registers = 0;
                 let name = expr
                     .data
@@ -203,13 +214,66 @@ impl<'a> Compiler<'a> {
                     .get("name")
                     .expect("Node.raw.name not found")
                     .clone();
-                self.consts
-                    .push(stringobject::string_from(self.vm.clone(), name.clone()));
-                let nameidx = self.consts.len() - 1;
+
+                let mut compiler = Compiler::new(self.info, self.vm.clone());
+                let bytecode = compiler.generate_bytecode(
+                    expr.data
+                        .get_data()
+                        .nodearr
+                        .expect("Node.nodearr is not present"),
+                );
+
+                self.instructions.push(CompilerInstruction::MakeClass {
+                    name: name.clone(),
+                    methods: bytecode.names.clone(),
+                    out: CompilerRegister::R(self.register_index.try_into().unwrap()),
+                    bytecode,
+                });
+                increment_reg_num!(self);
+                registers += 1;
+
+                self.positions.push((expr.start, expr.end));
+
+                self.names.insert(name, self.names.len() as i32);
+                self.instructions.push(CompilerInstruction::CopyRegister {
+                    from: CompilerRegister::R((self.register_index - 1).try_into().unwrap()),
+                    to: CompilerRegister::V(self.names.len() - 1),
+                    i: self.instructions.len(),
+                });
+                self.positions.push((expr.start, expr.end));
+
+                self.register_index -= registers;
+            }
+            NodeType::Function => {
+                let mut registers = 0;
+                let name_str = expr
+                    .data
+                    .get_data()
+                    .raw
+                    .get("name")
+                    .expect("Node.raw.name not found")
+                    .clone();
+
+                let name = stringobject::string_from(self.vm.clone(), name_str.clone());
+                let mut nameidx = usize::MAX;
+                for (i, var) in self.consts.iter().enumerate() {
+                    if unsafe {
+                        (var.tp.eq.unwrap())(var.clone(), name.clone())
+                            .unwrap()
+                            .internals
+                            .bool
+                    } {
+                        nameidx = i;
+                        break;
+                    }
+                }
+                if nameidx == usize::MAX {
+                    self.consts.push(name);
+                    nameidx = self.consts.len() - 1;
+                }
 
                 let mut names = HashMap::new();
                 let mut args = Vec::new();
-                let mut indices = Vec::new();
                 for (i, arg) in expr
                     .data
                     .get_data()
@@ -219,17 +283,27 @@ impl<'a> Compiler<'a> {
                     .enumerate()
                 {
                     args.push(stringobject::string_from(self.vm.clone(), arg.clone()));
-                    indices.push(intobject::int_from(self.vm.clone(), i as isize));
 
-                    names.insert(arg.to_string(), self.names.len() as i32);
+                    names.insert(arg.to_string(), i as i32);
                 }
-                self.consts
-                    .push(listobject::list_from(self.vm.clone(), args));
-                let argsidx = self.consts.len() - 1;
 
-                self.consts
-                    .push(listobject::list_from(self.vm.clone(), indices));
-                let idxsidx = self.consts.len() - 1;
+                let args = listobject::list_from(self.vm.clone(), args);
+                let mut argsidx = usize::MAX;
+                for (i, var) in self.consts.iter().enumerate() {
+                    if unsafe {
+                        (var.tp.eq.unwrap())(var.clone(), args.clone())
+                            .unwrap()
+                            .internals
+                            .bool
+                    } {
+                        argsidx = i;
+                        break;
+                    }
+                }
+                if argsidx == usize::MAX {
+                    self.consts.push(args);
+                    argsidx = self.consts.len() - 1;
+                }
 
                 let mut compiler = Compiler::new(self.info, self.vm.clone());
                 compiler.names = names;
@@ -240,15 +314,28 @@ impl<'a> Compiler<'a> {
                         .expect("Node.nodearr is not present"),
                 );
 
-                self.consts
-                    .push(codeobject::code_from(self.vm.clone(), bytecode));
-                let codeidx = self.consts.len() - 1;
+                let code = codeobject::code_from(self.vm.clone(), bytecode);
+                let mut codeidx = usize::MAX;
+                for (i, var) in self.consts.iter().enumerate() {
+                    if unsafe {
+                        (var.tp.eq.unwrap())(var.clone(), code.clone())
+                            .unwrap()
+                            .internals
+                            .bool
+                    } {
+                        codeidx = i;
+                        break;
+                    }
+                }
+                if codeidx == usize::MAX {
+                    self.consts.push(code);
+                    codeidx = self.consts.len() - 1;
+                }
 
                 self.instructions.push(CompilerInstruction::MakeFunction {
                     nameidx,
                     argsidx,
                     codeidx,
-                    idxsidx,
                     out: CompilerRegister::R(self.register_index.try_into().unwrap()),
                 });
                 increment_reg_num!(self);
@@ -256,7 +343,7 @@ impl<'a> Compiler<'a> {
 
                 self.positions.push((expr.start, expr.end));
 
-                self.names.insert(name, self.names.len() as i32);
+                self.names.insert(name_str, self.names.len() as i32);
                 self.instructions.push(CompilerInstruction::CopyRegister {
                     from: CompilerRegister::R((self.register_index - 1).try_into().unwrap()),
                     to: CompilerRegister::V(self.names.len() - 1),
@@ -634,10 +721,7 @@ impl<'a> Compiler<'a> {
                     registers: 0,
                 }
             }
-            NodeType::Class => {
-                unimplemented!("value compilation.");
-            }
-            NodeType::Function => {
+            NodeType::Class | NodeType::Function => {
                 unreachable!()
             }
         }
@@ -882,7 +966,12 @@ impl<'a> Compiler<'a> {
                 self.positions.push((expr.start, expr.end));
             }
             NodeType::Class => {
-                unimplemented!("Operation compilation");
+                raise_error(
+                    "Class definition is not an expression",
+                    ErrorType::FunctionNotExpression,
+                    &expr.start,
+                    self.info,
+                );
             }
         }
 

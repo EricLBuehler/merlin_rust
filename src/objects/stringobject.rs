@@ -13,14 +13,14 @@ use trc::Trc;
 
 use super::exceptionobject::typemismatchexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, MethodType, MethodValue, Object, ObjectInternals,
-    TypeObject,
+    create_object_from_type, finalize_type, finalize_type_dict, MethodType, MethodValue, Object,
+    ObjectInternals, TypeObject,
 };
 
 const MFBH_MAX_LEN: usize = 256;
 
 pub fn string_from(vm: Trc<VM<'_>>, raw: String) -> Object<'_> {
-    let mut tp = create_object_from_type(unwrap_fast!(vm.types.strtp.as_ref()).clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.strtp.as_ref()).clone(), vm, None);
     tp.internals = ObjectInternals {
         str: ManuallyDrop::new(raw),
     };
@@ -125,6 +125,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(string_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.str) }),
@@ -152,5 +153,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.strtp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

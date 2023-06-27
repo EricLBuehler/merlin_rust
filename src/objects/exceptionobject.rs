@@ -35,6 +35,7 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(exc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -77,6 +78,7 @@ pub fn nameexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.nameexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -93,6 +95,7 @@ pub fn nameexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.nameexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -139,6 +142,7 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(nameexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -181,6 +185,7 @@ pub fn overflowexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.overflwexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -197,6 +202,7 @@ pub fn overflowexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.overflwexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -248,6 +254,7 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(overflowexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -290,6 +297,7 @@ pub fn methodnotdefinedexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.mthntfndexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -306,6 +314,7 @@ pub fn methodnotdefinedexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.mthntfndexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -357,6 +366,7 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(methodnotdefinedexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -399,6 +409,7 @@ pub fn typemismatchexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.tpmisexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -415,6 +426,7 @@ pub fn typemismatchexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.tpmisexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -466,6 +478,7 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(typemismatchexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -508,6 +521,7 @@ pub fn keynotfoundexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.keyntfndexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -524,6 +538,7 @@ pub fn keynotfoundexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.keyntfndexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -575,6 +590,7 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(keynotfoundexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -617,6 +633,7 @@ pub fn valueexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.valueexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -633,6 +650,7 @@ pub fn valueexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.valueexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -680,6 +698,7 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(valueexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
@@ -722,6 +741,7 @@ pub fn zerodivexc_from_obj<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.divzeroexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
     tp.internals = ObjectInternals {
         exc: ManuallyDrop::new(ExcData { obj, start, end }),
@@ -738,6 +758,7 @@ pub fn zerodivexc_from_str<'a>(
     let mut tp = create_object_from_type(
         unwrap_fast!(vm.types.divzeroexctp.as_ref()).clone(),
         vm.clone(),
+        None,
     );
 
     tp.internals = ObjectInternals {
@@ -789,6 +810,7 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
             super::ObjectBase::Other(unwrap_fast!(vm.types.objecttp.as_ref()).clone()),
         ],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(zerodivexc_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),

@@ -1,7 +1,7 @@
 use super::exceptionobject::{typemismatchexc_from_str, zerodivexc_from_str};
 use super::{
-    boolobject, create_object_from_type, finalize_type, stringobject, MethodType, MethodValue,
-    Object, ObjectInternals, TypeObject,
+    boolobject, create_object_from_type, finalize_type, finalize_type_dict, stringobject,
+    MethodType, MethodValue, Object, ObjectInternals, TypeObject,
 };
 
 use crate::is_type_exact;
@@ -23,7 +23,7 @@ pub fn int_from(vm: Trc<VM<'_>>, raw: isize) -> Object<'_> {
         .as_ref()}
         .clone();
     }
-    let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.inttp.as_ref()).clone(), vm, None);
     tp.internals = ObjectInternals { int: raw };
     tp
 }
@@ -266,7 +266,7 @@ pub fn generate_cache<'a>(
     unsafe {
         let mut i = MIN_INT_CACHE;
         for item in &mut (*arr)[..] {
-            let mut tp = create_object_from_type(int.clone(), vm.clone());
+            let mut tp = create_object_from_type(int.clone(), vm.clone(), None);
             tp.internals = ObjectInternals { int: i };
             std::ptr::write(item, Some(tp));
             i += 1;
@@ -281,6 +281,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(int_new),
         del: Some(|_| {}),
@@ -308,5 +309,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.inttp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

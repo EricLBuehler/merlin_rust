@@ -2,8 +2,8 @@ use std::mem::ManuallyDrop;
 
 use super::exceptionobject::valueexc_from_str;
 use super::{
-    create_object_from_type, finalize_type, intobject, MethodType, MethodValue, Object, RawObject,
-    TypeObject,
+    create_object_from_type, finalize_type, finalize_type_dict, intobject, MethodType, MethodValue,
+    Object, RawObject, TypeObject,
 };
 use crate::is_type_exact;
 use crate::objects::exceptionobject::{methodnotdefinedexc_from_str, typemismatchexc_from_str};
@@ -16,7 +16,7 @@ use crate::{
 use trc::Trc;
 
 pub fn list_from<'a>(vm: Trc<VM<'a>>, raw: Vec<Object<'a>>) -> Object<'a> {
-    let mut tp = create_object_from_type(unwrap_fast!(vm.types.listtp.as_ref()).clone(), vm);
+    let mut tp = create_object_from_type(unwrap_fast!(vm.types.listtp.as_ref()).clone(), vm, None);
     tp.internals = ObjectInternals {
         arr: ManuallyDrop::new(raw),
     };
@@ -30,6 +30,23 @@ fn list_repr(selfv: Object<'_>) -> MethodType<'_> {
     let mut res = String::from("[");
     for item in unsafe { &selfv.internals.arr }.iter() {
         let repr = RawObject::object_repr_safe(item.clone());
+        if !repr.is_some() {
+            return MethodValue::Error(repr.unwrap_err());
+        }
+        res += &unwrap_fast!(repr);
+        res += ", ";
+    }
+    if res.len() > 1 {
+        res.pop();
+        res.pop();
+    }
+    res += "]";
+    MethodValue::Some(stringobject::string_from(selfv.vm.clone(), res))
+}
+fn list_str(selfv: Object<'_>) -> MethodType<'_> {
+    let mut res = String::from("[");
+    for item in unsafe { &selfv.internals.arr }.iter() {
+        let repr = RawObject::object_str_safe(item.clone());
         if !repr.is_some() {
             return MethodValue::Error(repr.unwrap_err());
         }
@@ -165,12 +182,13 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(list_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.arr) }),
 
         repr: Some(list_repr),
-        str: Some(list_repr),
+        str: Some(list_str),
         abs: None,
         neg: None,
         hash_fn: None,
@@ -191,5 +209,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.listtp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

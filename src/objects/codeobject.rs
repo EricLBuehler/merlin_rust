@@ -1,5 +1,6 @@
 use std::mem::ManuallyDrop;
 
+use super::finalize_type_dict;
 use super::{
     create_object_from_type, finalize_type, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
@@ -14,7 +15,7 @@ use trc::Trc;
 
 pub fn code_from<'a>(vm: Trc<VM<'a>>, bytecode: Trc<Bytecode<'a>>) -> Object<'a> {
     let mut tp: Trc<RawObject> =
-        create_object_from_type(unwrap_fast!(vm.types.codetp.as_ref()).clone(), vm);
+        create_object_from_type(unwrap_fast!(vm.types.codetp.as_ref()).clone(), vm, None);
     tp.internals = ObjectInternals {
         code: ManuallyDrop::new(bytecode),
     };
@@ -48,6 +49,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
             unwrap_fast!(vm.types.objecttp.as_ref()).clone(),
         )],
         typeid: vm.types.n_types,
+        dict: None,
 
         new: Some(code_new),
         del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.code) }),
@@ -74,5 +76,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
     vm.types.codetp = Some(tp.clone());
     vm.types.n_types += 1;
 
-    finalize_type(tp);
+    finalize_type(tp.clone());
+    finalize_type_dict(tp);
 }

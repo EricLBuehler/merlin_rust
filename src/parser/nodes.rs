@@ -42,7 +42,6 @@ pub struct NodeValue<'a> {
     pub nodes: hashbrown::HashMap<String, &'a Node>,
     pub op: Option<OpType>,
     pub nodearr: Option<&'a Vec<Node>>,
-    pub vars: Option<&'a Vec<Node>>,
     pub args: Option<Vec<String>>,
     pub mapping: Option<&'a Vec<(Node, Node)>>,
 }
@@ -64,7 +63,6 @@ impl<'a> NodeValue<'a> {
             nodes: hashbrown::HashMap::new(),
             op: None,
             nodearr: None,
-            vars: None,
             args: None,
             mapping: None,
         }
@@ -266,7 +264,6 @@ impl NodeData for DictNode {
 
 pub struct ClassNode {
     pub name: String,
-    pub classvars: Vec<Node>,
     pub methods: Vec<Node>,
 }
 
@@ -275,7 +272,6 @@ impl NodeData for ClassNode {
         let mut value = NodeValue::new();
         value.raw.insert(String::from("name"), self.name.clone());
         value.nodearr = Some(&self.methods);
-        value.vars = Some(&self.methods);
 
         value
     }

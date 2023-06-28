@@ -91,11 +91,11 @@ fn fn_descrget<'a>(
     instance: Option<Object<'a>>,
     _owner: Object<'a>,
 ) -> MethodType<'a> {
-    if instance.is_some() {
+    if let Some(instance) = instance {
         MethodValue::Some(method_from(
             selfv.vm.clone(),
             selfv.clone(),
-            instance.unwrap().clone(),
+            instance.clone(),
         ))
     } else {
         MethodValue::Some(selfv.clone())

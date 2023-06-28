@@ -57,7 +57,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         call: None,
 
-        getattr: Some(|selfv, attr| RawObject::generic_getattr(selfv, attr)),
+        getattr: Some(RawObject::generic_getattr),
         setattr: None,
         descrget: None,
         descrset: None,

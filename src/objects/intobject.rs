@@ -18,7 +18,7 @@ use std::hash::{Hash, Hasher};
 
 #[inline]
 pub fn int_from(vm: Trc<VM<'_>>, raw: isize) -> Object<'_> {
-    if raw >= MIN_INT_CACHE && raw <= MAX_INT_CACHE {
+    if (MIN_INT_CACHE..=MAX_INT_CACHE).contains(&raw) {
         return unwrap_fast! {vm.cache.int_cache[(raw + INT_CACHE_OFFSET) as usize]
         .as_ref()}
         .clone();

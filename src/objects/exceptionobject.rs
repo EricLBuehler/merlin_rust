@@ -21,7 +21,7 @@ fn exc_repr(selfv: Object<'_>) -> MethodType<'_> {
 fn exc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn exc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -135,7 +135,7 @@ fn nameexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn nameexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn nameexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -255,7 +255,7 @@ fn overflowexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn overflowexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn overflowexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -375,7 +375,7 @@ fn methodnotdefinedexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn methodnotdefinedexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn methodnotdefinedexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -495,7 +495,7 @@ fn typemismatchexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn typemismatchexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn typemismatchexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -615,7 +615,7 @@ fn keynotfoundexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn keynotfoundexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn keynotfoundexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -731,7 +731,7 @@ fn valueexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn valueexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn valueexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -851,7 +851,7 @@ fn zerodivexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn zerodivexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn zerodivexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
@@ -967,7 +967,7 @@ fn attrexc_str(selfv: Object<'_>) -> MethodType<'_> {
 fn attrexc_hash(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(intobject::int_from(
         selfv.vm.clone(),
-        (selfv.tp.typeid as i32 * -1 - 10) as isize,
+        (-(selfv.tp.typeid as i32) - 10) as isize,
     ))
 }
 fn attrexc_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {

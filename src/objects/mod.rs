@@ -56,6 +56,7 @@ macro_rules! is_type_exact {
     };
 }
 
+#[allow(clippy::type_complexity)]
 #[derive(Clone, Eq)]
 pub struct TypeObject<'a> {
     pub typename: String,
@@ -279,7 +280,7 @@ impl<'a> RawObject<'a> {
                 );
             }
 
-            return res;
+            res
         }
     }
 }

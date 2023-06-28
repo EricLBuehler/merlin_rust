@@ -24,15 +24,15 @@ a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): 19.34 ns
+Merlin 1.3 (release): 20 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: 54.8 ns 
+Python 3.10.6: 54.9 ns 
 
 `python3 -m timeit -c "a=1;b=2;a+b;a+b;a+b"`
 
-Merlin is: 2.83x **faster**
+Merlin is: 2.75x **faster**
 
 ***
 
@@ -49,21 +49,21 @@ a+b
 ```
 Total execution time:
 
-Merlin 1.3 (release): 48 ns
+Merlin 1.3 (release): 57.86 ns
 
 `./merlin program.me -t 10000`
 
-Python 3.10.6: 102 ns 
+Python 3.10.6: 103 ns 
 
 `python3 -m timeit -c "a=1;b=2;a+b;a+b;a+b;a+b;a+b;a+b"`
 
-Merlin is: 2.125x **faster**
+Merlin is: 1.78x **faster**
 
 ***
 
-Merlin 1.3: 2.48x slower for 2x more.
+Merlin 1.3: 2.89x slower for 2x more.
 
-Python 3.10.6: 1.86x slower for 2x more.
+Python 3.10.6: 1.87x slower for 2x more.
 
 ## Installation
 To get started with Merlin:

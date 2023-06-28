@@ -73,7 +73,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(bool_new),
-        del: Some(|_| {}),
 
         repr: Some(bool_repr),
         str: Some(bool_repr),

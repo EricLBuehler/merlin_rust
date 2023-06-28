@@ -41,7 +41,6 @@ pub fn init_exc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(exc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(exc_repr),
         str: Some(exc_repr),
@@ -156,7 +155,6 @@ pub fn init_nameexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(nameexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(nameexc_repr),
         str: Some(nameexc_str),
@@ -276,7 +274,6 @@ pub fn init_overflowexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(overflowexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(overflowexc_repr),
         str: Some(overflowexc_str),
@@ -396,7 +393,6 @@ pub fn init_methodnotdefinedexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(methodnotdefinedexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(methodnotdefinedexc_repr),
         str: Some(methodnotdefinedexc_str),
@@ -516,7 +512,6 @@ pub fn init_typemismatchexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(typemismatchexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(typemismatchexc_repr),
         str: Some(typemismatchexc_str),
@@ -636,7 +631,6 @@ pub fn init_keynotfoundexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(keynotfoundexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(keynotfoundexc_repr),
         str: Some(keynotfoundexc_str),
@@ -752,7 +746,6 @@ pub fn init_valueexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(valueexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(valueexc_repr),
         str: Some(valueexc_str),
@@ -872,7 +865,6 @@ pub fn init_zerodivexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(zerodivexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(zerodivexc_repr),
         str: Some(zerodivexc_str),
@@ -988,7 +980,6 @@ pub fn init_attrexc(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(attrexc_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.exc) }),
 
         repr: Some(attrexc_repr),
         str: Some(attrexc_str),

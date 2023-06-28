@@ -66,7 +66,6 @@ pub struct TypeObject<'a> {
 
     //instantiation
     pub new: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, args, kwargs
-    pub del: Option<fn(Object<'a>)>,                                           //self
 
     //unary
     pub repr: Option<fn(Object<'a>) -> MethodType<'a>>, //self
@@ -109,6 +108,12 @@ impl<'a> PartialEq for RawObject<'a> {
 impl<'a> PartialEq for TypeObject<'a> {
     fn eq(&self, other: &Self) -> bool {
         self.typename == other.typename && self.bases == other.bases
+    }
+}
+
+impl<'a> Drop for RawObject<'a> {
+    fn drop(&mut self) {
+        unsafe { std::ptr::drop_in_place(&mut self.internals) };
     }
 }
 

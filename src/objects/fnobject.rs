@@ -112,7 +112,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(fn_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.fun) }),
 
         repr: Some(fn_repr),
         str: Some(fn_repr),

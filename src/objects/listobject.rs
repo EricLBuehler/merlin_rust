@@ -185,7 +185,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(list_new),
-        del: Some(|mut selfv| unsafe { ManuallyDrop::drop(&mut selfv.internals.arr) }),
 
         repr: Some(list_repr),
         str: Some(list_str),

@@ -284,7 +284,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(int_new),
-        del: Some(|_| {}),
 
         repr: Some(int_repr),
         str: Some(int_repr),

@@ -54,7 +54,6 @@ pub fn init(mut vm: Trc<VM<'_>>) {
         dict: None,
 
         new: Some(none_new),
-        del: Some(|_| {}),
 
         repr: Some(none_repr),
         str: Some(none_repr),

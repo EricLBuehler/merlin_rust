@@ -515,7 +515,6 @@ pub fn create_class<'a>(mut vm: Trc<VM<'a>>, name: String, dict: Object<'a>) -> 
         dict: Some(dict.clone()),
 
         new: None,
-        del: Some(|_| {}),
 
         repr: if dict.tp.get.unwrap()(
             dict.clone(),

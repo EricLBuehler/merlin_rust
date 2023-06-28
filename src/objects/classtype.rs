@@ -5,8 +5,7 @@ use crate::{interpreter::VM, parser::Position, unwrap_fast};
 
 use super::{
     create_object_from_typeobject, exceptionobject::methodnotdefinedexc_from_str, finalize_type,
-    listobject, stringobject, MethodType, MethodValue, Object, RawObject,
-    TypeObject,
+    listobject, stringobject, MethodType, MethodValue, Object, RawObject, TypeObject,
 };
 
 //unary
@@ -691,5 +690,5 @@ pub fn create_class<'a>(mut vm: Trc<VM<'a>>, name: String, dict: Object<'a>) -> 
 
     finalize_type(tp.clone());
 
-    create_object_from_typeobject(vm.types.typetp.as_ref().unwrap().clone(), vm, tp)
+    create_object_from_typeobject(vm, tp)
 }

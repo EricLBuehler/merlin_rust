@@ -59,6 +59,7 @@ pub struct Types<'a> {
     pub strtp: Option<Trc<TypeObject<'a>>>,
     pub classtp: Option<Trc<TypeObject<'a>>>,
     pub attrexctp: Option<Trc<TypeObject<'a>>>,
+    pub methodtp: Option<Trc<TypeObject<'a>>>,
 
     pub n_types: u32,
 }
@@ -152,6 +153,7 @@ impl<'a> VM<'a> {
                 strtp: None,
                 classtp: None,
                 attrexctp: None,
+                methodtp: None,
                 n_types: 0,
             }),
             interpreters: Vec::new(),
@@ -744,7 +746,7 @@ impl<'a> Interpreter<'a> {
                     }
 
                     let method_dict = dictobject::dict_from(self.vm.clone(), method_map);
-                    
+
                     let new_class =
                         classtype::create_class(self.vm.clone(), name.clone(), method_dict);
 

@@ -438,7 +438,7 @@ impl<'a> Parser<'a> {
             self.expect(TokenType::Comma);
             self.advance();
         }
-        
+
         let end = Position::create_from_parts(
             self.current.startcol,
             self.current.endcol,

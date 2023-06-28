@@ -1,6 +1,7 @@
 use std::mem::ManuallyDrop;
 
 use super::exceptionobject::valueexc_from_str;
+use super::methodobject::method_from;
 use super::{
     create_object_from_type, finalize_type, finalize_type_dict, MethodType, MethodValue, Object,
     TypeObject,
@@ -67,9 +68,9 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
         let exc = valueexc_from_str(
             selfv.vm.clone(),
             &format!(
-                "Expected {} arguments, got {}",
-                unsafe { &args.internals.arr }.len(),
-                unsafe { &selfv.internals.fun }.args.len()
+                "Expected {} argument(s), got {}",
+                unsafe { &selfv.internals.fun }.args.len(),
+                unsafe { &args.internals.arr }.len()
             ),
             Position::default(),
             Position::default(),
@@ -83,6 +84,22 @@ fn fn_call<'a>(selfv: Object<'a>, args: Object<'a>) -> MethodType<'a> {
 
     let code = &unsafe { &selfv.internals.fun.code.internals.code };
     MethodValue::Some(VM::execute_vars(selfv.vm.clone(), code, map))
+}
+
+fn fn_descrget<'a>(
+    selfv: Object<'a>,
+    instance: Option<Object<'a>>,
+    _owner: Object<'a>,
+) -> MethodType<'a> {
+    if instance.is_some() {
+        MethodValue::Some(method_from(
+            selfv.vm.clone(),
+            selfv.clone(),
+            instance.unwrap().clone(),
+        ))
+    } else {
+        MethodValue::Some(selfv.clone())
+    }
 }
 
 pub fn init(mut vm: Trc<VM<'_>>) {
@@ -117,7 +134,7 @@ pub fn init(mut vm: Trc<VM<'_>>) {
 
         getattr: None,
         setattr: None,
-        descrget: None,
+        descrget: Some(fn_descrget),
         descrset: None,
     });
 

@@ -11,7 +11,11 @@ fn object_new<'a>(_selfv: Object<'a>, _args: Object<'a>, _kwargs: Object<'a>) ->
 fn object_repr(selfv: Object<'_>) -> MethodType<'_> {
     MethodValue::Some(stringobject::string_from(
         selfv.vm.clone(),
-        format!("<'{}' object @ {:x}>", &selfv.tp.typename, Trc::as_ptr(&selfv) as usize),
+        format!(
+            "<'{}' object @ {:x}>",
+            &selfv.tp.typename,
+            Trc::as_ptr(&selfv) as usize
+        ),
     ))
 }
 fn object_eq<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {

@@ -20,6 +20,7 @@ pub mod dictobject;
 pub mod exceptionobject;
 pub mod fnobject;
 pub mod listobject;
+pub mod methodobject;
 pub mod stringobject;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -91,7 +92,7 @@ pub struct TypeObject<'a> {
     //attributes
     pub getattr: Option<fn(Object<'a>, Object<'a>) -> MethodType<'a>>, //self, attr
     pub setattr: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, attr
-    pub descrget: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self (the object), instance (None if the type of instance is not the owner, that is - the owner is the i), owner (the owning type)
+    pub descrget: Option<fn(Object<'a>, Option<Object<'a>>, Object<'a>) -> MethodType<'a>>, //self (the object), instance (None if the type of instance is not the owner, that is - the owner is the i), owner (the owning type)
     pub descrset: Option<fn(Object<'a>, Object<'a>, Object<'a>) -> MethodType<'a>>, //self, instance
 }
 
@@ -246,6 +247,27 @@ impl<'a> RawObject<'a> {
                     Position::default(),
                 ));
             }
+
+            if unwrap_fast!(res).tp.descrget.is_some() {
+                if is_type_exact!(selfv, unwrap_fast!(selfv.vm.types.typetp.as_ref()))
+                    && Trc::ptr_eq(
+                        selfv.dict.as_ref().unwrap(),
+                        unsafe { &selfv.internals.typ }.dict.as_ref().unwrap(),
+                    )
+                {
+                    return unwrap_fast!(res).tp.descrget.unwrap()(
+                        unwrap_fast!(res).clone(),
+                        None,
+                        create_object_from_typeobject(selfv.vm.clone(), selfv.tp.clone()),
+                    );
+                }
+                return unwrap_fast!(res).tp.descrget.unwrap()(
+                    unwrap_fast!(res).clone(),
+                    Some(selfv.clone()),
+                    create_object_from_typeobject(selfv.vm.clone(), selfv.tp.clone()),
+                );
+            }
+
             return res;
         }
     }
@@ -259,6 +281,12 @@ pub struct FnData<'a> {
     code: Object<'a>,
     args: Vec<Object<'a>>,
     name: String,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct FnWrapper<'a> {
+    fun: Object<'a>,
+    instance: Object<'a>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -279,6 +307,7 @@ pub union ObjectInternals<'a> {
     pub fun: ManuallyDrop<FnData<'a>>,
     pub exc: ManuallyDrop<ExcData<'a>>,
     pub typ: ManuallyDrop<TypeObject<'a>>,
+    pub fn_wrapper: ManuallyDrop<FnWrapper<'a>>,
 }
 
 pub enum MethodValue<T, E> {
@@ -359,10 +388,10 @@ fn create_object_from_type<'a>(
 }
 
 #[inline]
-fn create_object_from_typeobject<'a>(typobj: Trc<TypeObject<'a>>, vm: Trc<VM<'a>>, tp: Trc<TypeObject<'a>>) -> Object<'a> {
+fn create_object_from_typeobject<'a>(vm: Trc<VM<'a>>, tp: Trc<TypeObject<'a>>) -> Object<'a> {
     let raw = RawObject {
         vm: vm.clone(),
-        tp: typobj.clone(),
+        tp: unwrap_fast!(vm.types.typetp.as_ref()).clone(),
         dict: tp.dict.clone(),
         internals: ObjectInternals {
             typ: ManuallyDrop::new((*tp).clone()),
@@ -503,6 +532,7 @@ pub fn init_types(vm: Trc<VM<'_>>) {
     exceptionobject::init_valueexc(vm.clone());
     exceptionobject::init_zerodivexc(vm.clone());
     exceptionobject::init_attrexc(vm.clone());
+    methodobject::init(vm.clone());
 }
 
 macro_rules! maybe_handle_exception {

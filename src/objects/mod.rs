@@ -4,7 +4,9 @@ use std::ops::Deref;
 use crate::{compiler::Bytecode, interpreter::VM, parser::Position, unwrap_fast};
 use trc::Trc;
 
-use self::exceptionobject::attrexc_from_str;
+use self::exceptionobject::{
+    attrexc_from_str, methodnotdefinedexc_from_str, typemismatchexc_from_str,
+};
 
 pub mod mhash;
 
@@ -125,10 +127,16 @@ impl<'a> RawObject<'a> {
     pub fn object_repr_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
         let repr = object.clone().tp.repr;
         if repr.is_none() {
-            return MethodValue::Error(stringobject::string_from(
+            let exc = methodnotdefinedexc_from_str(
                 object.vm.clone(),
-                String::from("__repr__ is not implemented."),
-            ));
+                &format!(
+                    "Method 'repr' is not defined for '{}' type",
+                    object.tp.typename
+                ),
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
         }
 
         let reprv = (unwrap_fast!(repr))(object.clone());
@@ -137,21 +145,20 @@ impl<'a> RawObject<'a> {
             return MethodValue::Error(reprv.unwrap_err());
         }
 
-        if reprv.is_not_implemented() {
-            return MethodValue::Error(stringobject::string_from(
-                object.vm.clone(),
-                String::from("__repr__ is not implemented."),
-            ));
-        }
-
         if !is_type_exact!(
             &unwrap_fast!(reprv),
             unwrap_fast!(object.vm.types.strtp.as_ref()).clone()
         ) {
-            return MethodValue::Error(stringobject::string_from(
+            let exc = typemismatchexc_from_str(
                 object.vm.clone(),
-                String::from("__repr__ returned non-string."),
-            ));
+                &format!(
+                    "Method 'repr' of '{}' type returned non-string",
+                    object.tp.typename
+                ),
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
         }
 
         MethodValue::Some(unsafe { &unwrap_fast!(reprv).internals.str }.to_string())
@@ -172,10 +179,16 @@ impl<'a> RawObject<'a> {
     pub fn object_str_safe(object: Object<'_>) -> MethodValue<String, Object<'_>> {
         let str = object.clone().tp.str;
         if str.is_none() {
-            return MethodValue::Error(stringobject::string_from(
+            let exc = methodnotdefinedexc_from_str(
                 object.vm.clone(),
-                String::from("__repr__ is not implemented."),
-            ));
+                &format!(
+                    "Method 'str' is not defined for '{}' type",
+                    object.tp.typename
+                ),
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
         }
 
         let strv = (unwrap_fast!(str))(object.clone());
@@ -184,21 +197,20 @@ impl<'a> RawObject<'a> {
             return MethodValue::Error(strv.unwrap_err());
         }
 
-        if strv.is_not_implemented() {
-            return MethodValue::Error(stringobject::string_from(
-                object.vm.clone(),
-                String::from("__repr__ is not implemented."),
-            ));
-        }
-
         if !is_type_exact!(
             &unwrap_fast!(strv),
             unwrap_fast!(object.vm.types.strtp.as_ref()).clone()
         ) {
-            return MethodValue::Error(stringobject::string_from(
+            let exc = typemismatchexc_from_str(
                 object.vm.clone(),
-                String::from("__repr__ returned non-string."),
-            ));
+                &format!(
+                    "Method 'str' of '{}' type returned non-string",
+                    object.tp.typename
+                ),
+                Position::default(),
+                Position::default(),
+            );
+            return MethodValue::Error(exc);
         }
 
         MethodValue::Some(unsafe { &unwrap_fast!(strv).internals.str }.to_string())

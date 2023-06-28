@@ -42,7 +42,6 @@ impl<'a> Deref for ObjectBase<'a> {
     }
 }
 
-//#[derive(Clone)]
 pub struct RawObject<'a> {
     pub tp: Trc<TypeObject<'a>>,
     pub internals: ObjectInternals<'a>,
@@ -324,7 +323,6 @@ pub union ObjectInternals<'a> {
 
 pub enum MethodValue<T, E> {
     Some(T),
-    NotImplemented,
     Error(E),
 }
 
@@ -344,11 +342,6 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
     pub fn unwrap(&self) -> T {
         match self {
             MethodValue::Some(v) => v.clone(),
-            MethodValue::NotImplemented => {
-                panic!(
-                    "Attempted to unwrap MethodValue with no value (got NotImplemented variant). "
-                )
-            }
             MethodValue::Error(_) => {
                 panic!("Attempted to unwrap MethodValue with no value (got Error variant). ")
             }
@@ -361,16 +354,8 @@ impl<T: Clone, E: Clone> MethodValue<T, E> {
             MethodValue::Some(_) => {
                 panic!("Attempted to unwrap MethodValue that is not an error (got Some variant). ")
             }
-            MethodValue::NotImplemented => {
-                panic!("Attempted to unwrap MethodValue that is not an error (got NotImplemented variant). ")
-            }
             MethodValue::Error(v) => v.clone(),
         }
-    }
-
-    #[inline]
-    pub fn is_not_implemented(&self) -> bool {
-        matches!(self, MethodValue::NotImplemented)
     }
 
     #[inline]
@@ -556,8 +541,6 @@ macro_rules! maybe_handle_exception {
                 .expect("Instruction out of range");
             let exc = $res.unwrap_err();
             $self.raise_exc_pos(exc, pos.0, pos.1);
-        } else if $res.is_not_implemented() {
-            todo!();
         }
     };
 }

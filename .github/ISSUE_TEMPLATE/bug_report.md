@@ -16,7 +16,7 @@ Steps to reproduce the behavior:
 2. ...
 3. ...
 
-If it is not reproducable, see `Additional context`
+If it is not reproducible, see `Additional context`
 
 **Code**
 If applicable, paste the `Merlin` code here that caused the error.
@@ -31,4 +31,4 @@ Output when built in dev mode (`make dev`, then run) and run using the steps to 
 Add system information and version here.
 
 **Additional context**
-Add any other context about the problem here (including, if applicable, why the error is not reproducable).
+Add any other context about the problem here (including, if applicable, why the error is not reproducible).

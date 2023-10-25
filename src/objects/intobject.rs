@@ -183,7 +183,7 @@ fn int_div<'a>(selfv: Object<'a>, other: Object<'a>) -> MethodType<'a> {
     if otherv == 0 {
         let exc = zerodivexc_from_str(
             selfv.vm.clone(),
-            "Divison by 0",
+            "Division by 0",
             Position::default(),
             Position::default(),
         );

@@ -8,7 +8,7 @@ Internally a `Trc` is used to store data. Because a `.clone()` only creates a ne
 
 ## Benefits of `Trc` and comparison to `CPython`
 `Trc` is a powerful data type. Besides it's atomic automatic memory management, it allows Merlin to be multithreaded! This is because the reference count is atomic. This is a contrast to `CPython`, which requires a `GIL` to provide a semblance of multithreading. The `Trc` data type gives Merlin inherent multithreading abilities. 
-`Trc` implements biased referece counting, which allows it to remove the possibility of race conditions from the reference count - which is what prevents `CPython` from removing their
+`Trc` implements biased reference counting, which allows it to remove the possibility of race conditions from the reference count - which is what prevents `CPython` from removing their
 `GIL`.
 
 ## Footnote about systems lacking atomics
